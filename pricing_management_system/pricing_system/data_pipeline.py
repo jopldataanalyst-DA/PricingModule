@@ -46,7 +46,7 @@ def run_pipeline():
     ]
     
     stock = stock_raw.with_columns([
-        pl.col(c).cast(pl.Utf8).str.strip_chars()
+        pl.col(c).cast(pl.Utf8).str.strip_chars().str.to_uppercase()
         for c in ["Uniware SKU", "FBA SKU", "FBF SKU", "SJIT SKU"]
     ] + [
         pl.col(c).cast(pl.Int64, strict=False).fill_null(0)
@@ -127,7 +127,9 @@ def run_pipeline():
         
         # Fetch stock_update
         cursor.execute("SELECT * FROM stock_update")
-        stock_update_df = pl.from_dicts(cursor.fetchall())
+        stock_update_df = pl.from_dicts(cursor.fetchall()).with_columns(
+            pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
+        )
         
         # Fetch catalog_pricing with explicit schema for strings to avoid inference errors
         cursor.execute("SELECT * FROM catalog_pricing")
@@ -136,7 +138,9 @@ def run_pipeline():
             catalog_pricing_df = pl.from_dicts(catalog_pricing_rows, schema_overrides={
                 "launch_date": pl.String,
                 "catalog_name": pl.String
-            })
+            }).with_columns(
+                pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
+            )
         else:
             # Fallback for empty table
             catalog_pricing_df = pl.DataFrame(schema={
@@ -152,7 +156,7 @@ def run_pipeline():
 
     # Process item master
     item = item_master_df.with_columns(
-        pl.col("Master SKU").cast(pl.Utf8).str.strip_chars()
+        pl.col("Master SKU").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
     ).rename({"Loc": "Location"})
 
     # Join with stock data
@@ -223,20 +227,6 @@ def run_pipeline():
                 INSERT INTO stock_items 
                 (sku_code, item_name, size, category, location, catalog, cost, price, mrp, available_atp, fba_stock, fbf_stock, sjit_stock, updated)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    item_name=VALUES(item_name),
-                    size=VALUES(size),
-                    category=VALUES(category),
-                    location=VALUES(location),
-                    catalog=VALUES(catalog),
-                    cost=VALUES(cost),
-                    price=VALUES(price),
-                    mrp=VALUES(mrp),
-                    available_atp=VALUES(available_atp),
-                    fba_stock=VALUES(fba_stock),
-                    fbf_stock=VALUES(fbf_stock),
-                    sjit_stock=VALUES(sjit_stock),
-                    updated=VALUES(updated)
             """, (
                 row.get("sku_code"), row.get("item_name"), row.get("size"), 
                 row.get("category"), row.get("location"), row.get("catalog"), 

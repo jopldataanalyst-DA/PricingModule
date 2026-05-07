@@ -63,7 +63,7 @@ def init_db():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS stock_items (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            sku_code VARCHAR(255) UNIQUE,
+            sku_code VARCHAR(255),
             item_name TEXT,
             size TEXT,
             category VARCHAR(255),

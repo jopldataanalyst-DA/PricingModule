@@ -83,7 +83,19 @@ async def get_items(
     check_page_access(user, "item_master")
     
     items = load_items_db()
-    item_list = [{"id": i + 1, **item} for i, item in enumerate(items)]
+    all_items = [{**item, "id": i + 1} for i, item in enumerate(items)]
+    
+    # Calculate Global Stats (before filtering)
+    stats = {
+        "total_skus": len(all_items),
+        "total_stock": sum(int(x.get('available_atp') or 0) for x in all_items),
+        "total_available": sum(int(x.get('available_atp') or 0) for x in all_items),
+        "total_fba": sum(int(x.get('fba_stock') or 0) for x in all_items),
+        "total_sjit": sum(int(x.get('sjit_stock') or 0) for x in all_items),
+        "total_fbf": sum(int(x.get('fbf_stock') or 0) for x in all_items)
+    }
+    
+    item_list = all_items
     
     if search:
         q = search.lower()
@@ -108,19 +120,9 @@ async def get_items(
             item_list.sort(key=lambda x: (str(x.get(sort_by, '')) or '').lower(), reverse=reverse)
     
     total = len(item_list)
-    total_stock = sum(x.get('available_atp', 0) for x in item_list)
     start = (page - 1) * page_size
     end = start + page_size
     page_items = item_list[start:end]
-    
-    stats = {
-        "total_skus": total,
-        "total_stock": total_stock,
-        "total_available": total_stock,
-        "total_fba": sum(x.get('fba_stock', 0) for x in item_list),
-        "total_sjit": sum(x.get('sjit_stock', 0) for x in item_list),
-        "total_fbf": sum(x.get('fbf_stock', 0) for x in item_list)
-    }
     
     return {"items": page_items, "total": total, "page": page, "page_size": page_size,
             "total_pages": (total + page_size - 1) // page_size if total else 1, "stats": stats}
