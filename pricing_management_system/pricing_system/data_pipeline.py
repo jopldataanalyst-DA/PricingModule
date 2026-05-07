@@ -145,7 +145,8 @@ def run_pipeline():
             # Fallback for empty table
             catalog_pricing_df = pl.DataFrame(schema={
                 "master_sku": pl.String, "launch_date": pl.String, "catalog_name": pl.String,
-                "cost": pl.Float64, "wholesale_price": pl.Float64, "up_price": pl.Float64
+                "cost": pl.Float64, "wholesale_price": pl.Float64, "up_price": pl.Float64,
+                "mrp": pl.Float64
             })
         
         cursor.close()
@@ -177,14 +178,15 @@ def run_pipeline():
     # Join with catalog pricing data
     final = final.join(
         catalog_pricing_df.select([
-            "master_sku", "launch_date", "catalog_name", "cost", "wholesale_price", "up_price"
+            "master_sku", "launch_date", "catalog_name", "cost", "wholesale_price", "up_price", "mrp"
         ]).rename({
             "master_sku": "Master SKU",
             "launch_date": "Launch Date DB",
             "catalog_name": "Catalog Name DB",
             "cost": "Cost DB",
             "wholesale_price": "Wholesale Price DB",
-            "up_price": "Up Price DB"
+            "up_price": "Up Price DB",
+            "mrp": "MRP DB"
         }),
         on="Master SKU",
         how="left"
@@ -195,12 +197,13 @@ def run_pipeline():
         pl.col("Cost DB").fill_null(0.0).alias("Cost"),
         pl.col("Wholesale Price DB").fill_null(0.0).alias("Wholesale Price"),
         pl.col("Catalog Name DB").fill_null("").alias("Catalog Name"),
+        pl.col("MRP DB").fill_null(0.0).alias("MRP"),
         pl.col("Up Price DB").fill_null(0.0).alias("Up Price"),
         pl.col("Launch Date DB").fill_null('').alias("Launch Date"),
         *[pl.col(c).fill_null(0) for c in ["Uniware Stock", "FBA", "FBF", "SJIT"]]
     ]).select([
         "Master SKU", "Style ID / Parent SKU", "Size", "Category", "Location",
-        "Catalog Name", "Cost", "Wholesale Price", "Up Price", 
+        "Catalog Name", "Cost", "Wholesale Price", "MRP", "Up Price", 
         "Uniware Stock", "FBA", "FBF", "SJIT", "Launch Date"
     ])
 
@@ -209,8 +212,8 @@ def run_pipeline():
         "Master SKU": "sku_code", "Style ID / Parent SKU": "item_name",
         "Size": "size", "Category": "category", "Location": "location",
         "Cost": "cost", "Wholesale Price": "price", "Catalog Name": "catalog",
-        "Up Price": "mrp", "Uniware Stock": "available_atp", "FBA": "fba_stock",
-        "FBF": "fbf_stock", "SJIT": "sjit_stock", "Launch Date": "updated"
+        "MRP": "mrp", "Up Price": "up_price", "Uniware Stock": "available_atp", 
+        "FBA": "fba_stock", "FBF": "fbf_stock", "SJIT": "sjit_stock", "Launch Date": "updated"
     })
 
     records = final_db_ready.to_dicts()
@@ -225,13 +228,14 @@ def run_pipeline():
         for row in records:
             cursor.execute("""
                 INSERT INTO stock_items 
-                (sku_code, item_name, size, category, location, catalog, cost, price, mrp, available_atp, fba_stock, fbf_stock, sjit_stock, updated)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                (sku_code, item_name, size, category, location, catalog, cost, price, mrp, up_price, available_atp, fba_stock, fbf_stock, sjit_stock, updated)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 row.get("sku_code"), row.get("item_name"), row.get("size"), 
                 row.get("category"), row.get("location"), row.get("catalog"), 
                 float(row.get("cost", 0) or 0), float(row.get("price", 0) or 0), 
-                float(row.get("mrp", 0) or 0), int(row.get("available_atp", 0) or 0), 
+                float(row.get("mrp", 0) or 0), float(row.get("up_price", 0) or 0),
+                int(row.get("available_atp", 0) or 0), 
                 int(row.get("fba_stock", 0) or 0), int(row.get("fbf_stock", 0) or 0), 
                 int(row.get("sjit_stock", 0) or 0), row.get("updated")
             ))

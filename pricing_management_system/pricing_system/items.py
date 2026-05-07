@@ -40,14 +40,14 @@ def load_items_db() -> List[Dict[str, Any]]:
 
 SELECTED_COLUMNS = [
     "sku_code", "item_name", "size", "category", "location",
-    "cost", "price", "catalog", "mrp",
+    "cost", "price", "catalog", "mrp", "up_price",
     "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
 ]
 
 COLUMN_LABELS = {
     "sku_code": "Master SKU", "item_name": "Style ID / Parent SKU", "size": "Size",
     "category": "Category", "location": "Location", "cost": "Cost",
-    "price": "Wholesale Price", "catalog": "Catalog Name", "mrp": "Up Price",
+    "price": "Wholesale Price", "catalog": "Catalog Name", "mrp": "MRP", "up_price": "Up Price",
     "available_atp": "Uniware Stock", "fba_stock": "FBA", "fbf_stock": "FBF",
     "sjit_stock": "SJIT", "updated": "Launch Date"
 }

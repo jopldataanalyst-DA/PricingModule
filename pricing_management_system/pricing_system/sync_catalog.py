@@ -1,42 +1,62 @@
-import mysql.connector
+import polars as pl
+from database import get_db
+from pathlib import Path
 
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "123456789",
-    "database": "pricing_module"
-}
+DATA_DIR = Path(r"D:\VatsalFiles\PricingModule\Data")
+CATALOG_CSV = DATA_DIR / "CatalogData.csv"
 
 def sync_catalog():
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        
-        # Select all Master SKUs from item_master
-        cursor.execute("SELECT `Master SKU` FROM item_master")
-        item_master_skus = cursor.fetchall()
-        
-        print(f"Found {len(item_master_skus)} SKUs in item_master")
-        
-        # Insert each SKU into catalog_pricing if it doesn't exist
-        inserted_count = 0
-        for (sku,) in item_master_skus:
-            if not sku:
-                continue
-            cursor.execute("""
-                INSERT IGNORE INTO catalog_pricing (master_sku, launch_date, catalog_name, cost, wholesale_price, up_price)
-                VALUES (%s, NULL, NULL, 0.0, 0.0, 0.0)
-            """, (sku,))
-            if cursor.rowcount > 0:
-                inserted_count += 1
-        
-        conn.commit()
-        print(f"Successfully added {inserted_count} new SKUs to catalog_pricing")
-        
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        print(f"Error: {e}")
+    if not CATALOG_CSV.exists():
+        print(f"File not found: {CATALOG_CSV}")
+        return
+
+    print(f"Reading {CATALOG_CSV}...")
+    # Read all as strings first to avoid parsing errors with 'Pending', '.', etc.
+    df = pl.read_csv(CATALOG_CSV, infer_schema_length=0)
+    
+    # Clean and cast numeric columns
+    numeric_cols = ["MRP", "Cost", "Wholesale Price", "Up Price"]
+    for col in numeric_cols:
+        if col in df.columns:
+            df = df.with_columns(
+                pl.col(col).cast(pl.Float64, strict=False).fill_null(0.0)
+            )
+    
+    records = df.to_dicts()
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    print(f"Updating catalog_pricing table with {len(records)} records...")
+    for row in records:
+        sku = str(row.get("Master SKU", "")).strip().upper()
+        if not sku:
+            continue
+            
+        cursor.execute("""
+            INSERT INTO catalog_pricing (master_sku, launch_date, catalog_name, cost, wholesale_price, up_price, mrp)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                launch_date=VALUES(launch_date),
+                catalog_name=VALUES(catalog_name),
+                cost=VALUES(cost),
+                wholesale_price=VALUES(wholesale_price),
+                up_price=VALUES(up_price),
+                mrp=VALUES(mrp)
+        """, (
+            sku,
+            row.get("Launch Date"),
+            row.get("Catalog Name"),
+            row.get("Cost"),
+            row.get("Wholesale Price"),
+            row.get("Up Price"),
+            row.get("MRP")
+        ))
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print("Sync complete.")
 
 if __name__ == "__main__":
     sync_catalog()

@@ -122,6 +122,7 @@ final = final.with_columns([
     pl.lit(0.0).alias("Wholesale Price"),
     pl.lit("").alias("Catalog Name"),
     pl.lit(0.0).alias("Up Price"),
+    pl.lit(0.0).alias("MRP"),
     pl.lit("").alias("Launch Date"),
     *[
         pl.col(c).fill_null(0)
@@ -138,6 +139,7 @@ final = final.with_columns([
     "Cost",
     "Wholesale Price",
     "Up Price",
+    "MRP",
     "Uniware Stock",
     "FBA",
     "FBF",

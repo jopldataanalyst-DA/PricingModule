@@ -72,6 +72,7 @@ def init_db():
             cost FLOAT,
             price FLOAT,
             mrp FLOAT,
+            up_price FLOAT,
             available_atp INT,
             fba_stock INT,
             fbf_stock INT,
@@ -105,6 +106,7 @@ def init_db():
             cost FLOAT DEFAULT 0.0,
             wholesale_price FLOAT DEFAULT 0.0,
             up_price FLOAT DEFAULT 0.0,
+            mrp FLOAT DEFAULT 0.0,
             INDEX idx_pricing_sku (master_sku)
         )
     """)
