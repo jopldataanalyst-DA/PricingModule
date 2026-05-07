@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rajnandini ERP — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f0e;
+  --surface: #141916;
+  --surface2: #1c2420;
+  --gold: #c9a96e;
+  --gold2: #e8c98a;
+  --green: #2d6a4f;
+  --green-light: #40916c;
+  --text: #e8e4dc;
+  --text-muted: #8a9088;
+  --border: #2a3330;
+  --danger: #e05252;
+  --radius: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(201,169,110,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,169,110,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.bg-glow {
+  position: fixed; top: -200px; right: -100px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(45,106,79,0.18) 0%, transparent 70%);
+  z-index: 0; pointer-events: none;
+}
+.bg-glow2 {
+  position: fixed; bottom: -200px; left: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(201,169,110,0.1) 0%, transparent 70%);
+  z-index: 0; pointer-events: none;
+}
+.login-wrap {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: min(900px, 96vw);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+  animation: fadeUp 0.6s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.login-brand {
+  background: linear-gradient(145deg, var(--green) 0%, #1a4a35 100%);
+  padding: 60px 48px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.login-brand::before {
+  content: '';
+  position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  border: 1px solid rgba(201,169,110,0.2);
+  border-radius: 50%;
+}
+.login-brand::after {
+  content: '';
+  position: absolute; bottom: -80px; left: -40px;
+  width: 260px; height: 260px;
+  border: 1px solid rgba(201,169,110,0.12);
+  border-radius: 50%;
+}
+.brand-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700;
+  color: var(--gold2);
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+.brand-logo span { display: block; font-size: 11px; font-weight: 400; color: rgba(232,201,138,0.6); letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; font-family: 'DM Sans', sans-serif; }
+.brand-tagline {
+  font-size: 13px; color: rgba(255,255,255,0.5);
+  line-height: 1.8; margin-top: auto; padding-top: 40px;
+}
+.brand-stats { display: flex; flex-direction: column; gap: 16px; }
+.stat-item { display: flex; align-items: center; gap: 12px; }
+.stat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+.stat-text { font-size: 12px; color: rgba(255,255,255,0.55); }
+.stat-num { color: var(--gold2); font-weight: 600; }
+
+.login-form-wrap {
+  background: var(--surface);
+  padding: 60px 48px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.form-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 600;
+  color: var(--text); margin-bottom: 8px;
+}
+.form-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 40px; }
+.form-group { margin-bottom: 20px; }
+label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+input {
+  width: 100%; padding: 14px 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 14px; font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+  outline: none;
+}
+input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,169,110,0.12); }
+input::placeholder { color: var(--text-muted); }
+.btn-login {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--gold) 0%, #b8914e 100%);
+  border: none; border-radius: var(--radius);
+  color: #1a1208; font-size: 14px; font-weight: 700;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: all 0.2s; margin-top: 8px;
+}
+.btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,169,110,0.3); }
+.btn-login:active { transform: translateY(0); }
+.error-msg { color: var(--danger); font-size: 13px; margin-top: 12px; display: none; text-align: center; background: rgba(224,82,82,0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(224,82,82,0.2); }
+.loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(26,18,8,0.3); border-top-color: #1a1208; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  .login-wrap { grid-template-columns: 1fr; }
+  .login-brand { display: none; }
+  .login-form-wrap { padding: 40px 28px; }
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+<div class="bg-glow2"></div>
+<div class="login-wrap">
+  <div class="login-brand">
+    <div>
+      <div class="brand-logo">Rajnandini<span>ERP Suite · Pricing Module</span></div>
+    </div>
+    <div class="brand-stats">
+      <div class="stat-item"><div class="stat-dot"></div><div class="stat-text">Manage <span class="stat-num">80,000+</span> SKUs in real-time</div></div>
+      <div class="stat-item"><div class="stat-dot"></div><div class="stat-text">Multi-channel: <span class="stat-num">FBA · SJIT · FBF</span></div></div>
+      <div class="stat-item"><div class="stat-dot"></div><div class="stat-text">Full audit trail & access control</div></div>
+    </div>
+    <div class="brand-tagline">Secure. Fast. Scalable.<br>Built for enterprise inventory management.</div>
+  </div>
+  <div class="login-form-wrap">
+    <div class="form-title">Welcome back</div>
+    <div class="form-subtitle">Sign in to your account to continue</div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="Enter your username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+</div>
+<script>
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('username').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('errorMsg');
+  if (!username || !password) { showError('Please enter username and password'); return; }
+  btn.innerHTML = '<span class="loading"></span>Signing in…';
+  btn.disabled = true;
+  err.style.display = 'none';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    const data = await res.json();
+    if (!res.ok) { showError(data.detail || 'Login failed'); return; }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    window.location.href = '/dashboard';
+  } catch(e) {
+    showError('Connection error. Please try again.');
+  } finally {
+    btn.innerHTML = 'Sign In';
+    btn.disabled = false;
+  }
+}
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.display = 'block';
+}
+// Redirect if already logged in
+if (localStorage.getItem('token')) window.location.href = '/dashboard';
+</script>
+</body>
+</html>

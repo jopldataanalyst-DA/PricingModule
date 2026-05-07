@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Item Master — Rajnandini ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { --bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724; --gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15); --green:#2d6a4f;--green-light:#40916c;--green-dim:rgba(64,145,108,0.15); --text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550; --border:#222c28;--border2:#2a3530; --danger:#e05252;--danger-dim:rgba(224,82,82,0.12); --warning:#f4a261;--warning-dim:rgba(244,162,97,0.12); --info:#4db8d4;--info-dim:rgba(77,184,212,0.12); --success:#52b788;--success-dim:rgba(82,183,136,0.12); --sidebar-w:220px;--header-h:60px;--radius:10px; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold2);line-height:1.2}
+.logo-sub{font-size:9px;color:var(--text-muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-user{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}
+.user-role{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.nav-section{padding:12px 0;flex:1;overflow-y:auto}
+.nav-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all 0.15s;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:15px;width:20px;text-align:center}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
+.header-title{font-size:15px;font-weight:600}.header-badge{background:var(--gold-dim);color:var(--gold);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sync-time{font-size:11px;color:var(--text-muted)}
+.stats-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0;flex-shrink:0}
+.stat-card{flex:1;padding:14px 20px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.stat-card:last-child{border-right:none}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.stat-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}
+.stat-value.gold{color:var(--gold2)}.stat-value.green{color:var(--success)}.stat-value.blue{color:var(--info)}.stat-value.orange{color:var(--warning)}.stat-value.purple{color:#b48ef5}
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;flex:1;min-width:200px;max-width:360px}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;width:100%}
+.search-box input::placeholder{color:var(--text-muted)}
+.filter-select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;min-width:120px}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,0.3)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,82,82,0.2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.table-wrap{flex:1;overflow:auto;position:relative}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead{position:sticky;top:0;z-index:10}
+th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;font-size:10px;letter-spacing:0.5px;text-transform:uppercase}
+th:hover{color:var(--gold)}.th.sorted{color:var(--gold)}
+td{padding:9px 12px;border-bottom:1px solid rgba(34,44,40,0.6);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:11px}
+tr:hover td{background:rgba(255,255,255,0.02)}
+tr.selected td{background:var(--gold-dim)}
+.badge-avail{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif}
+.badge-yes{background:var(--success-dim);color:var(--success)}.badge-no{background:var(--danger-dim);color:var(--danger)}
+.pagination{background:var(--surface);border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.page-info{font-size:12px;color:var(--text-muted);margin-right:auto}
+.page-btn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text-muted);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.page-btn:hover{border-color:var(--gold);color:var(--gold)}.page-btn.active{background:var(--gold);color:#1a1208;border-color:var(--gold);font-weight:700}.page-btn:disabled{opacity:0.3;cursor:not-allowed}
+.page-size-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;outline:none}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:min(600px,95vw);max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px}
+.modal-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:4px}
+.modal-body{padding:24px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:6px}
+.form-field label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.form-field input,.form-field select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s}
+.form-field input:focus,.form-field select:focus{border-color:var(--gold)}
+.form-field input:disabled{opacity:0.4;cursor:not-allowed}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.import-drop{border:2px dashed var(--border2);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s}
+.import-drop:hover,.import-drop.drag{border-color:var(--gold);background:var(--gold-dim)}
+.import-drop .icon{font-size:40px;margin-bottom:12px}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:240px;display:flex;align-items:center;gap:10px;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.toast.success{border-color:rgba(82,183,136,0.4)}.toast.error{border-color:rgba(224,82,82,0.4)}.toast.info{border-color:rgba(77,184,212,0.4)}
+.table-loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);gap:12px}
+.spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.actions-cell{display:flex;gap:4px}
+.col-blurred{filter:blur(4px);pointer-events:none}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-logo"><div class="logo-text">Rajnandini</div><div class="logo-sub">ERP Suite · Pricing</div></div>
+<div class="sidebar-user" id="sidebarUser">
+<div class="user-avatar" id="userAvatar">A</div>
+<div class="user-info"><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div>
+</div>
+<nav class="nav-section" id="navSection">
+<div class="nav-label">Menu</div>
+<a class="nav-item active" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
+<a class="nav-item" href="#" id="nav-import" onclick="openImport()"><span class="icon">⬆️</span> Import Data</a>
+<a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
+<div class="nav-label">Reports</div>
+<a class="nav-item" href="#" onclick="exportData()"><span class="icon">📊</span> Export Excel</a>
+</nav>
+<div class="sidebar-footer">
+<a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Sign Out</a>
+</div>
+</aside>
+<main class="main">
+<header class="header">
+<span class="icon" style="font-size:18px">📦</span>
+<span class="header-title">Item Master</span>
+<span class="header-badge" id="headerBadge">Loading…</span>
+<div class="header-right">
+<span class="sync-time" id="syncTime">—</span>
+<button class="btn btn-gold btn-sm" onclick="loadItems()" title="Refresh">↻ Refresh</button>
+</div>
+</header>
+<div class="stats-bar" id="statsBar">
+<div class="stat-card"><div class="stat-label">Total SKUs</div><div class="stat-value gold" id="s-total">—</div></div>
+<div class="stat-card"><div class="stat-label">Uniware Stock</div><div class="stat-value green" id="s-avail">—</div></div>
+<div class="stat-card"><div class="stat-label">FBA</div><div class="stat-value blue" id="s-fba">—</div></div>
+<div class="stat-card"><div class="stat-label">SJIT</div><div class="stat-value orange" id="s-sjit">—</div></div>
+<div class="stat-card"><div class="stat-label">FBF</div><div class="stat-value purple" id="s-fbf">—</div></div>
+</div>
+<div class="toolbar">
+<div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search SKU, item name, brand…" oninput="debounceSearch()"></div>
+<select class="filter-select" id="filterStatus" onchange="loadItems()"><option value="">All Statuses</option></select>
+<select class="filter-select" id="filterAvail" onchange="loadItems()"><option value="">All Availability</option><option value="Yes">Available</option><option value="No">Not Available</option></select>
+<select class="filter-select" id="filterCategory" onchange="loadItems()"><option value="">All Categories</option></select>
+<div style="margin-left:auto;display:flex;gap:8px;" id="adminActions"></div>
+</div>
+<div class="table-wrap" id="tableWrap"><div class="table-loading"><div class="spinner"></div> Loading items…</div></div>
+<div class="pagination" id="pagination">
+<span class="page-info" id="pageInfo">—</span>
+<button class="page-btn" id="prevBtn" onclick="changePage(-1)">‹</button>
+<div id="pageNumbers" style="display:flex;gap:4px"></div>
+<button class="page-btn" id="nextBtn" onclick="changePage(1)">›</button>
+<select class="page-size-select" id="pageSizeSelect" onchange="var ps=parseInt(this.value);state.pageSize=ps;state.page=1;localStorage.setItem('pageSize',ps);loadItems()"><option value="50">50 / page</option><option value="100">100 / page</option><option value="200">200 / page</option></select>
+</div>
+</main>
+<div class="modal-overlay" id="editModal">
+<div class="modal"><div class="modal-header"><div class="modal-title">Edit Item</div><button class="modal-close" onclick="closeModal('editModal')">✕</button></div>
+<div class="modal-body"><div class="modal-grid" id="editFields"></div></div>
+<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button><button class="btn btn-gold" onclick="saveEdit()">Save Changes</button></div>
+</div>
+</div>
+<div class="modal-overlay" id="importModal">
+<div class="modal"><div class="modal-header"><div class="modal-title">Import / Update Data</div><button class="modal-close" onclick="closeModal('importModal')">✕</button></div>
+<div class="modal-body">
+<div class="import-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+<div class="icon">📂</div>
+<div style="font-size:15px;font-weight:600;margin-bottom:6px">Drop CSV file here or click to browse</div>
+<div style="font-size:12px;color:var(--text-muted)">Export the dashboard CSV first, fill in the <b>Action</b> column (<code>add</code> / <code>replace</code> / <code>delete</code>), then import. Only rows with an Action value are processed.</div>
+<input type="file" id="fileInput" accept=".csv" style="display:none" onchange="handleFileSelect(this)">
+</div>
+<div id="importResult" style="margin-top:16px;display:none"></div>
+</div>
+</div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script>
+var API = '';
+var token = localStorage.getItem('token');
+var user = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token) window.location.href = '/';
+
+var state = { page: 1, pageSize: 50, total: 0, totalPages: 0, sortBy: 'id', sortDir: 'asc', columns: { visible: [], editable: [], labels: {} }, editItem: null, searchTimer: null };
+
+document.addEventListener('DOMContentLoaded', function() {
+  var savedPageSize = localStorage.getItem('pageSize');
+  if (savedPageSize) {
+    state.pageSize = parseInt(savedPageSize);
+    document.getElementById('pageSizeSelect').value = savedPageSize;
+  }
+});
+
+(function() {
+  try {
+    console.log('Dashboard starting...');
+    setupUser();
+    loadColumns();
+    loadFilterOptions();
+    loadItems();
+    console.log('After loadItems call');
+  } catch(e) {
+    console.error('Init error:', e);
+    document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:yellow">Error: ' + e.message + '</div>';
+  }
+})();
+
+function setupUser() {
+  var avt = document.getElementById('userAvatar');
+  avt.textContent = (user.username || 'U')[0].toUpperCase();
+  document.getElementById('userName').textContent = user.username || '—';
+  document.getElementById('userRole').textContent = user.role || '—';
+  var pages = user.allowed_pages || [];
+  if (pages.indexOf('admin') < 0 && user.role !== 'admin') {
+    document.getElementById('nav-admin').style.display = 'none';
+  }
+  if (user.role !== 'admin') {
+    document.getElementById('nav-import').style.display = 'none';
+  } else {
+    document.getElementById('adminActions').innerHTML = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button><button class="btn btn-outline btn-sm" id="importBtn" onclick="openImport()">⬆ Import CSV</button>';
+  }
+}
+
+async function loadColumns() {
+  var res = await apiFetch('/api/items/columns');
+  if (res) state.columns = res;
+}
+
+async function loadFilterOptions() {
+  var res = await apiFetch('/api/items/filters');
+  if (!res) return;
+  var statusSel = document.getElementById('filterStatus');
+  for (var s = 0; s < res.statuses.length; s++) {
+    var o = document.createElement('option');
+    o.value = res.statuses[s];
+    o.textContent = res.statuses[s];
+    statusSel.appendChild(o);
+  }
+  var catSel = document.getElementById('filterCategory');
+  for (var c = 0; c < res.categories.length; c++) {
+    var o = document.createElement('option');
+    o.value = res.categories[c];
+    o.textContent = res.categories[c];
+    catSel.appendChild(o);
+  }
+}
+
+async function loadItems() {
+  var wrap = document.getElementById('tableWrap');
+  wrap.innerHTML = '<div class="table-loading"><div class="spinner"></div> Loading…</div>';
+  var params = 'page=' + state.page + '&page_size=' + state.pageSize + '&search=' + encodeURIComponent(document.getElementById('searchInput').value) + '&status_filter=' + encodeURIComponent(document.getElementById('filterStatus').value) + '&availability=' + encodeURIComponent(document.getElementById('filterAvail').value) + '&category=' + encodeURIComponent(document.getElementById('filterCategory').value) + '&sort_by=' + state.sortBy + '&sort_dir=' + state.sortDir;
+  var data = await apiFetch('/api/items/?' + params);
+  console.log('API response:', data);
+  
+  // Fallback: show loading timeout
+  var loadTimeout = setTimeout(function() {
+    document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:yellow">Loading taking too long... check console</div>';
+  }, 5000);
+  
+  if (!data) {
+    clearTimeout(loadTimeout);
+    document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:var(--danger)">No data returned</div>';
+    return;
+  }
+  
+  clearTimeout(loadTimeout);
+  state.total = data.total;
+  state.totalPages = data.total_pages;
+  renderTable(data.items);
+  renderPagination();
+  updateStats(data.stats);
+  document.getElementById('headerBadge').textContent = data.total.toLocaleString() + ' items';
+  document.getElementById('syncTime').textContent = 'Last load: ' + new Date().toLocaleTimeString();
+}
+
+function renderTable(items) {
+  console.log('renderTable called with', items.length, 'items');
+  if (items.length > 0) console.log('First item:', items[0]);
+  
+  var cols = state.columns.visible;
+  var editable = state.columns.editable;
+  var labels = state.columns.labels;
+  var isAdmin = user.role === 'admin';
+
+  var html = '<table><thead><tr>';
+  if (isAdmin) html += '<th style="width:30px"><input type="checkbox" onchange="toggleAll(this)"></th>';
+  html += '<th>#</th>';
+  
+  for (var c = 0; c < cols.length; c++) {
+    var col = cols[c];
+    var active = state.sortBy === col ? 'sorted' : '';
+    var arrow = state.sortBy === col ? (state.sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    html += '<th class="' + active + '" onclick="sortBy(\'' + col + '\')">' + (labels[col] || col) + arrow + '</th>';
+  }
+  if (editable.length > 0 || isAdmin) html += '<th>Actions</th>';
+  html += '</tr></thead><tbody>';
+
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var itemId = item.id;
+    html += '<tr id="row-' + itemId + '">';
+    if (isAdmin) html += '<td><input type="checkbox" class="row-check" value="' + itemId + '"></td>';
+    html += '<td style="color:var(--text-muted)">' + itemId + '</td>';
+    
+    for (var c = 0; c < cols.length; c++) {
+      var col = cols[c];
+      var val = item[col];
+      if (val === undefined || val === null) val = '-';
+      
+      if (col === 'availability') {
+        val = '<span class="badge-avail ' + (val === 'Yes' ? 'badge-yes' : 'badge-no') + '">' + val + '</span>';
+      } else if (col === 'status') {
+        var cls = (val === 'Not Found') ? 'badge-notfound' : 'badge-found';
+        val = '<span class="badge-avail ' + cls + '">' + val + '</span>';
+      } else if (col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock') {
+        if (val !== '-') {
+          val = parseInt(val).toLocaleString();
+          var color = parseInt(val) > 0 ? 'var(--info)' : 'var(--text-muted)';
+          val = '<span style="color:' + color + '">' + val + '</span>';
+        }
+      } else if ((col === 'price' || col === 'cost' || col === 'mrp') && val !== '-') {
+        val = '₹' + parseFloat(val).toFixed(2);
+      }
+      html += '<td>' + val + '</td>';
+    }
+    if (editable.length > 0 || isAdmin) {
+      html += '<td><div class="actions-cell">';
+      if (editable.length > 0 || isAdmin) {
+        html += '<button class="btn btn-outline btn-sm" id="edit-btn-' + itemId + '" onclick="openEdit(' + itemId + '); event.stopPropagation();">✏</button>';
+        console.log('Created edit button for item:', itemId);
+      }
+      if (isAdmin) {
+        html += '<button class="btn btn-danger btn-sm" onclick="deleteItem(' + itemId + ')">🗑</button>';
+      }
+      html += '</div></td>';
+    }
+    html += '</tr>';
+  }
+
+  if (items.length === 0) {
+    var colspan = cols.length + (isAdmin ? 3 : 2);
+    html += '<tr><td colspan="' + colspan + '" style="text-align:center;padding:40px;color:var(--text-muted)">No items found</td></tr>';
+  }
+
+  html += '</tbody></table>';
+  document.getElementById('tableWrap').innerHTML = html;
+}
+
+function updateStats(stats) {
+  if (!stats) return;
+  document.getElementById('s-total').textContent = (stats.total_skus || 0).toLocaleString();
+  document.getElementById('s-avail').textContent = (stats.total_available || 0).toLocaleString();
+  document.getElementById('s-fba').textContent = (stats.total_fba || 0).toLocaleString();
+  document.getElementById('s-sjit').textContent = (stats.total_sjit || 0).toLocaleString();
+  document.getElementById('s-fbf').textContent = (stats.total_fbf || 0).toLocaleString();
+}
+
+function renderPagination() {
+  var page = state.page;
+  var totalPages = state.totalPages;
+  var total = state.total;
+  var pageSize = state.pageSize;
+  var start = (page - 1) * pageSize + 1;
+  var end = Math.min(page * pageSize, total);
+  document.getElementById('pageInfo').textContent = 'Showing ' + start.toLocaleString() + '-' + end.toLocaleString() + ' of ' + total.toLocaleString();
+  document.getElementById('prevBtn').disabled = page <= 1;
+  document.getElementById('nextBtn').disabled = page >= totalPages;
+  var pn = document.getElementById('pageNumbers');
+  pn.innerHTML = '';
+  var range = [];
+  if (totalPages <= 7) { for (var i = 1; i <= totalPages; i++) range.push(i); }
+  else {
+    range.push(1);
+    if (page > 3) range.push('...');
+    for (var i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) range.push(i);
+    if (page < totalPages - 2) range.push('...');
+    range.push(totalPages);
+  }
+  for (let p = 0; p < range.length; p++) {
+    let btn = document.createElement('button');
+    let pg = range[p];
+    btn.className = 'page-btn' + (pg === page ? ' active' : '');
+    btn.textContent = pg;
+    if (pg === '...') { btn.style.cursor = 'default'; btn.style.pointerEvents = 'none'; }
+    else btn.onclick = function() { state.page = pg; loadItems(); };
+    pn.appendChild(btn);
+  }
+}
+
+function changePage(delta) { state.page = Math.max(1, Math.min(state.totalPages, state.page + delta)); loadItems(); }
+function sortBy(col) { if (state.sortBy === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; else { state.sortBy = col; state.sortDir = 'asc'; } state.page = 1; loadItems(); }
+function debounceSearch() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(function() { state.page = 1; loadItems(); }, 350); }
+function toggleAll(cb) { var checks = document.querySelectorAll('.row-check'); for (var i = 0; i < checks.length; i++) checks[i].checked = cb.checked; }
+
+async function openEdit(id) {
+  console.log('openEdit called with id:', id);
+  var item = await apiFetch('/api/items/' + id);
+  console.log('openEdit got item:', item);
+  if (!item) {
+    showToast('Item not found', 'error');
+    return;
+  }
+  state.editItem = item;
+  var editable = state.columns.editable;
+  var labels = state.columns.labels;
+  var fields = document.getElementById('editFields');
+  var editableFields = [];
+  for (var i = 0; i < state.columns.visible.length; i++) {
+    if (state.columns.visible[i] !== 'sku_code') editableFields.push(state.columns.visible[i]);
+  }
+  var fieldsHtml = '<div class="form-field" style="grid-column:1/-1"><label>' + (labels.sku_code || 'SKU Code') + '</label><input value="' + item.sku_code + '" disabled></div>';
+  for (var i = 0; i < editableFields.length; i++) {
+    var col = editableFields[i];
+    var isEditable = editable.indexOf(col) >= 0 || user.role === 'admin';
+    var val = item[col] || '';
+    var inputType = 'text';
+    if (col === 'price' || col === 'cost' || col === 'mrp' || col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock') inputType = 'number';
+    else if (col === 'updated') inputType = 'date';
+    fieldsHtml += '<div class="form-field"><label>' + (labels[col] || col) + '</label><input name="' + col + '" type="' + inputType + '" value="' + val + '"' + (!isEditable ? ' disabled' : '') + '></div>';
+  }
+  fields.innerHTML = fieldsHtml;
+  openModal('editModal');
+}
+
+async function saveEdit() {
+  var fields = document.getElementById('editFields');
+  var inputs = fields.querySelectorAll('input:not([disabled]), select:not([disabled])');
+  var body = {};
+  for (var i = 0; i < inputs.length; i++) {
+    var el = inputs[i];
+    if (el.name) body[el.name] = el.value === '' ? null : el.value;
+  }
+  var res = await apiFetch('/api/items/' + state.editItem.id, { method: 'PUT', body: JSON.stringify(body) });
+  if (res) { closeModal('editModal'); showToast('Item updated successfully', 'success'); loadItems(); }
+}
+
+async function deleteItem(id) {
+  if (!confirm('Delete this item? This cannot be undone.')) return;
+  var res = await apiFetch('/api/items/' + id, { method: 'DELETE' });
+  if (res) { showToast('Item deleted', 'success'); loadItems(); }
+}
+
+function openImport() { openModal('importModal'); }
+function handleFileSelect(input) { var file = input.files[0]; if (file) uploadFile(file); }
+
+var dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', function() { dz.classList.remove('drag'); });
+dz.addEventListener('drop', function(e) { e.preventDefault(); dz.classList.remove('drag'); var f = e.dataTransfer.files[0]; if (f) uploadFile(f); });
+
+async function uploadFile(file) {
+  var result = document.getElementById('importResult');
+  result.style.display = 'block';
+  result.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted)"><div class="spinner"></div> Importing data…</div>';
+  var fd = new FormData();
+  fd.append('file', file);
+  try {
+    var res = await fetch('/api/items/import', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
+    var data = await res.json();
+    if (res.ok) {
+      var errHtml = (data.error_details && data.error_details.length) ? '<div style="margin-top:10px;font-size:11px;color:var(--warning);line-height:1.6">' + data.error_details.join('<br>') + '</div>' : '';
+      result.innerHTML = '<div style="background:var(--success-dim);padding:16px;border-radius:10px"><div style="color:var(--success);font-weight:600;margin-bottom:8px">Import Complete</div><div>Processed: ' + data.total + ' &nbsp;|&nbsp; ➕ Added: ' + data.added + ' &nbsp;|&nbsp; 🔄 Replaced: ' + data.replaced + ' &nbsp;|&nbsp; 🗑 Deleted: ' + data.deleted + (data.errors ? ' &nbsp;|&nbsp; ⚠️ Errors: ' + data.errors : '') + '</div>' + errHtml + '</div>';
+      showToast('Done — ' + data.added + ' added, ' + data.replaced + ' replaced, ' + data.deleted + ' deleted', 'success');
+      loadItems();
+    } else {
+      result.innerHTML = '<div style="color:var(--danger);padding:16px">Error: ' + (data.detail || 'Unknown error') + '</div>';
+    }
+  } catch(e) {
+    result.innerHTML = '<div style="color:var(--danger)">Connection error</div>';
+  }
+}
+
+async function exportDashboard() {
+  showToast('Preparing export…', 'info');
+  try {
+    var res = await fetch('/api/items/export', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) { showToast('Export failed', 'error'); return; }
+    var blob = await res.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dashboard_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Export downloaded!', 'success');
+  } catch(e) { showToast('Export error: ' + e.message, 'error'); }
+}
+function exportData() { exportDashboard(); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function apiFetch(url, opts) {
+  opts = opts || {};
+  var headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+  if (opts.headers) {
+    for (var k in opts.headers) headers[k] = opts.headers[k];
+  }
+  try {
+    console.log('Fetching:', url);
+    var res = await fetch(API + url, {
+      headers: headers,
+      cache: 'no-store',
+      method: opts.method || 'GET',
+      body: opts.body
+    });
+    console.log('Response status:', res.status, 'ok:', res.ok);
+    if (res.status === 401) { localStorage.clear(); window.location.href = '/'; return null; }
+    if (!res.ok) { var d = await res.json(); console.log('Error response:', d); showToast(d.detail || 'Request failed', 'error'); return null; }
+    var data = await res.json();
+    console.log('Got data:', data);
+    return data;
+  } catch(e) { console.log('Fetch error:', e); showToast('Connection error', 'error'); return null; }
+}
+
+function showToast(msg, type) {
+  var tc = document.getElementById('toastContainer');
+  var icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  var el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = '<span>' + (icons[type] || 'ℹ️') + '</span><span>' + msg + '</span>';
+  tc.appendChild(el);
+  setTimeout(function() { el.remove(); }, 4000);
+}
+
+function logout() { fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }); localStorage.clear(); window.location.href = '/'; }
+</script>
+</body>
+</html>

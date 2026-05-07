@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — Rajnandini ERP</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724;
+  --gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.12);
+  --green:#2d6a4f;--text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550;
+  --border:#222c28;--border2:#2a3530;
+  --danger:#e05252;--danger-dim:rgba(224,82,82,0.12);
+  --success:#52b788;--success-dim:rgba(82,183,136,0.12);
+  --info:#4db8d4;--info-dim:rgba(77,184,212,0.12);
+  --warning:#f4a261;--radius:10px;--sidebar-w:220px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100}
+.sidebar-logo{padding:20px;border-bottom:1px solid var(--border)}
+.logo-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold2)}
+.logo-sub{font-size:9px;color:var(--text-muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-user{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.user-name{font-size:13px;font-weight:600}.user-role{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.nav-section{padding:12px 0;flex:1;overflow-y:auto}
+.nav-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all 0.15s;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}
+.nav-item .icon{font-size:15px;width:20px;text-align:center}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.header{height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
+.header-title{font-size:15px;font-weight:600}.header-right{margin-left:auto;display:flex;gap:10px}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;margin-bottom:-1px}
+.tab:hover{color:var(--text)}.tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
+
+/* Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700;font-family:'DM Mono',monospace}
+.stat-value.gold{color:var(--gold2)}.stat-value.green{color:var(--success)}.stat-value.blue{color:var(--info)}.stat-value.orange{color:var(--warning)}
+
+/* Table */
+.data-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.data-table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.data-table-title{font-size:14px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10px 14px;text-align:left;white-space:nowrap;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:11px}
+tr:hover td{background:rgba(255,255,255,0.02)}
+
+/* Buttons */
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,0.3)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,82,82,0.2)}
+.btn-success{background:var(--success-dim);color:var(--success);border:1px solid rgba(82,183,136,0.2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;width:min(680px,95vw);max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px}
+.modal-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:20px}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:6px}
+.form-field.full{grid-column:1/-1}
+.form-field label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.form-field input,.form-field select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.15s}
+.form-field input:focus,.form-field select:focus{border-color:var(--gold)}
+
+/* Badges */
+.badge{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif}
+.badge-admin{background:var(--gold-dim);color:var(--gold)}.badge-viewer{background:var(--info-dim);color:var(--info)}.badge-restricted{background:var(--danger-dim);color:var(--danger)}
+.badge-active{background:var(--success-dim);color:var(--success)}.badge-inactive{background:var(--danger-dim);color:var(--danger)}
+
+/* Column perms */
+.col-perms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:300px;overflow-y:auto;padding:4px}
+.col-check{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:var(--surface2);font-size:12px}
+.col-check input{accent-color:var(--gold);width:14px;height:14px}
+
+/* Toast */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:240px;display:flex;align-items:center;gap:10px;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.log-old{color:var(--danger);font-size:10px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-new{color:var(--success);font-size:10px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty-state{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">Rajnandini</div><div class="logo-sub">ERP Suite · Admin</div></div>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">A</div>
+    <div><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div>
+  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Navigation</div>
+    <a class="nav-item" href="/dashboard"><span class="icon">📦</span> Item Master</a>
+    <a class="nav-item active" href="/admin"><span class="icon">⚙️</span> Admin Panel</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="header">
+    <span style="font-size:18px">⚙️</span>
+    <span class="header-title">Admin Panel</span>
+    <div class="header-right">
+      <button class="btn btn-gold btn-sm" onclick="loadAll()">↻ Refresh</button>
+    </div>
+  </header>
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value gold" id="st-items">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active Users</div><div class="stat-value green" id="st-users">—</div></div>
+      <div class="stat-card"><div class="stat-label">Logs Today</div><div class="stat-value blue" id="st-logs">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Imports</div><div class="stat-value orange" id="st-imports">—</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('users')">👥 Users</div>
+      <div class="tab" onclick="showTab('logs')">📋 Audit Logs</div>
+      <div class="tab" onclick="showTab('imports')">📂 Import History</div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tab-users">
+      <div class="data-table">
+        <div class="data-table-header">
+          <div class="data-table-title">User Management</div>
+          <button class="btn btn-gold btn-sm" onclick="openCreateUser()">+ Add User</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Pages</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="7" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div id="tab-logs" style="display:none">
+      <div class="data-table">
+        <div class="data-table-header">
+          <div class="data-table-title">Audit Logs</div>
+          <div style="display:flex;gap:8px">
+            <select id="logActionFilter" class="form-field select" onchange="loadLogs()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none">
+              <option value="">All Actions</option>
+            </select>
+            <input id="logUserFilter" placeholder="Filter user…" oninput="debounce(loadLogs,350)()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--text);font-size:12px;outline:none;width:140px">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>Old Value</th><th>New Value</th><th>IP</th><th>Time</th></tr></thead>
+          <tbody id="logsTable"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--text-muted)" id="logPageInfo">—</span>
+          <div style="margin-left:auto;display:flex;gap:4px" id="logPagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Imports Tab -->
+    <div id="tab-imports" style="display:none">
+      <div class="data-table">
+        <div class="data-table-header"><div class="data-table-title">Import History</div></div>
+        <table>
+          <thead><tr><th>#</th><th>File</th><th>Imported By</th><th>Total</th><th>New</th><th>Updated</th><th>Skipped</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody id="importsTable"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Create/Edit User Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="userModalTitle">Add User</div>
+      <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Username</label>
+          <input id="u-username" type="text" placeholder="Enter username">
+        </div>
+        <div class="form-field">
+          <label>New Password</label>
+          <input id="u-password" type="password" placeholder="Enter new password">
+        </div>
+        <div class="form-field">
+          <label>Role</label>
+          <select id="u-role">
+            <option value="viewer">Viewer</option>
+            <option value="restricted">Restricted</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Status</label>
+          <select id="u-is_active">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="form-field" style="grid-column:1/-1">
+          <label>Allowed Pages</label>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px" id="pagesCheckboxes"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px">Column Permissions — Item Master</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="btn btn-outline btn-sm" onclick="checkAllCols('visible',true)">Show All</button>
+          <button class="btn btn-outline btn-sm" onclick="checkAllCols('visible',false)">Hide All</button>
+          <button class="btn btn-outline btn-sm" onclick="checkAllCols('editable',true)">Edit All</button>
+          <button class="btn btn-outline btn-sm" onclick="checkAllCols('editable',false)">Edit None</button>
+        </div>
+        <table style="width:100%;font-size:12px">
+          <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
+          <tbody id="colPermsTable"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('userModal')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveUser()">Save User</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const token = localStorage.getItem('token');
+const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token || loggedInUser.role !== 'admin') { window.location.href = loggedInUser.role ? '/dashboard' : '/'; }
+
+document.getElementById('userAvatar').textContent = (loggedInUser.username||'A')[0].toUpperCase();
+document.getElementById('userName').textContent = loggedInUser.username || '—';
+document.getElementById('userRole').textContent = loggedInUser.role || '—';
+
+const ALL_COLS = ["sku_code","item_name","size","category","location","cost","price","catalog","mrp","available_atp","fba_stock","fbf_stock","sjit_stock","updated"];
+const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"Up Price",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
+const PAGES = ["item_master","admin","logs","import"];
+const PAGES_LABELS = {item_master:"Item Master",admin:"Admin Panel",logs:"Audit Logs",import:"Import Data"};
+
+let logState = { page: 1, total: 0, totalPages: 0 };
+let editUserId = null;
+
+function debounce(fn, delay) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+
+async function loadAll() { await loadStats(); await loadUsers(); }
+window.addEventListener('load', () => { loadAll(); loadLogs(); loadImports(); loadLogActions(); });
+
+async function loadStats() {
+  const d = await apiFetch('/api/admin/stats');
+  if (!d) return;
+  document.getElementById('st-items').textContent = (d.total_items||0).toLocaleString();
+  document.getElementById('st-users').textContent = d.active_users||0;
+  document.getElementById('st-logs').textContent = d.logs_today||0;
+  document.getElementById('st-imports').textContent = d.total_imports||0;
+}
+
+async function loadUsers() {
+  const users = await apiFetch('/api/admin/users');
+  if (!users) return;
+  const tb = document.getElementById('usersTable');
+  const currentUserId = loggedInUser.user_id || loggedInUser.id;
+  if (!users.length) {
+    tb.innerHTML = '<tr><td colspan="7" class="empty-state">No users</td></tr>';
+    return;
+  }
+  let html = '';
+  for (let i = 0; i < users.length; i++) {
+    const u = users[i];
+    const uId = u.id;
+    const uName = u.username || '—';
+    const uRole = (u.role || 'viewer').toLowerCase();
+    const uPages = (u.allowed_pages || []).join(', ') || '—';
+    const uActive = u.is_active;
+    const uLast = u.last_login ? new Date(u.last_login).toLocaleString() : '—';
+    const delBtn = uId !== currentUserId ? '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + uId + ')">🗑</button>' : '';
+    html += '<tr><td>' + uId + '</td><td style="font-weight:600;color:var(--text)">' + uName + '</td><td><span class="badge badge-' + uRole + '">' + (u.role || 'viewer') + '</span></td><td style="font-family:\'DM Sans\',sans-serif;color:var(--text-muted)">' + uPages + '</td><td><span class="badge ' + (uActive ? 'badge-active' : 'badge-inactive') + '">' + (uActive ? 'Active' : 'Inactive') + '</span></td><td style="color:var(--text-muted)">' + uLast + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-outline btn-sm" onclick="openEditUser(' + uId + ')">✏ Edit</button>' + delBtn + '</div></td></tr>';
+  }
+  tb.innerHTML = html;
+}
+
+async function loadLogs() {
+  const action = document.getElementById('logActionFilter').value;
+  const username = document.getElementById('logUserFilter').value;
+  const params = new URLSearchParams({ page: logState.page, page_size: 50, action, username });
+  const d = await apiFetch(`/api/logs/?${params}`);
+  if (!d) return;
+  logState.total = d.total; logState.totalPages = d.total_pages;
+  document.getElementById('logPageInfo').textContent = `${d.total.toLocaleString()} entries`;
+  const tb = document.getElementById('logsTable');
+  tb.innerHTML = d.logs.map(l => `
+    <tr>
+      <td>${l.id}</td>
+      <td style="color:var(--gold2)">${l.username}</td>
+      <td><span class="badge ${l.action==='LOGIN'?'badge-active':(l.action==='DELETE'||l.action==='DELETE_USER')?'badge-inactive':'badge-viewer'}">${l.action}</span></td>
+      <td>${l.table_name||'—'}</td>
+      <td style="color:var(--text-muted)">${l.record_id||'—'}</td>
+      <td class="log-old" title="${l.old_values||''}">${l.old_values ? '…changed' : '—'}</td>
+      <td class="log-new" title="${l.new_values||''}">${l.new_values ? '…updated' : '—'}</td>
+      <td style="color:var(--text-muted)">${l.ip_address||'—'}</td>
+      <td style="color:var(--text-muted)">${new Date(l.timestamp).toLocaleString()}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" class="empty-state">No logs</td></tr>';
+  renderLogPagination();
+}
+
+function renderLogPagination() {
+  const pn = document.getElementById('logPagination');
+  pn.innerHTML = '';
+  for (let i = 1; i <= Math.min(logState.totalPages, 10); i++) {
+    const btn = document.createElement('button');
+    btn.className = `btn btn-sm ${i === logState.page ? 'btn-gold' : 'btn-outline'}`;
+    btn.textContent = i; btn.onclick = () => { logState.page = i; loadLogs(); };
+    pn.appendChild(btn);
+  }
+}
+
+async function loadLogActions() {
+  const actions = await apiFetch('/api/logs/actions');
+  if (!actions) return;
+  const sel = document.getElementById('logActionFilter');
+  actions.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+}
+
+async function loadImports() {
+  const d = await apiFetch('/api/admin/import-history');
+  if (!d) return;
+  const tb = document.getElementById('importsTable');
+  tb.innerHTML = d.map(h => `
+    <tr>
+      <td>${h.id}</td>
+      <td style="color:var(--text)">${h.filename}</td>
+      <td style="color:var(--gold2)">${h.imported_by}</td>
+      <td>${(h.total_rows||0).toLocaleString()}</td>
+      <td style="color:var(--success)">${(h.new_rows||0).toLocaleString()}</td>
+      <td style="color:var(--info)">${(h.updated_rows||0).toLocaleString()}</td>
+      <td style="color:var(--warning)">${(h.skipped_rows||0).toLocaleString()}</td>
+      <td><span class="badge ${h.status==='success'?'badge-active':'badge-inactive'}">${h.status}</span></td>
+      <td style="color:var(--text-muted)">${new Date(h.timestamp).toLocaleString()}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="9" class="empty-state">No imports yet</td></tr>';
+}
+
+function showTab(name) {
+  ['users','logs','imports'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((el, i) => {
+    el.classList.toggle('active', ['users','logs','imports'][i] === name);
+  });
+  if (name === 'logs') loadLogs();
+  if (name === 'imports') loadImports();
+}
+
+function buildUserModal(userData = null) {
+  editUserId = userData ? userData.id : null;
+  document.getElementById('userModalTitle').textContent = userData ? 'Edit User' : 'Add User';
+  
+  console.log('buildUserModal called with:', userData);
+  
+  // Username - show current for edit mode
+  var currentUsername = userData ? (userData.username || '') : '';
+  console.log('Setting username to:', currentUsername);
+  document.getElementById('u-username').value = currentUsername;
+  document.getElementById('u-username').disabled = false;
+  document.getElementById('u-username').disabled = false;
+  
+  // Password - clear for both modes, show different placeholder
+  document.getElementById('u-password').value = '';
+  if (userData) {
+    document.getElementById('u-password').placeholder = 'Leave blank to keep current';
+  } else {
+    document.getElementById('u-password').placeholder = 'Enter new password';
+  }
+  
+  // Role
+  document.getElementById('u-role').value = userData ? userData.role : 'viewer';
+  
+  // Status
+  var isActive = userData && userData.is_active !== false;
+  document.getElementById('u-is_active').value = isActive ? 'true' : 'false';
+
+  // Pages checkboxes
+  var pagesEl = document.getElementById('pagesCheckboxes');
+  var allowedPages = userData ? (userData.allowed_pages || []) : ['item_master'];
+  var pagesHtml = '';
+  for (var p = 0; p < PAGES.length; p++) {
+    var pageName = PAGES[p];
+    var isChecked = allowedPages.indexOf(pageName) >= 0;
+    pagesHtml += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">';
+    pagesHtml += '<input type="checkbox" class="page-cb" value="' + pageName + '"' + (isChecked ? ' checked' : '') + ' style="accent-color:var(--gold)">';
+    pagesHtml += PAGES_LABELS[pageName] + '</label>';
+  }
+  pagesEl.innerHTML = pagesHtml;
+
+  // Column perms
+  var colPermsTable = document.getElementById('colPermsTable');
+  var colPerms = userData && userData.column_permissions ? userData.column_permissions.item_master : {};
+  var visible = colPerms.visible || ALL_COLS;
+  var editable = colPerms.editable || [];
+  var colHtml = '';
+  for (var c = 0; c < ALL_COLS.length; c++) {
+    var colName = ALL_COLS[c];
+    var visChecked = visible.indexOf(colName) >= 0;
+    var editChecked = editable.indexOf(colName) >= 0;
+    colHtml += '<tr>';
+    colHtml += '<td style="font-family:\'DM Sans\',sans-serif">' + COL_LABELS[colName] + '</td>';
+    colHtml += '<td><input type="checkbox" class="col-vis" data-col="' + colName + '"' + (visChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    colHtml += '<td><input type="checkbox" class="col-edit" data-col="' + colName + '"' + (editChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    colHtml += '</tr>';
+  }
+  colPermsTable.innerHTML = colHtml;
+
+  openModal('userModal');
+}
+
+function openCreateUser() { buildUserModal(null); }
+
+async function openEditUser(id) {
+  console.log('openEditUser called with id:', id);
+  var users = await apiFetch('/api/admin/users');
+  if (!users) {
+    console.log('No users returned');
+    return;
+  }
+  console.log('All users:', users);
+  
+  var u = null;
+  for (var i = 0; i < users.length; i++) {
+    if (users[i].id === id) {
+      u = users[i];
+      break;
+    }
+  }
+  
+  console.log('Found user:', u);
+  if (u) {
+    editUserId = id;
+    buildUserModal(u);
+  } else {
+    console.log('User not found with id:', id);
+  }
+}
+
+function checkAllCols(type, val) {
+  document.querySelectorAll(type === 'visible' ? '.col-vis' : '.col-edit').forEach(cb => cb.checked = val);
+}
+
+async function saveUser() {
+  var username = document.getElementById('u-username').value.trim();
+  var password = document.getElementById('u-password').value;
+  var role = document.getElementById('u-role').value;
+  var isActive = document.getElementById('u-is_active').value === 'true';
+  
+  var allowedPages = [];
+  var pageCbs = document.querySelectorAll('.page-cb:checked');
+  for (var i = 0; i < pageCbs.length; i++) {
+    allowedPages.push(pageCbs[i].value);
+  }
+  
+  var visibleCols = [];
+  var visCbs = document.querySelectorAll('.col-vis:checked');
+  for (var i = 0; i < visCbs.length; i++) {
+    visibleCols.push(visCbs[i].getAttribute('data-col'));
+  }
+  
+  var editableCols = [];
+  var editCbs = document.querySelectorAll('.col-edit:checked');
+  for (var i = 0; i < editCbs.length; i++) {
+    editableCols.push(editCbs[i].getAttribute('data-col'));
+  }
+  
+  var colPerms = { item_master: { visible: visibleCols, editable: editableCols } };
+
+  if (!editUserId && (!username || !password)) { 
+    showToast('Username and password required for new user', 'error'); 
+    return; 
+  }
+
+  var res;
+  if (editUserId) {
+    var body = { 
+      username: username,
+      role: role, 
+      allowed_pages: allowedPages, 
+      column_permissions: colPerms, 
+      is_active: isActive 
+    };
+    if (password && password.length > 0) { 
+      body.password = password; 
+    }
+    res = await apiFetch('/api/admin/users/' + editUserId, { method: 'PUT', body: JSON.stringify(body) });
+  } else {
+    res = await apiFetch('/api/admin/users', { method: 'POST', body: JSON.stringify({ 
+      username: username, 
+      password: password, 
+      role: role, 
+      allowed_pages: allowedPages, 
+      column_permissions: colPerms, 
+      is_active: isActive 
+    }) });
+  }
+  if (res) { 
+    closeModal('userModal'); 
+    showToast(editUserId ? 'User updated' : 'User created', 'success'); 
+    loadUsers(); 
+    loadStats(); 
+  }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  var res = await apiFetch('/api/admin/users/' + id, { method: 'DELETE' });
+  if (res) { showToast('User deleted', 'success'); loadUsers(); loadStats(); }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function apiFetch(url, opts = {}) {
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...opts.headers }, ...opts });
+    if (res.status === 401) { localStorage.clear(); window.location.href = '/'; return null; }
+    if (!res.ok) { const d = await res.json(); showToast(d.detail || 'Error', 'error'); return null; }
+    return res.json();
+  } catch(e) { showToast('Connection error', 'error'); return null; }
+}
+
+function showToast(msg, type='info') {
+  const tc = document.getElementById('toastContainer');
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast`; el.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  tc.appendChild(el); setTimeout(() => el.remove(), 4000);
+}
+function logout() { localStorage.clear(); window.location.href = '/'; }
+</script>
+</body>
+</html>

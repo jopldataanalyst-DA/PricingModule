@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "role": "admin",
+    "allowed_pages": [
+      "item_master",
+      "admin",
+      "logs",
+      "import"
+    ],
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "username": "vikesh",
+    "password": "64407c29de10ca999f080bb94c7a14644fab84dbc47c165071824736a61374ec",
+    "role": "viewer",
+    "allowed_pages": [
+      "item_master"
+    ],
+    "is_active": true
+  },
+  {
+    "id": 3,
+    "username": "hitesh",
+    "password": "22354a3e6dc6fb244bc41c92656dcea971010620720641c5657e1746ab72b282",
+    "role": "restricted",
+    "allowed_pages": [
+      "item_master"
+    ],
+    "is_active": true
+  }
+]
