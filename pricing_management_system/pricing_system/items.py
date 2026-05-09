@@ -40,14 +40,18 @@ def load_items_db() -> List[Dict[str, Any]]:
 
 SELECTED_COLUMNS = [
     "sku_code", "item_name", "size", "category", "location",
-    "cost", "price", "catalog", "mrp", "up_price",
+    "child_remark", "parent_remark", "item_type",
+    "cost", "price", "catalog", "mrp", "up_price", "cost_into_percent",
     "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
 ]
 
 COLUMN_LABELS = {
     "sku_code": "Master SKU", "item_name": "Style ID / Parent SKU", "size": "Size",
     "category": "Category", "location": "Location", "cost": "Cost",
+    "child_remark": "Child Remark", "parent_remark": "Parent Remark",
+    "item_type": "Type",
     "price": "Wholesale Price", "catalog": "Catalog Name", "mrp": "MRP", "up_price": "Up Price",
+    "cost_into_percent": "Cost into %",
     "available_atp": "Uniware Stock", "fba_stock": "FBA", "fbf_stock": "FBF",
     "sjit_stock": "SJIT", "updated": "Launch Date"
 }
@@ -134,7 +138,7 @@ async def export_items(user=Depends(get_current_user)):
     check_page_access(user, "edit_items")
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT sku_code, item_name, size, category, location, cost, price, catalog, mrp, available_atp, fba_stock, fbf_stock, sjit_stock, updated FROM stock_items")
+    cursor.execute("SELECT sku_code, item_name, size, category, location, child_remark, parent_remark, item_type, cost, price, catalog, mrp, up_price, cost_into_percent, available_atp, fba_stock, fbf_stock, sjit_stock, updated FROM stock_items")
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -142,9 +146,9 @@ async def export_items(user=Depends(get_current_user)):
     # Create header with labels
     header_labels = [COLUMN_LABELS.get(c, c) for c in [
         "sku_code", "item_name", "size", "category", "location",
-        "cost", "price", "catalog", "mrp",
-        "available_atp", "fba_stock", "fbf_stock", "sjit_stock",
-        "updated"
+        "child_remark", "parent_remark", "item_type",
+        "cost", "price", "catalog", "mrp", "up_price", "cost_into_percent",
+        "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
     ]] + ["Action"]
     
     output = io.StringIO()
@@ -154,8 +158,10 @@ async def export_items(user=Depends(get_current_user)):
     for row in rows:
         row_data = [
             row.get("sku_code"), row.get("item_name"), row.get("size"), 
-            row.get("category"), row.get("location"), row.get("cost"), 
-            row.get("price"), row.get("catalog"), row.get("mrp"),
+            row.get("category"), row.get("location"), row.get("child_remark"),
+            row.get("parent_remark"), row.get("item_type"), row.get("cost"), 
+            row.get("price"), row.get("catalog"), row.get("mrp"), row.get("up_price"),
+            row.get("cost_into_percent"),
             row.get("available_atp"), row.get("fba_stock"), row.get("fbf_stock"), 
             row.get("sjit_stock"), row.get("updated"), ""
         ]
@@ -249,9 +255,13 @@ async def import_items(
         try:
             if action == "add":
                 cursor.execute("""
-                    INSERT INTO item_master (`Master SKU`, `Style ID / Parent SKU`, Size, Category, Loc)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (sku, get_val("item_name"), get_val("size"), get_val("category"), get_val("location")))
+                    INSERT INTO item_master (`Master SKU`, `Style ID / Parent SKU`, Size, Category, Loc, `Child Remark`, `Parent Remark`, `Type`)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    sku, get_val("item_name"), get_val("size"), get_val("category"),
+                    get_val("location"), get_val("child_remark"),
+                    get_val("parent_remark"), get_val("item_type")
+                ))
 
                 cursor.execute("""
                     INSERT INTO catalog_pricing (master_sku, launch_date, catalog_name, cost, wholesale_price, up_price)
@@ -265,9 +275,14 @@ async def import_items(
             elif action == "replace":
                 cursor.execute("""
                     UPDATE item_master
-                    SET `Style ID / Parent SKU`=%s, Size=%s, Category=%s, Loc=%s
+                    SET `Style ID / Parent SKU`=%s, Size=%s, Category=%s, Loc=%s,
+                        `Child Remark`=%s, `Parent Remark`=%s, `Type`=%s
                     WHERE `Master SKU`=%s
-                """, (get_val("item_name"), get_val("size"), get_val("category"), get_val("location"), sku))
+                """, (
+                    get_val("item_name"), get_val("size"), get_val("category"),
+                    get_val("location"), get_val("child_remark"),
+                    get_val("parent_remark"), get_val("item_type"), sku
+                ))
 
                 cursor.execute("""
                     INSERT INTO catalog_pricing (master_sku, launch_date, catalog_name, cost, wholesale_price, up_price)

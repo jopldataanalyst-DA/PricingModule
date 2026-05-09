@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Item Master — Rajnandini ERP</title>
+<title>Amazon Pricing — Rajnandini ERP</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root { --bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724; --gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15); --green:#2d6a4f;--green-light:#40916c;--green-dim:rgba(64,145,108,0.15); --text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550; --border:#222c28;--border2:#2a3530; --danger:#e05252;--danger-dim:rgba(224,82,82,0.12); --warning:#f4a261;--warning-dim:rgba(244,162,97,0.12); --info:#4db8d4;--info-dim:rgba(77,184,212,0.12); --success:#52b788;--success-dim:rgba(82,183,136,0.12); --sidebar-w:220px;--header-h:60px;--radius:10px; }
@@ -38,6 +38,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .search-box input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;width:100%}
 .search-box input::placeholder{color:var(--text-muted)}
 .filter-select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;min-width:120px}
+.column-picker{position:relative}
+.column-menu{position:absolute;right:0;top:calc(100% + 6px);width:260px;max-height:360px;overflow:auto;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.45);padding:8px;display:none;z-index:40}
+.column-menu.open{display:block}
+.column-option{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--text);cursor:pointer}
+.column-option:hover{background:var(--surface3)}
+.column-option input{accent-color:var(--gold)}
+.column-menu-actions{display:flex;gap:6px;padding:6px 4px 8px;border-bottom:1px solid var(--border2);margin-bottom:4px}
+.clear-filter-btn{display:none}
+.clear-filter-btn.show{display:flex}
+.th-inner{display:flex;align-items:center;gap:6px}
+.th-label{cursor:pointer}
+.filter-btn{width:22px;height:22px;border-radius:5px;border:1px solid transparent;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px}
+.filter-btn:hover,.filter-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.filter-menu{position:fixed;width:280px;max-height:380px;overflow:hidden;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,0.45);padding:8px;display:none;z-index:2000}
+.filter-menu.open{display:block}
+.filter-menu-search{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 9px;font-size:12px;outline:none;margin-bottom:8px}
+.filter-menu-list{max-height:230px;overflow:auto;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);padding:4px 0;margin:6px 0}
+.filter-menu-actions{display:flex;gap:6px;align-items:center}
 .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:6px}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208}
 .btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,0.3)}
@@ -52,7 +70,6 @@ th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10
 th:hover{color:var(--gold)}.th.sorted{color:var(--gold)}
 td{padding:9px 12px;border-bottom:1px solid rgba(34,44,40,0.6);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:11px}
 tr:hover td{background:rgba(255,255,255,0.02)}
-tr.selected td{background:var(--gold-dim)}
 .badge-avail{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif}
 .badge-yes{background:var(--success-dim);color:var(--success)}.badge-no{background:var(--danger-dim);color:var(--danger)}
 .pagination{background:var(--surface);border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -87,6 +104,30 @@ tr.selected td{background:var(--gold-dim)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .actions-cell{display:flex;gap:4px}
 .col-blurred{filter:blur(4px);pointer-events:none}
+
+/* ── Override panel ─────────────────────────────────────────────────── */
+.override-panel{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:5px 10px;transition:border-color .15s}
+.override-panel:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,110,.1)}
+.op-label{font-size:10px;color:var(--text-muted);font-weight:600;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.op-input{background:none;border:none;outline:none;color:var(--gold2);font-size:13px;font-family:'DM Mono',monospace;font-weight:600;width:64px;text-align:right}
+.op-suffix{font-size:11px;color:var(--text-muted);margin-left:1px;flex-shrink:0}
+.op-clear{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:11px;padding:0 1px;line-height:1;transition:color .15s;display:none;margin-left:2px;flex-shrink:0}
+.op-clear.show{display:block}
+.op-clear:hover{color:var(--danger)}
+.btn-apply{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208;border:none;padding:6px 14px;font-size:11px;font-weight:700;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.btn-apply:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,.3)}
+.btn-apply.has-override{background:var(--gold);box-shadow:0 0 0 2px rgba(201,169,110,.35)}
+.btn-reset-ov{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,82,82,.25);padding:6px 12px;font-size:11px;font-weight:600;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap;display:none;align-items:center;gap:4px}
+.btn-reset-ov.show{display:flex}
+.btn-reset-ov:hover{background:rgba(224,82,82,.2)}
+.override-badge{background:var(--gold-dim);border:1px solid rgba(201,169,110,.3);color:var(--gold2);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;display:none;font-family:'DM Sans',sans-serif}
+.override-badge.show{display:inline-flex;align-items:center;gap:4px}
+
+/* ── Recalculated cell highlight ────────────────────────────────────── */
+@keyframes cellFlash{0%{background:rgba(201,169,110,.22)}100%{background:transparent}}
+td.recalc{animation:cellFlash .5s ease forwards;color:var(--gold2) !important}
+td.recalc-neg{animation:cellFlash .5s ease forwards;color:var(--danger) !important}
+td.recalc,td.recalc-neg{font-weight:600}
 </style>
 </head>
 <body>
@@ -98,8 +139,8 @@ tr.selected td{background:var(--gold-dim)}
 </div>
 <nav class="nav-section" id="navSection">
 <div class="nav-label">Menu</div>
-<a class="nav-item active" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
-<a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
+<a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
+<a class="nav-item active" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
 <a class="nav-item" href="#" id="nav-import" onclick="openImport()"><span class="icon">⬆️</span> Import Data</a>
 <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
 <div class="nav-label">Reports</div>
@@ -111,8 +152,8 @@ tr.selected td{background:var(--gold-dim)}
 </aside>
 <main class="main">
 <header class="header">
-<span class="icon" style="font-size:18px">📦</span>
-<span class="header-title">Item Master</span>
+<span class="icon" style="font-size:18px">🛒</span>
+<span class="header-title">Amazon Pricing</span>
 <span class="header-badge" id="headerBadge">Loading…</span>
 <div class="header-right">
 <span class="sync-time" id="syncTime">—</span>
@@ -128,9 +169,31 @@ tr.selected td{background:var(--gold-dim)}
 </div>
 <div class="toolbar">
 <div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search SKU, item name, brand…" oninput="debounceSearch()"></div>
-<select class="filter-select" id="filterStatus" onchange="loadItems()"><option value="">All Statuses</option></select>
-<select class="filter-select" id="filterAvail" onchange="loadItems()"><option value="">All Availability</option><option value="Yes">Available</option><option value="No">Not Available</option></select>
-<select class="filter-select" id="filterCategory" onchange="loadItems()"><option value="">All Categories</option></select>
+<div class="column-picker">
+<button class="btn btn-outline btn-sm" onclick="toggleColumnMenu(event)">Columns</button>
+<div class="column-menu" id="columnMenu"></div>
+</div>
+<button class="btn btn-outline btn-sm clear-filter-btn" id="clearFiltersBtn" onclick="clearAllFilters()">Clear Filters</button>
+
+<!-- Cost % override -->
+<div class="override-panel" title="Override Cost Into % for visible rows on Apply">
+  <span class="op-label">Cost %</span>
+  <input class="op-input" type="number" id="costPctInput" min="0" max="99" step="0.5" placeholder="23">
+  <span class="op-suffix">%</span>
+  <button class="op-clear" id="costPctClear" title="Clear" onclick="clearInput('costPctInput','costPctClear')">✕</button>
+</div>
+
+<!-- Cost ₹ override -->
+<div class="override-panel" title="Override Cost ₹ for visible rows on Apply">
+  <span class="op-label">Cost ₹</span>
+  <input class="op-input" type="number" id="costAmtInput" min="0" step="1" placeholder="1200">
+  <button class="op-clear" id="costAmtClear" title="Clear" onclick="clearInput('costAmtInput','costAmtClear')">✕</button>
+</div>
+
+<button class="btn-apply" id="applyOverrideBtn" onclick="applyOverride()">▶ Apply</button>
+<button class="btn-reset-ov" id="resetOverrideBtn" onclick="resetAllOverrides()">✕ Reset</button>
+<span class="override-badge" id="overrideBadge">● 0 overridden</span>
+
 <div style="margin-left:auto;display:flex;gap:8px;" id="adminActions"></div>
 </div>
 <div class="table-wrap" id="tableWrap"><div class="table-loading"><div class="spinner"></div> Loading items…</div></div>
@@ -162,13 +225,213 @@ tr.selected td{background:var(--gold-dim)}
 </div>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+<div class="filter-menu" id="filterMenu"></div>
 <script>
 var API = '';
 var token = localStorage.getItem('token');
 var user = JSON.parse(localStorage.getItem('user') || '{}');
 if (!token) window.location.href = '/';
 
-var state = { page: 1, pageSize: 50, total: 0, totalPages: 0, sortBy: 'id', sortDir: 'asc', columns: { visible: [], editable: [], labels: {} }, editItem: null, searchTimer: null };
+var COLUMN_STORAGE_KEY = 'amazonPricingColumns:v2';
+var state = {
+  page:1, pageSize:50, total:0, totalPages:0,
+  sortBy:'id', sortDir:'asc',
+  columns:{ visible:[], all:[], editable:[], labels:{} },
+  editItem:null, searchTimer:null, requestSeq:0,
+  activeFilters:{}, currentItems:[],
+  filterMenuColumn:null, filterMenuValues:[],
+  // overriddenSkus: Map of item.id → { original: {...item}, computed: {...newVals} }
+  // Persists across filter/page/sort changes until Reset is clicked
+  overriddenSkus: {}
+};
+
+// ─── Pricing engine ──────────────────────────────────────────────────────────
+var PE = (function(){
+  function n(v){ var x=parseFloat(String(v==null?'':v).replace(/,/g,'')); return isNaN(x)?0:x; }
+  function r2(v){ return Math.round(v*100)/100; }
+
+  // cost       = cost value to use (₹)
+  // costIntoPct = cost-into percentage as a number e.g. 23 (NOT 0.23)
+  // item        = original row (for pre-computed rate-card charges)
+  function calc(item, cost, costIntoPct){
+    var returnCharge  = n(item.return_charge) || 59;
+    var costAfter     = cost > 0 ? cost / (100 - costIntoPct) * 100 : 0;
+    var gstOnReturn   = cost > 0 ? returnCharge * 0.18 : 0;
+    var finalTp       = cost > 0 ? costAfter + returnCharge + gstOnReturn : 0;
+
+    // Rate-card charges are pre-computed server-side per category/price-band.
+    // Reuse them — only TP changes client-side.
+    var commPct         = n(item.commission_percent);   // e.g. 12.5
+    var fixedClosingFee = n(item.fixed_closing_fee);
+    var fbaPickPack     = n(item.fba_pick_pack);
+    var techFee         = n(item.technology_fee);
+    var shippingCharged = n(item.shipping_fee_charged);
+    var fixedCharges    = fixedClosingFee + fbaPickPack + techFee + shippingCharged;
+
+    var commRate  = commPct / 100;
+    if(commRate >= 1) commRate = 0;
+
+    var sp           = Math.round(commRate < 1 ? (finalTp + fixedCharges)/(1-commRate) : finalTp + fixedCharges);
+    var commAmount   = sp * commRate;
+    var totalCharges = commAmount + fixedCharges;
+    var sett         = sp - totalCharges;
+    var netProfit    = sett - returnCharge - gstOnReturn - cost;
+    var netPctSp     = sp     > 0 ? netProfit/sp*100     : 0;
+    var netPctTp     = finalTp> 0 ? netProfit/finalTp*100 : 0;
+
+    return {
+      cost:                     r2(cost),
+      cost_into_percent:        r2(costIntoPct),
+      cost_after_percent:       r2(costAfter),
+      gst_on_return:            r2(gstOnReturn),
+      final_tp:                 r2(finalTp),
+      required_selling_price:   sp,
+      commission_amount:        r2(commAmount),
+      total_charges:            r2(totalCharges),
+      final_value_after_charges:r2(sett),
+      sett_acc_panel:           r2(sett),
+      net_profit_on_sp:         r2(netProfit),
+      net_profit_percent_on_sp: r2(netPctSp),
+      net_profit_percent_on_tp: r2(netPctTp)
+    };
+  }
+
+  return {
+    // Both overrides applied together; pass null to keep original value
+    recalc: function(item, overridePct, overrideAmt){
+      var cost       = overrideAmt  !== null ? overrideAmt               : n(item.cost);
+      var costIntoPct= overridePct  !== null ? overridePct               : n(item.cost_into_percent);
+      return calc(item, cost, costIntoPct);
+    }
+  };
+})();
+
+// Fields that change when pricing is recalculated
+var RECALC_FIELDS = [
+  'cost','cost_into_percent','cost_after_percent','gst_on_return','final_tp',
+  'required_selling_price','commission_amount','total_charges',
+  'final_value_after_charges','sett_acc_panel',
+  'net_profit_on_sp','net_profit_percent_on_sp','net_profit_percent_on_tp'
+];
+var PCT_COLS   = ['cost_into_percent','commission_percent','whf_percent_on_shipping','net_profit_percent_on_sp','net_profit_percent_on_tp'];
+var MONEY_COLS = ['cost','mrp','cost_after_percent','return_charge','gst_on_return','final_tp',
+  'required_selling_price','commission_amount','fixed_closing_fee','fba_pick_pack',
+  'technology_fee','full_shipping_fee','shipping_fee_charged','total_charges',
+  'final_value_after_charges','old_daily_sp','old_deal_sp','sett_acc_panel','net_profit_on_sp'];
+
+function fmtCell(col, val){
+  if(val===null||val===undefined) return '-';
+  if(PCT_COLS.indexOf(col)   !== -1) return parseFloat(val).toFixed(2)+'%';
+  if(MONEY_COLS.indexOf(col) !== -1) return '₹'+parseFloat(val).toFixed(2);
+  return String(val);
+}
+
+// ─── Override UI helpers ─────────────────────────────────────────────────────
+function _inputVal(id){
+  var v = document.getElementById(id).value.trim();
+  return (v===''||isNaN(parseFloat(v))) ? null : parseFloat(v);
+}
+function clearInput(inputId, clearBtnId){
+  document.getElementById(inputId).value = '';
+  document.getElementById(clearBtnId).classList.remove('show');
+}
+function _syncBadge(){
+  var count = Object.keys(state.overriddenSkus).length;
+  var badge = document.getElementById('overrideBadge');
+  var resetBtn = document.getElementById('resetOverrideBtn');
+  var applyBtn = document.getElementById('applyOverrideBtn');
+  if(count > 0){
+    badge.textContent  = '● ' + count.toLocaleString() + ' overridden';
+    badge.classList.add('show');
+    resetBtn.classList.add('show');
+    applyBtn.classList.add('has-override');
+  } else {
+    badge.classList.remove('show');
+    resetBtn.classList.remove('show');
+    applyBtn.classList.remove('has-override');
+  }
+}
+
+// Show ✕ per input as user types
+function _wireInputClears(){
+  [['costPctInput','costPctClear'],['costAmtInput','costAmtClear']].forEach(function(pair){
+    var inp = document.getElementById(pair[0]);
+    var clr = document.getElementById(pair[1]);
+    inp.addEventListener('input', function(){
+      clr.classList.toggle('show', this.value.trim() !== '');
+    });
+    inp.addEventListener('keydown', function(e){
+      if(e.key === 'Enter') applyOverride();
+    });
+  });
+}
+
+function applyOverride(){
+  var overridePct = _inputVal('costPctInput');
+  var overrideAmt = _inputVal('costAmtInput');
+
+  // Need at least one value
+  if(overridePct === null && overrideAmt === null){
+    showToast('Enter a Cost % or Cost ₹ value (or both) to apply', 'error');
+    return;
+  }
+  if(overridePct !== null && (overridePct < 0 || overridePct >= 100)){
+    showToast('Cost % must be between 0 and 99', 'error');
+    return;
+  }
+  if(overrideAmt !== null && overrideAmt < 0){
+    showToast('Cost ₹ must be a positive number', 'error');
+    return;
+  }
+
+  // Apply only to currently visible rows (respects current filter/search/page)
+  var applied = 0;
+  state.currentItems.forEach(function(item){
+    var newVals = PE.recalc(item, overridePct, overrideAmt);
+    state.overriddenSkus[item.id] = { computed: newVals };
+    applied++;
+  });
+
+  _syncBadge();
+  _paintOverrides();
+
+  var desc = [];
+  if(overridePct !== null) desc.push('Cost % = ' + overridePct + '%');
+  if(overrideAmt !== null) desc.push('Cost = ₹' + overrideAmt);
+  showToast('Applied to ' + applied + ' visible rows — ' + desc.join(', '), 'info');
+}
+
+function resetAllOverrides(){
+  state.overriddenSkus = {};
+  _syncBadge();
+  // Re-render from clean original data
+  renderTable(state.currentItems);
+}
+
+// Paint override values onto visible rows (called after render)
+function _paintOverrides(){
+  if(!Object.keys(state.overriddenSkus).length) return;
+  var cols = state.columns.visible;
+
+  state.currentItems.forEach(function(item){
+    var ov = state.overriddenSkus[item.id];
+    if(!ov) return;
+    var rowEl = document.getElementById('row-'+item.id);
+    if(!rowEl) return;
+    var tds = rowEl.querySelectorAll('td');
+    cols.forEach(function(col, c){
+      if(RECALC_FIELDS.indexOf(col) === -1) return;
+      if(!(col in ov.computed)) return;
+      var td = tds[c + 1]; // +1 for leading # cell
+      if(!td) return;
+      var val = ov.computed[col];
+      td.innerHTML = fmtCell(col, val);
+      var isNeg = (col==='net_profit_on_sp'||col==='net_profit_percent_on_sp'||col==='net_profit_percent_on_tp') && parseFloat(val)<0;
+      td.className = isNeg ? 'recalc-neg' : 'recalc';
+      void td.offsetWidth; // re-trigger flash animation
+    });
+  });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   var savedPageSize = localStorage.getItem('pageSize');
@@ -176,16 +439,15 @@ document.addEventListener('DOMContentLoaded', function() {
     state.pageSize = parseInt(savedPageSize);
     document.getElementById('pageSizeSelect').value = savedPageSize;
   }
+  _wireInputClears();
 });
 
-(function() {
+(async function() {
   try {
-    console.log('Dashboard starting...');
     setupUser();
-    loadColumns();
+    await loadColumns();
     loadFilterOptions();
-    loadItems();
-    console.log('After loadItems call');
+    await loadItems();
   } catch(e) {
     console.error('Init error:', e);
     document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:yellow">Error: ' + e.message + '</div>';
@@ -209,84 +471,161 @@ function setupUser() {
 }
 
 async function loadColumns() {
-  var res = await apiFetch('/api/items/columns');
-  if (res) state.columns = res;
+  var res = await apiFetch('/api/amazon/columns');
+  if (!res) return;
+  var saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem(COLUMN_STORAGE_KEY) || '[]');
+  } catch(e) {
+    saved = [];
+  }
+  var allCols = res.all || res.visible || [];
+  var validSaved = saved.filter(function(col) { return allCols.indexOf(col) >= 0; });
+  state.columns = res;
+  state.columns.all = allCols;
+  state.columns.visible = validSaved.length ? validSaved : (res.visible || []);
+  renderColumnMenu();
 }
 
 async function loadFilterOptions() {
-  var res = await apiFetch('/api/items/filters');
-  if (!res) return;
-  var statusSel = document.getElementById('filterStatus');
-  for (var s = 0; s < res.statuses.length; s++) {
-    var o = document.createElement('option');
-    o.value = res.statuses[s];
-    o.textContent = res.statuses[s];
-    statusSel.appendChild(o);
+  return;
+}
+
+function renderColumnMenu() {
+  var menu = document.getElementById('columnMenu');
+  if (!menu) return;
+  var labels = state.columns.labels || {};
+  var allCols = state.columns.all || state.columns.visible || [];
+  var selected = state.columns.visible || [];
+  var html = '<div class="column-menu-actions"><button class="btn btn-outline btn-sm" onclick="resetColumns(event)">Default</button><button class="btn btn-outline btn-sm" onclick="showAllColumns(event)">All</button></div>';
+  for (var i = 0; i < allCols.length; i++) {
+    var col = allCols[i];
+    var checked = selected.indexOf(col) >= 0 ? ' checked' : '';
+    html += '<label class="column-option"><input type="checkbox" value="' + col + '"' + checked + ' onchange="toggleColumn(this)"><span>' + (labels[col] || col) + '</span></label>';
   }
-  var catSel = document.getElementById('filterCategory');
-  for (var c = 0; c < res.categories.length; c++) {
-    var o = document.createElement('option');
-    o.value = res.categories[c];
-    o.textContent = res.categories[c];
-    catSel.appendChild(o);
+  menu.innerHTML = html;
+}
+
+function setVisibleColumns(cols) {
+  var allCols = state.columns.all || [];
+  state.columns.visible = cols.filter(function(col) { return allCols.indexOf(col) >= 0; });
+  localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify(state.columns.visible));
+  renderColumnMenu();
+  loadItems();
+}
+
+function toggleColumn(input) {
+  var cols = state.columns.visible.slice();
+  if (input.checked && cols.indexOf(input.value) < 0) cols.push(input.value);
+  if (!input.checked) cols = cols.filter(function(col) { return col !== input.value; });
+  if (cols.length === 0) {
+    input.checked = true;
+    return;
   }
+  setVisibleColumns(cols);
+}
+
+function resetColumns(event) {
+  if (event) event.stopPropagation();
+  localStorage.removeItem(COLUMN_STORAGE_KEY);
+  apiFetch('/api/amazon/columns').then(function(res) {
+    if (!res) return;
+    state.columns.visible = res.visible || [];
+    renderColumnMenu();
+    loadItems();
+  });
+}
+
+function showAllColumns(event) {
+  if (event) event.stopPropagation();
+  setVisibleColumns((state.columns.all || []).slice());
+}
+
+function toggleColumnMenu(event) {
+  if (event) event.stopPropagation();
+  document.getElementById('columnMenu').classList.toggle('open');
+}
+
+document.addEventListener('click', function(event) {
+  var picker = document.querySelector('.column-picker');
+  var menu = document.getElementById('columnMenu');
+  if (picker && menu && !picker.contains(event.target)) menu.classList.remove('open');
+  var filterMenu = document.getElementById('filterMenu');
+  if (filterMenu && !filterMenu.contains(event.target) && !event.target.classList.contains('filter-btn')) {
+    filterMenu.classList.remove('open');
+  }
+});
+
+function escapeHtml(value) {
+  return String(value === undefined || value === null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 async function loadItems() {
+  var requestId = ++state.requestSeq;
   var wrap = document.getElementById('tableWrap');
-  wrap.innerHTML = '<div class="table-loading"><div class="spinner"></div> Loading…</div>';
-  var params = 'page=' + state.page + '&page_size=' + state.pageSize + '&search=' + encodeURIComponent(document.getElementById('searchInput').value) + '&status_filter=' + encodeURIComponent(document.getElementById('filterStatus').value) + '&availability=' + encodeURIComponent(document.getElementById('filterAvail').value) + '&category=' + encodeURIComponent(document.getElementById('filterCategory').value) + '&sort_by=' + state.sortBy + '&sort_dir=' + state.sortDir;
-  var data = await apiFetch('/api/items/?' + params);
-  console.log('API response:', data);
-  
-  // Fallback: show loading timeout
   var loadTimeout = setTimeout(function() {
-    document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:yellow">Loading taking too long... check console</div>';
+    if (requestId === state.requestSeq) {
+      document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:yellow">Loading taking too long... check console</div>';
+    }
   }, 5000);
+  wrap.innerHTML = '<div class="table-loading"><div class="spinner"></div> Loading…</div>';
+  var params = 'page=' + state.page +
+    '&page_size=' + state.pageSize +
+    '&search=' + encodeURIComponent(document.getElementById('searchInput').value) +
+    '&sort_by=' + encodeURIComponent(state.sortBy) +
+    '&sort_dir=' + encodeURIComponent(state.sortDir) +
+    '&filters=' + encodeURIComponent(JSON.stringify(state.activeFilters));
+  var data = await apiFetch('/api/amazon/?' + params);
+  clearTimeout(loadTimeout);
+
+  if (requestId !== state.requestSeq) {
+    return;
+  }
   
   if (!data) {
-    clearTimeout(loadTimeout);
     document.getElementById('tableWrap').innerHTML = '<div style="padding:40px;color:var(--danger)">No data returned</div>';
     return;
   }
   
-  clearTimeout(loadTimeout);
   state.total = data.total;
   state.totalPages = data.total_pages;
+  state.currentItems = data.items || [];
   renderTable(data.items);
   renderPagination();
   updateStats(data.stats);
   document.getElementById('headerBadge').textContent = data.total.toLocaleString() + ' items';
   document.getElementById('syncTime').textContent = 'Last load: ' + new Date().toLocaleTimeString();
+  _syncBadge();
 }
 
 function renderTable(items) {
-  console.log('renderTable called with', items.length, 'items');
-  if (items.length > 0) console.log('First item:', items[0]);
-  
   var cols = state.columns.visible;
   var editable = state.columns.editable;
   var labels = state.columns.labels;
-  var isAdmin = user.role === 'admin';
+  var showActions = editable.length > 0;
 
   var html = '<table><thead><tr>';
-  if (isAdmin) html += '<th style="width:30px"><input type="checkbox" onchange="toggleAll(this)"></th>';
   html += '<th>#</th>';
   
   for (var c = 0; c < cols.length; c++) {
     var col = cols[c];
     var active = state.sortBy === col ? 'sorted' : '';
     var arrow = state.sortBy === col ? (state.sortDir === 'asc' ? ' ↑' : ' ↓') : '';
-    html += '<th class="' + active + '" onclick="sortBy(\'' + col + '\')">' + (labels[col] || col) + arrow + '</th>';
+    var filterActive = state.activeFilters[col] && state.activeFilters[col].length ? ' active' : '';
+    html += '<th class="' + active + '"><div class="th-inner"><span class="th-label" onclick="sortBy(\'' + col + '\')">' + escapeHtml(labels[col] || col) + arrow + '</span><button class="filter-btn' + filterActive + '" onclick="openFilterMenu(event,\'' + col + '\')">▾</button></div></th>';
   }
-  if (editable.length > 0 || isAdmin) html += '<th>Actions</th>';
+  if (showActions) html += '<th>Actions</th>';
   html += '</tr></thead><tbody>';
 
   for (var i = 0; i < items.length; i++) {
     var item = items[i];
     var itemId = item.id;
     html += '<tr id="row-' + itemId + '">';
-    if (isAdmin) html += '<td><input type="checkbox" class="row-check" value="' + itemId + '"></td>';
     html += '<td style="color:var(--text-muted)">' + itemId + '</td>';
     
     for (var c = 0; c < cols.length; c++) {
@@ -294,32 +633,25 @@ function renderTable(items) {
       var val = item[col];
       if (val === undefined || val === null) val = '-';
       
-      if (col === 'availability') {
-        val = '<span class="badge-avail ' + (val === 'Yes' ? 'badge-yes' : 'badge-no') + '">' + val + '</span>';
-      } else if (col === 'status') {
-        var cls = (val === 'Not Found') ? 'badge-notfound' : 'badge-found';
-        val = '<span class="badge-avail ' + cls + '">' + val + '</span>';
-      } else if (col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock') {
+      if (col === 'total_stock' || col === 'uniware' || col === 'fba' || col === 'sjit' || col === 'fbf') {
         if (val !== '-') {
           val = parseInt(val).toLocaleString();
           var color = parseInt(val) > 0 ? 'var(--info)' : 'var(--text-muted)';
           val = '<span style="color:' + color + '">' + val + '</span>';
         }
-      } else if ((col === 'price' || col === 'cost' || col === 'mrp') && val !== '-') {
-        val = '₹' + parseFloat(val).toFixed(2);
-      } else if (col === 'cost_into_percent' && val !== '-') {
+      } else if (['cost_into_percent', 'commission_percent', 'whf_percent_on_shipping', 'net_profit_percent_on_sp', 'net_profit_percent_on_tp'].indexOf(col) !== -1 && val !== '-') {
         val = parseFloat(val).toFixed(2) + '%';
+      } else if (['cost', 'mrp', 'cost_after_percent', 'return_charge', 'gst_on_return', 'final_tp', 'required_selling_price', 'commission_amount', 'fixed_closing_fee', 'fba_pick_pack', 'technology_fee', 'full_shipping_fee', 'shipping_fee_charged', 'total_charges', 'final_value_after_charges', 'old_daily_sp', 'old_deal_sp', 'sett_acc_panel', 'net_profit_on_sp'].indexOf(col) !== -1 && val !== '-') {
+        val = '₹' + parseFloat(val).toFixed(2);
+      } else {
+        val = escapeHtml(val);
       }
       html += '<td>' + val + '</td>';
     }
-    if (editable.length > 0 || isAdmin) {
+    if (showActions) {
       html += '<td><div class="actions-cell">';
-      if (editable.length > 0 || isAdmin) {
+      if (editable.length > 0) {
         html += '<button class="btn btn-outline btn-sm" id="edit-btn-' + itemId + '" onclick="openEdit(' + itemId + '); event.stopPropagation();">✏</button>';
-        console.log('Created edit button for item:', itemId);
-      }
-      if (isAdmin) {
-        html += '<button class="btn btn-danger btn-sm" onclick="deleteItem(' + itemId + ')">🗑</button>';
       }
       html += '</div></td>';
     }
@@ -327,21 +659,25 @@ function renderTable(items) {
   }
 
   if (items.length === 0) {
-    var colspan = cols.length + (isAdmin ? 3 : 2);
+    var colspan = cols.length + (showActions ? 2 : 1);
     html += '<tr><td colspan="' + colspan + '" style="text-align:center;padding:40px;color:var(--text-muted)">No items found</td></tr>';
   }
 
   html += '</tbody></table>';
   document.getElementById('tableWrap').innerHTML = html;
+  updateClearFiltersButton();
+  // Re-paint any persisted overrides for visible rows
+  _paintOverrides();
 }
 
 function updateStats(stats) {
   if (!stats) return;
-  document.getElementById('s-total').textContent = (stats.total_skus || 0).toLocaleString();
-  document.getElementById('s-avail').textContent = (stats.total_available || 0).toLocaleString();
-  document.getElementById('s-fba').textContent = (stats.total_fba || 0).toLocaleString();
-  document.getElementById('s-sjit').textContent = (stats.total_sjit || 0).toLocaleString();
-  document.getElementById('s-fbf').textContent = (stats.total_fbf || 0).toLocaleString();
+  var uniwareTotal = stats.total_available !== undefined ? stats.total_available : stats.total_stock;
+  document.getElementById('s-total').textContent = Number(stats.total_skus || 0).toLocaleString();
+  document.getElementById('s-avail').textContent = Number(uniwareTotal || 0).toLocaleString();
+  document.getElementById('s-fba').textContent = Number(stats.total_fba || 0).toLocaleString();
+  document.getElementById('s-sjit').textContent = Number(stats.total_sjit || 0).toLocaleString();
+  document.getElementById('s-fbf').textContent = Number(stats.total_fbf || 0).toLocaleString();
 }
 
 function renderPagination() {
@@ -379,12 +715,100 @@ function renderPagination() {
 function changePage(delta) { state.page = Math.max(1, Math.min(state.totalPages, state.page + delta)); loadItems(); }
 function sortBy(col) { if (state.sortBy === col) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; else { state.sortBy = col; state.sortDir = 'asc'; } state.page = 1; loadItems(); }
 function debounceSearch() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(function() { state.page = 1; loadItems(); }, 350); }
-function toggleAll(cb) { var checks = document.querySelectorAll('.row-check'); for (var i = 0; i < checks.length; i++) checks[i].checked = cb.checked; }
+function updateClearFiltersButton() {
+  var hasFilters = Object.keys(state.activeFilters).some(function(col) { return state.activeFilters[col] && state.activeFilters[col].length; });
+  document.getElementById('clearFiltersBtn').classList.toggle('show', hasFilters);
+}
+function clearAllFilters() {
+  state.activeFilters = {};
+  state.page = 1;
+  loadItems();
+}
+
+async function openFilterMenu(event, col) {
+  event.stopPropagation();
+  state.filterMenuColumn = col;
+  var menu = document.getElementById('filterMenu');
+  menu.innerHTML = '<div class="table-loading" style="height:80px"><div class="spinner"></div> Loading…</div>';
+  menu.style.left = Math.min(event.clientX, window.innerWidth - 300) + 'px';
+  menu.style.top = Math.min(event.clientY + 8, window.innerHeight - 400) + 'px';
+  menu.classList.add('open');
+  var params = 'column=' + encodeURIComponent(col) +
+    '&search=' + encodeURIComponent(document.getElementById('searchInput').value) +
+    '&filters=' + encodeURIComponent(JSON.stringify(state.activeFilters));
+  var data = await apiFetch('/api/amazon/filter-options?' + params);
+  state.filterMenuValues = data && data.values ? data.values : [];
+  renderFilterMenu('');
+}
+
+function renderFilterMenu(query) {
+  var col = state.filterMenuColumn;
+  var menu = document.getElementById('filterMenu');
+  query = query || '';
+  var labels = state.columns.labels || {};
+  var active = state.activeFilters[col] || [];
+  var values = state.filterMenuValues || [];
+  var visibleValues = values.filter(function(value) { return String(value).toLowerCase().indexOf(String(query || '').toLowerCase()) >= 0; });
+  var activeSet = {};
+  for (var a = 0; a < active.length; a++) activeSet[String(active[a])] = true;
+  var hasActive = active.length > 0;
+  var html = '<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--gold)">' + escapeHtml(labels[col] || col) + '</div>';
+  html += '<input class="filter-menu-search" placeholder="Search values..." oninput="renderFilterMenu(this.value)" value="' + escapeHtml(query) + '">';
+  html += '<div class="filter-menu-actions"><button class="btn btn-outline btn-sm" onclick="checkFilterValues(true)">All</button><button class="btn btn-outline btn-sm" onclick="checkFilterValues(false)">None</button><button class="btn btn-outline btn-sm" onclick="clearColumnFilter()">Clear</button></div>';
+  html += '<div class="filter-menu-list">';
+  for (var i = 0; i < visibleValues.length; i++) {
+    var value = visibleValues[i];
+    var checked = (!hasActive || activeSet[String(value)]) ? ' checked' : '';
+    html += '<label class="column-option"><input class="filter-value-check" type="checkbox" value="' + escapeHtml(value) + '"' + checked + '><span>' + escapeHtml(value === '' ? '(Blank)' : value) + '</span></label>';
+  }
+  if (visibleValues.length === 0) html += '<div style="padding:16px;color:var(--text-muted);font-size:12px">No values</div>';
+  html += '</div><div class="filter-menu-actions" style="justify-content:flex-end"><button class="btn btn-outline btn-sm" onclick="closeFilterMenu()">Cancel</button><button class="btn btn-gold btn-sm" onclick="applyColumnFilter()">Apply</button></div>';
+  menu.innerHTML = html;
+  setTimeout(function() {
+    var input = document.querySelector('#filterMenu .filter-menu-search');
+    if (input) {
+      input.focus();
+      input.setSelectionRange(query.length, query.length);
+    }
+  }, 0);
+}
+
+function checkFilterValues(checked) {
+  var boxes = document.querySelectorAll('#filterMenu .filter-value-check');
+  for (var i = 0; i < boxes.length; i++) boxes[i].checked = checked;
+}
+
+function clearColumnFilter() {
+  delete state.activeFilters[state.filterMenuColumn];
+  closeFilterMenu();
+  state.page = 1;
+  loadItems();
+}
+
+function applyColumnFilter() {
+  var boxes = document.querySelectorAll('#filterMenu .filter-value-check');
+  var selected = [];
+  for (var i = 0; i < boxes.length; i++) {
+    if (boxes[i].checked) selected.push(boxes[i].value);
+  }
+  if (selected.length === 0) {
+    state.activeFilters[state.filterMenuColumn] = ['__NO_MATCH__'];
+  } else if (selected.length === (state.filterMenuValues || []).length) {
+    delete state.activeFilters[state.filterMenuColumn];
+  } else {
+    state.activeFilters[state.filterMenuColumn] = selected;
+  }
+  closeFilterMenu();
+  state.page = 1;
+  loadItems();
+}
+
+function closeFilterMenu() {
+  document.getElementById('filterMenu').classList.remove('open');
+}
 
 async function openEdit(id) {
-  console.log('openEdit called with id:', id);
   var item = await apiFetch('/api/items/' + id);
-  console.log('openEdit got item:', item);
   if (!item) {
     showToast('Item not found', 'error');
     return;
@@ -403,7 +827,7 @@ async function openEdit(id) {
     var isEditable = editable.indexOf(col) >= 0 || user.role === 'admin';
     var val = item[col] || '';
     var inputType = 'text';
-    if (col === 'price' || col === 'cost' || col === 'mrp' || col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock' || col === 'cost_into_percent') inputType = 'number';
+    if (col === 'price' || col === 'cost' || col === 'mrp' || col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock') inputType = 'number';
     else if (col === 'updated') inputType = 'date';
     fieldsHtml += '<div class="form-field"><label>' + (labels[col] || col) + '</label><input name="' + col + '" type="' + inputType + '" value="' + val + '"' + (!isEditable ? ' disabled' : '') + '></div>';
   }
@@ -487,18 +911,15 @@ async function apiFetch(url, opts) {
     for (var k in opts.headers) headers[k] = opts.headers[k];
   }
   try {
-    console.log('Fetching:', url);
     var res = await fetch(API + url, {
       headers: headers,
       cache: 'no-store',
       method: opts.method || 'GET',
       body: opts.body
     });
-    console.log('Response status:', res.status, 'ok:', res.ok);
     if (res.status === 401) { localStorage.clear(); window.location.href = '/'; return null; }
-    if (!res.ok) { var d = await res.json(); console.log('Error response:', d); showToast(d.detail || 'Request failed', 'error'); return null; }
+    if (!res.ok) { var d = await res.json(); showToast(d.detail || 'Request failed', 'error'); return null; }
     var data = await res.json();
-    console.log('Got data:', data);
     return data;
   } catch(e) { console.log('Fetch error:', e); showToast('Connection error', 'error'); return null; }
 }

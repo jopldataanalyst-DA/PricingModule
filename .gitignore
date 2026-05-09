@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.vscode/
+Data/pricing.db

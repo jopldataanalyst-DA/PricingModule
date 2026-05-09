@@ -119,7 +119,7 @@ def upload_table(file_path, table_name, action="append"):
 # =========================
 
 upload_table(
-    file_path=r"D:\VatsalFiles\PricingModule\Data\PricingModuleData.csv",
-    table_name="Pricing_Module_Data",
+    file_path=r"D:\VatsalFiles\PricingModule\Data\ItemMaster.csv",
+    table_name="item_master",
     action="replace"   # append / replace
 )

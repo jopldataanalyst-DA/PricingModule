@@ -68,11 +68,15 @@ def init_db():
             size TEXT,
             category VARCHAR(255),
             location TEXT,
+            child_remark TEXT,
+            parent_remark TEXT,
+            item_type TEXT,
             catalog TEXT,
             cost FLOAT,
             price FLOAT,
             mrp FLOAT,
             up_price FLOAT,
+            cost_into_percent FLOAT DEFAULT 23.0,
             available_atp INT,
             fba_stock INT,
             fbf_stock INT,
@@ -107,9 +111,77 @@ def init_db():
             wholesale_price FLOAT DEFAULT 0.0,
             up_price FLOAT DEFAULT 0.0,
             mrp FLOAT DEFAULT 0.0,
+            cost_into_percent FLOAT DEFAULT 23.0,
             INDEX idx_pricing_sku (master_sku)
         )
     """)
+
+    # Create amazon_pricing_results table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS amazon_pricing_results (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            master_sku VARCHAR(255),
+            original_category VARCHAR(255),
+            amazon_cat VARCHAR(255),
+            remark TEXT,
+            cost FLOAT DEFAULT 0.0,
+            mrp FLOAT DEFAULT 0.0,
+            uniware INT DEFAULT 0,
+            fba INT DEFAULT 0,
+            sjit INT DEFAULT 0,
+            fbf INT DEFAULT 0,
+            launch_date TEXT,
+            loc TEXT,
+            cost_into_percent FLOAT DEFAULT 0.0,
+            cost_after_percent FLOAT DEFAULT 0.0,
+            return_charge FLOAT DEFAULT 0.0,
+            gst_on_return FLOAT DEFAULT 0.0,
+            final_tp FLOAT DEFAULT 0.0,
+            required_selling_price FLOAT DEFAULT 0.0,
+            selected_price_range VARCHAR(100),
+            selected_fixed_fee_range VARCHAR(100),
+            commission_percent FLOAT DEFAULT 0.0,
+            commission_amount FLOAT DEFAULT 0.0,
+            fixed_closing_fee FLOAT DEFAULT 0.0,
+            fba_pick_pack FLOAT DEFAULT 0.0,
+            technology_fee FLOAT DEFAULT 0.0,
+            full_shipping_fee FLOAT DEFAULT 0.0,
+            whf_percent_on_shipping FLOAT DEFAULT 0.0,
+            shipping_fee_charged FLOAT DEFAULT 0.0,
+            total_charges FLOAT DEFAULT 0.0,
+            final_value_after_charges FLOAT DEFAULT 0.0,
+            old_daily_sp FLOAT DEFAULT 0.0,
+            old_deal_sp FLOAT DEFAULT 0.0,
+            sett_acc_panel FLOAT DEFAULT 0.0,
+            net_profit_on_sp FLOAT DEFAULT 0.0,
+            net_profit_percent_on_sp FLOAT DEFAULT 0.0,
+            net_profit_percent_on_tp FLOAT DEFAULT 0.0,
+            INDEX idx_amazon_sku (master_sku)
+        )
+    """)
+
+    # Amazon pricing must preserve duplicate SKU rows from item master.
+    # Older databases created master_sku as UNIQUE, which made KPIs too low.
+    try:
+        cursor.execute("ALTER TABLE amazon_pricing_results DROP INDEX master_sku")
+    except Exception:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE amazon_pricing_results ADD COLUMN old_deal_sp FLOAT DEFAULT 0.0 AFTER old_daily_sp")
+    except Exception:
+        pass
+
+    for ddl in [
+        "ALTER TABLE stock_items ADD COLUMN child_remark TEXT AFTER location",
+        "ALTER TABLE stock_items ADD COLUMN parent_remark TEXT AFTER child_remark",
+        "ALTER TABLE stock_items ADD COLUMN item_type TEXT AFTER parent_remark",
+    ]:
+        try:
+            cursor.execute(ddl)
+        except Exception:
+            pass
+
     conn.commit()
     cursor.close()
     conn.close()

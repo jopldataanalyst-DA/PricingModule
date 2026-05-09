@@ -10,6 +10,7 @@ from auth import router as auth_router, get_current_user
 from items import router as items_router
 from admin import router as admin_router
 from logs import router as logs_router
+from amazon import router as amazon_router
 from database import init_users, init_db
 from data_pipeline import run_pipeline
 import asyncio
@@ -29,6 +30,7 @@ app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 app.include_router(items_router, prefix="/api/items", tags=["items"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(logs_router, prefix="/api/logs", tags=["logs"])
+app.include_router(amazon_router, prefix="/api/amazon", tags=["amazon"])
 
 # Static files
 app.mount("/ui", StaticFiles(directory=r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui"), name="ui")
@@ -55,6 +57,10 @@ async def root():
 @app.get("/dashboard")
 async def dashboard():
     return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\dashboard.html")
+
+@app.get("/amazon-pricing")
+async def amazon_dashboard():
+    return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\amazon_pricing.html")
 
 @app.get("/admin")
 async def admin_page():
