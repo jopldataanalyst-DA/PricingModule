@@ -1,14 +1,8 @@
 from fastapi import APIRouter, Depends, Query
-import json
-from pathlib import Path
-from datetime import datetime
-from auth import get_current_user, require_admin
-from database import hash_password, load_users
+from auth import require_admin
+from audit import load_audit_logs
 
 router = APIRouter()
-
-DATA_DIR = Path(__file__).parent.parent.parent / "Data"
-LOGS_FILE = DATA_DIR / "logs.json"
 
 @router.get("/")
 async def get_logs(
@@ -18,11 +12,7 @@ async def get_logs(
     username: str = Query(""),
     user=Depends(require_admin)
 ):
-    if not LOGS_FILE.exists():
-        return {"logs": [], "total": 0, "page": 1, "total_pages": 1}
-    
-    with open(LOGS_FILE, 'r') as f:
-        logs = json.load(f)
+    logs = load_audit_logs()
     
     if action:
         logs = [l for l in logs if l.get("action") == action]
@@ -43,11 +33,6 @@ async def get_logs(
 
 @router.get("/actions")
 async def get_actions(user=Depends(require_admin)):
-    if not LOGS_FILE.exists():
-        return []
-    
-    with open(LOGS_FILE, 'r') as f:
-        logs = json.load(f)
-    
+    logs = load_audit_logs()
     actions = list(set(l.get("action") for l in logs if l.get("action")))
     return sorted(actions)

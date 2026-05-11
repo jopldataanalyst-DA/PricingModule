@@ -22,8 +22,10 @@ def clean_stock_data(url: str) -> pl.DataFrame:
     raw_df = pl.read_csv(BytesIO(response.content), has_header=False)
     df = raw_df.slice(3)
     new_columns = ["uni", "uni_stock", "fba", "fba_stock", "fbf", "fbf_stock", "sjit", "sjit_stock"]
+    if df.width < len(new_columns):
+        raise ValueError(f"Stock sheet has {df.width} columns, expected at least {len(new_columns)}")
+    df = df.select(df.columns[:len(new_columns)])
     df.columns = new_columns
-    df = df.filter(pl.col("uni").is_not_null())
     df = df.with_columns([
         pl.col("uni").cast(pl.Utf8).str.strip_chars(),
         pl.col("fba").cast(pl.Utf8).str.strip_chars(),
@@ -34,6 +36,13 @@ def clean_stock_data(url: str) -> pl.DataFrame:
         pl.col("fbf_stock").cast(pl.Int64, strict=False).fill_null(0),
         pl.col("sjit_stock").cast(pl.Int64, strict=False).fill_null(0),
     ])
+    sku_columns = ["uni", "fba", "fbf", "sjit"]
+    df = df.filter(
+        pl.any_horizontal([
+            pl.col(c).is_not_null() & (pl.col(c) != "")
+            for c in sku_columns
+        ])
+    )
     return df
 
 def run_pipeline():
@@ -98,6 +107,7 @@ def run_pipeline():
         cursor = conn.cursor()
         
         stock_records = stock_merged.to_dicts()
+        cursor.execute("DELETE FROM stock_update")
         for row in stock_records:
             cursor.execute("""
                 INSERT INTO stock_update (master_sku, uniware_stock, fba_stock, fbf_stock, sjit_stock)
@@ -125,20 +135,49 @@ def run_pipeline():
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
         
-        # Fetch stock_items (this IS the item master – populated by CSV import)
-        cursor.execute("SELECT * FROM stock_items")
-        stock_items_rows = cursor.fetchall()
-        if not stock_items_rows:
-            print(f"[{datetime.now()}] stock_items table is empty – skipping dashboard rebuild.")
+        # Fetch item_master as the base for the dashboard
+        cursor.execute("SELECT * FROM item_master")
+        item_master_rows = cursor.fetchall()
+        if not item_master_rows:
+            print(f"[{datetime.now()}] item_master table is empty – skipping dashboard rebuild.")
             cursor.close()
             conn.close()
         else:
-            stock_items_df = pl.from_dicts(stock_items_rows, schema_overrides={
-                "updated": pl.String,
-                "child_remark": pl.String,
-                "parent_remark": pl.String,
-                "item_type": pl.String,
-            })
+            item_master_df = pl.from_dicts(item_master_rows)
+            rename_map = {
+                "Master SKU": "sku_code",
+                "Style ID / Parent SKU": "item_name",
+                "Size": "size",
+                "Category": "category",
+                "Loc": "location",
+                "Child Remark": "child_remark",
+                "Parent Remark": "parent_remark",
+                "Type": "item_type"
+            }
+            rename_dict = {k: v for k, v in rename_map.items() if k in item_master_df.columns}
+            stock_items_df = item_master_df.rename(rename_dict).with_columns([
+                pl.col("sku_code").cast(pl.Utf8).str.strip_chars().str.to_uppercase(),
+                pl.col("item_name").cast(pl.Utf8).fill_null(""),
+                pl.col("size").cast(pl.Utf8).fill_null(""),
+                pl.col("category").cast(pl.Utf8).fill_null(""),
+                pl.col("location").cast(pl.Utf8).fill_null(""),
+                pl.col("child_remark").cast(pl.Utf8).fill_null(""),
+                pl.col("parent_remark").cast(pl.Utf8).fill_null(""),
+                pl.col("item_type").cast(pl.Utf8).fill_null(""),
+                pl.lit("").alias("catalog"),
+                pl.lit(0.0).alias("cost"),
+                pl.lit(0.0).alias("price"),
+                pl.lit(0.0).alias("mrp"),
+                pl.lit(0.0).alias("up_price"),
+                pl.lit(23.0).alias("cost_into_percent"),
+                pl.lit(0).alias("available_atp"),
+                pl.lit(0).alias("fba_stock"),
+                pl.lit(0).alias("fbf_stock"),
+                pl.lit(0).alias("sjit_stock"),
+                pl.lit("").alias("updated")
+            ])
+            if "id" in stock_items_df.columns:
+                stock_items_df = stock_items_df.drop("id")
 
             # Fetch stock_update
             cursor.execute("SELECT * FROM stock_update")
@@ -157,12 +196,24 @@ def run_pipeline():
             cursor.execute("SELECT * FROM catalog_pricing")
             catalog_pricing_rows = cursor.fetchall()
             if catalog_pricing_rows:
-                catalog_pricing_df = pl.from_dicts(catalog_pricing_rows, schema_overrides={
-                    "launch_date": pl.String,
-                    "catalog_name": pl.String
-                }).with_columns(
-                    pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
-                )
+                catalog_pricing_df = pl.from_dicts(catalog_pricing_rows)
+                rename_map = {
+                    "Master SKU": "master_sku",
+                    "Launch Date": "launch_date", 
+                    "Catalog Name": "catalog_name",
+                    "Cost": "cost",
+                    "Wholesale Price": "wholesale_price",
+                    "Up Price": "up_price",
+                    "MRP": "mrp"
+                }
+                rename_dict = {k: v for k, v in rename_map.items() if k in catalog_pricing_df.columns}
+                catalog_pricing_df = catalog_pricing_df.rename(rename_dict).with_columns([
+                    pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase(),
+                    pl.col("cost").cast(pl.Float64, strict=False).fill_null(0.0),
+                    pl.col("mrp").cast(pl.Float64, strict=False).fill_null(0.0),
+                    pl.col("launch_date").cast(pl.Utf8).fill_null(""),
+                    pl.col("catalog_name").cast(pl.Utf8).fill_null("")
+                ]).unique(subset=["master_sku"], keep="last")
             else:
                 catalog_pricing_df = pl.DataFrame(schema={
                     "master_sku": pl.String, "launch_date": pl.String, "catalog_name": pl.String,
@@ -214,14 +265,47 @@ def run_pipeline():
                 pl.coalesce(["_new_sjit", "sjit_stock"]).fill_null(0).alias("sjit_stock"),
             ]).drop(["_new_uni", "_new_fba", "_new_fbf", "_new_sjit"])
 
-            # Merge catalog pricing (cost / mrp / launch_date) where not already set
+            # Include stock SKUs that are not present in item_master so dashboard
+            # stock totals match the latest stock_update snapshot.
+            stock_only_df = (
+                stock_update_df
+                .select(["master_sku", "uniware_stock", "fba_stock", "fbf_stock", "sjit_stock"])
+                .rename({
+                    "master_sku": "sku_code",
+                    "uniware_stock": "available_atp",
+                })
+                .join(stock_items_df.select(["sku_code"]).unique(), on="sku_code", how="anti")
+            )
+            if stock_only_df.height:
+                stock_only_df = stock_only_df.with_columns([
+                    pl.lit("").alias("item_name"),
+                    pl.lit("").alias("size"),
+                    pl.lit("Stock Only").alias("category"),
+                    pl.lit("").alias("location"),
+                    pl.lit("").alias("child_remark"),
+                    pl.lit("Stock SKU missing from item_master").alias("parent_remark"),
+                    pl.lit("").alias("item_type"),
+                    pl.lit("").alias("catalog"),
+                    pl.lit(0.0).alias("cost"),
+                    pl.lit(0.0).alias("price"),
+                    pl.lit(0.0).alias("mrp"),
+                    pl.lit(0.0).alias("up_price"),
+                    pl.lit(23.0).alias("cost_into_percent"),
+                    pl.lit("").alias("updated"),
+                ]).select(stock_items_df.columns)
+                stock_items_df = pl.concat([stock_items_df, stock_only_df], how="vertical")
+
+            # Merge catalog pricing (cost / mrp / price / up_price / catalog / launch_date)
             stock_items_df = stock_items_df.join(
                 catalog_pricing_df.select([
-                    "master_sku", "cost", "mrp", "launch_date"
+                    "master_sku", "cost", "mrp", "wholesale_price", "up_price", "catalog_name", "launch_date"
                 ]).rename({
                     "master_sku": "sku_code",
                     "cost": "_cat_cost",
                     "mrp": "_cat_mrp",
+                    "wholesale_price": "_cat_price",
+                    "up_price": "_cat_up_price",
+                    "catalog_name": "_cat_catalog",
                     "launch_date": "_cat_launch",
                 }),
                 on="sku_code",
@@ -229,8 +313,11 @@ def run_pipeline():
             ).with_columns([
                 pl.coalesce(["_cat_cost", "cost"]).fill_null(0.0).alias("cost"),
                 pl.coalesce(["_cat_mrp",  "mrp"]).fill_null(0.0).alias("mrp"),
+                pl.coalesce(["_cat_price", "price"]).fill_null(0.0).alias("price"),
+                pl.coalesce(["_cat_up_price", "up_price"]).fill_null(0.0).alias("up_price"),
+                pl.coalesce(["_cat_catalog", "catalog"]).fill_null("").alias("catalog"),
                 pl.coalesce(["_cat_launch", "updated"]).fill_null("").alias("updated"),
-            ]).drop(["_cat_cost", "_cat_mrp", "_cat_launch"])
+            ]).drop(["_cat_cost", "_cat_mrp", "_cat_price", "_cat_up_price", "_cat_catalog", "_cat_launch"])
 
             stock_items_df = stock_items_df.join(
                 cost_percent_df.select(["master_sku", "cost_into_percent"]).rename({

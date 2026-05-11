@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from database import hash_password, load_users, save_users
+from audit import record_audit_log
 
 SECRET_KEY = "rajnandini_pricing_secret_2025_xK9#mP"
 ALGORITHM = "HS256"
@@ -41,6 +42,27 @@ def require_admin(user=Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
+def is_root_user(user: dict):
+    return int(user.get("user_id") or user.get("id") or 0) == 1 or user.get("username") == "admin"
+
+def verify_special_password(user: dict, special_password: str | None):
+    if is_root_user(user):
+        return True
+    if not special_password:
+        raise HTTPException(status_code=403, detail="Special password is required for item changes")
+
+    user_id = int(user.get("user_id") or user.get("id") or 0)
+    username = user.get("username")
+    account = next(
+        (u for u in load_users() if int(u.get("id") or 0) == user_id or u.get("username") == username),
+        None,
+    )
+    if not account or not account.get("special_password"):
+        raise HTTPException(status_code=403, detail="Special password is not configured for this user")
+    if account.get("special_password") != hash_password(special_password):
+        raise HTTPException(status_code=403, detail="Invalid special password")
+    return True
+
 def check_page_access(user: dict, page: str):
     allowed = user.get("allowed_pages", [])
     if isinstance(allowed, str):
@@ -59,6 +81,9 @@ async def login(req: LoginRequest, request: Request):
         if user.get("username") == req.username and user.get("password") == hash_password(req.password):
             if not user.get("is_active", True):
                 raise HTTPException(status_code=401, detail="Account disabled")
+
+            user["last_login"] = datetime.now().isoformat()
+            save_users(users)
             
             token_data = {
                 "user_id": user.get("id", 0),
@@ -67,15 +92,18 @@ async def login(req: LoginRequest, request: Request):
                 "allowed_pages": user.get("allowed_pages", ["item_master"]),
                 "column_permissions": user.get("column_permissions", {})
             }
+            record_audit_log(token_data, "LOGIN", table_name="users", record_id=user.get("id"), remark="Login successful", request=request)
             return {
                 "token": create_token(token_data),
                 "user": token_data
             }
     
+    record_audit_log({"username": req.username}, "LOGIN_FAILED", table_name="users", remark="Login failed", request=request)
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @router.post("/logout")
 async def logout(request: Request, user=Depends(get_current_user)):
+    record_audit_log(user, "LOGOUT", table_name="users", record_id=user.get("user_id"), remark="Logout", request=request)
     return {"message": "Logged out"}
 
 @router.get("/me")

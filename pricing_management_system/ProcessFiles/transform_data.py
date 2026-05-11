@@ -30,10 +30,10 @@ def clean_stock_data(url: str, output_path: str = None) -> pl.DataFrame:
         "fbf", "fbf_stock",
         "sjit", "sjit_stock"
     ]
+    if df.width < len(new_columns):
+        raise ValueError(f"Stock sheet has {df.width} columns, expected at least {len(new_columns)}")
+    df = df.select(df.columns[:len(new_columns)])
     df.columns = new_columns
-
-    # Remove empty rows
-    df = df.filter(pl.col("uni").is_not_null())
 
     # Clean and cast columns
     df = df.with_columns([
@@ -46,6 +46,12 @@ def clean_stock_data(url: str, output_path: str = None) -> pl.DataFrame:
         pl.col("fbf_stock").cast(pl.Int64, strict=False).fill_null(0),
         pl.col("sjit_stock").cast(pl.Int64, strict=False).fill_null(0),
     ])
+    df = df.filter(
+        pl.any_horizontal([
+            pl.col(c).is_not_null() & (pl.col(c) != "")
+            for c in ["uni", "fba", "fbf", "sjit"]
+        ])
+    )
 
     # Save to CSV if output_path is provided
     if output_path:
@@ -75,7 +81,7 @@ stock.columns = [
 
 # Clean stock
 stock = stock.with_columns([
-    pl.col(c).cast(pl.Utf8).str.strip_chars()
+    pl.col(c).cast(pl.Utf8).str.strip_chars().str.to_uppercase()
     for c in ["Uniware SKU", "FBA SKU", "FBF SKU", "SJIT SKU"]
 ] + [
     pl.col(c).cast(pl.Int64, strict=False).fill_null(0)
@@ -109,7 +115,7 @@ stock_tables = [
 
 # Clean item master
 final = item.with_columns(
-    pl.col("Master SKU").cast(pl.Utf8).str.strip_chars()
+    pl.col("Master SKU").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
 ).rename({"Loc": "Location"})
 
 # Join all stock tables

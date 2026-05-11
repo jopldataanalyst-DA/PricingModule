@@ -174,8 +174,8 @@ tr:hover td{background:rgba(255,255,255,0.02)}
           </div>
         </div>
         <table>
-          <thead><tr><th>#</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>Old Value</th><th>New Value</th><th>IP</th><th>Time</th></tr></thead>
-          <tbody id="logsTable"><tr><td colspan="9" class="empty-state">Loading…</td></tr></tbody>
+          <thead><tr><th>#</th><th>User</th><th>Action</th><th>Table</th><th>Record</th><th>Remark</th><th>IP</th><th>Time</th></tr></thead>
+          <tbody id="logsTable"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
         </table>
         <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center">
           <span style="font-size:12px;color:var(--text-muted)" id="logPageInfo">—</span>
@@ -215,6 +215,10 @@ tr:hover td{background:rgba(255,255,255,0.02)}
           <input id="u-password" type="password" placeholder="Enter new password">
         </div>
         <div class="form-field">
+          <label>Special Password</label>
+          <input id="u-special-password" type="password" placeholder="Required for item changes">
+        </div>
+        <div class="form-field">
           <label>Role</label>
           <select id="u-role">
             <option value="viewer">Viewer</option>
@@ -235,17 +239,35 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         </div>
       </div>
       <div style="margin-top:20px">
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px">Column Permissions — Item Master</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px">
-          <button class="btn btn-outline btn-sm" onclick="checkAllCols('visible',true)">Show All</button>
-          <button class="btn btn-outline btn-sm" onclick="checkAllCols('visible',false)">Hide All</button>
-          <button class="btn btn-outline btn-sm" onclick="checkAllCols('editable',true)">Edit All</button>
-          <button class="btn btn-outline btn-sm" onclick="checkAllCols('editable',false)">Edit None</button>
+        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:12px">Column Permissions</div>
+        <div class="col-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px">
+          <div class="tab active" id="colTab_item_master" onclick="showColPermTab('item_master')">Item Master</div>
+          <div class="tab" id="colTab_amazon_pricing" onclick="showColPermTab('amazon_pricing')">Amazon Pricing</div>
         </div>
-        <table style="width:100%;font-size:12px">
-          <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
-          <tbody id="colPermsTable"></tbody>
-        </table>
+        <div id="colPermSection_item_master">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','visible',true)">Show All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','visible',false)">Hide All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','editable',true)">Edit All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','editable',false)">Edit None</button>
+          </div>
+          <table style="width:100%;font-size:12px">
+            <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
+            <tbody id="colPermsTable_item_master"></tbody>
+          </table>
+        </div>
+        <div id="colPermSection_amazon_pricing" style="display:none">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','visible',true)">Show All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','visible',false)">Hide All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','editable',true)">Edit All</button>
+            <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','editable',false)">Edit None</button>
+          </div>
+          <table style="width:100%;font-size:12px">
+            <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
+            <tbody id="colPermsTable_amazon_pricing"></tbody>
+          </table>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -266,13 +288,21 @@ document.getElementById('userAvatar').textContent = (loggedInUser.username||'A')
 document.getElementById('userName').textContent = loggedInUser.username || '—';
 document.getElementById('userRole').textContent = loggedInUser.role || '—';
 
-const ALL_COLS = ["sku_code","item_name","size","category","location","cost","price","catalog","mrp","available_atp","fba_stock","fbf_stock","sjit_stock","updated"];
-const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"Up Price",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
-const PAGES = ["item_master","admin","logs","import"];
-const PAGES_LABELS = {item_master:"Item Master",admin:"Admin Panel",logs:"Audit Logs",import:"Import Data"};
+const ALL_COLS = ["sku_code","item_name","size","category","location","child_remark","parent_remark","item_type","cost","price","catalog","mrp","up_price","cost_into_percent","available_atp","fba_stock","fbf_stock","sjit_stock","updated"];
+const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",child_remark:"Child Remark",parent_remark:"Parent Remark",item_type:"Type",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"MRP",up_price:"Up Price",cost_into_percent:"Cost into %",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
+const AMAZON_COLS = ["master_sku","item_name","original_category","amazon_cat","remark","cost","mrp","uniware","fba","sjit","fbf","launch_date","loc","cost_into_percent","cost_after_percent","return_charge","gst_on_return","final_tp","required_selling_price","selected_price_range","selected_fixed_fee_range","commission_percent","commission_amount","fixed_closing_fee","fba_pick_pack","technology_fee","full_shipping_fee","whf_percent_on_shipping","shipping_fee_charged","total_charges","final_value_after_charges","old_daily_sp","old_deal_sp","sett_acc_panel","net_profit_on_sp","net_profit_percent_on_sp","net_profit_percent_on_tp"];
+const AMAZON_COL_LABELS = {master_sku:"Master SKU",item_name:"Style ID / Parent SKU",original_category:"Original Category",amazon_cat:"Amazon Cat",remark:"Remark",cost:"Cost",mrp:"MRP",uniware:"Uniware",fba:"FBA",sjit:"Sjit",fbf:"FBF",launch_date:"Launch Date",loc:"LOC",cost_into_percent:"Cost into %",cost_after_percent:"Cost after %",return_charge:"Return Charge",gst_on_return:"GST on Return",final_tp:"Final TP",required_selling_price:"Required Selling Price",selected_price_range:"Selected Price Range",selected_fixed_fee_range:"Selected Fixed Fee Range",commission_percent:"Commission %",commission_amount:"Commission Amount",fixed_closing_fee:"Fixed Closing Fee",fba_pick_pack:"FBA Pick Pack",technology_fee:"Technology Fee",full_shipping_fee:"Full Shipping Fee",whf_percent_on_shipping:"WHF % On Shipping",shipping_fee_charged:"Shipping Fee Charged",total_charges:"Total Charges",final_value_after_charges:"Final Value After Charges",old_daily_sp:"Old Daily SP",old_deal_sp:"Old Deal SP",sett_acc_panel:"Sett Acc Panel",net_profit_on_sp:"Net Profit On SP",net_profit_percent_on_sp:"Net Profit % On SP",net_profit_percent_on_tp:"Net Profit % On TP"};
+const PAGES = ["item_master","amazon_pricing","admin","logs","import"];
+const PAGES_LABELS = {item_master:"Item Master",amazon_pricing:"Amazon Pricing",admin:"Admin Panel",logs:"Audit Logs",import:"Import Data"};
+const COL_PERM_TABLES = ["item_master","amazon_pricing"];
+const COL_PERM_TABLE_LABELS = {item_master:"Item Master",amazon_pricing:"Amazon Pricing"};
 
 let logState = { page: 1, total: 0, totalPages: 0 };
 let editUserId = null;
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 
 function debounce(fn, delay) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
@@ -303,13 +333,13 @@ async function loadUsers() {
   for (let i = 0; i < users.length; i++) {
     const u = users[i];
     const uId = u.id;
-    const uName = u.username || '—';
+    const uName = esc(u.username || '—');
     const uRole = (u.role || 'viewer').toLowerCase();
-    const uPages = (u.allowed_pages || []).join(', ') || '—';
+    const uPages = esc((u.allowed_pages || []).join(', ') || '—');
     const uActive = u.is_active;
     const uLast = u.last_login ? new Date(u.last_login).toLocaleString() : '—';
     const delBtn = uId !== currentUserId ? '<button class="btn btn-danger btn-sm" onclick="deleteUser(' + uId + ')">🗑</button>' : '';
-    html += '<tr><td>' + uId + '</td><td style="font-weight:600;color:var(--text)">' + uName + '</td><td><span class="badge badge-' + uRole + '">' + (u.role || 'viewer') + '</span></td><td style="font-family:\'DM Sans\',sans-serif;color:var(--text-muted)">' + uPages + '</td><td><span class="badge ' + (uActive ? 'badge-active' : 'badge-inactive') + '">' + (uActive ? 'Active' : 'Inactive') + '</span></td><td style="color:var(--text-muted)">' + uLast + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-outline btn-sm" onclick="openEditUser(' + uId + ')">✏ Edit</button>' + delBtn + '</div></td></tr>';
+    html += '<tr><td>' + uId + '</td><td style="font-weight:600;color:var(--text)">' + uName + '</td><td><span class="badge badge-' + uRole + '">' + esc(u.role || 'viewer') + '</span></td><td style="font-family:\'DM Sans\',sans-serif;color:var(--text-muted)">' + uPages + '</td><td><span class="badge ' + (uActive ? 'badge-active' : 'badge-inactive') + '">' + (uActive ? 'Active' : 'Inactive') + '</span></td><td style="color:var(--text-muted)">' + uLast + '</td><td><div style="display:flex;gap:4px"><button class="btn btn-outline btn-sm" onclick="openEditUser(' + uId + ')">✏ Edit</button>' + delBtn + '</div></td></tr>';
   }
   tb.innerHTML = html;
 }
@@ -326,16 +356,15 @@ async function loadLogs() {
   tb.innerHTML = d.logs.map(l => `
     <tr>
       <td>${l.id}</td>
-      <td style="color:var(--gold2)">${l.username}</td>
-      <td><span class="badge ${l.action==='LOGIN'?'badge-active':(l.action==='DELETE'||l.action==='DELETE_USER')?'badge-inactive':'badge-viewer'}">${l.action}</span></td>
-      <td>${l.table_name||'—'}</td>
-      <td style="color:var(--text-muted)">${l.record_id||'—'}</td>
-      <td class="log-old" title="${l.old_values||''}">${l.old_values ? '…changed' : '—'}</td>
-      <td class="log-new" title="${l.new_values||''}">${l.new_values ? '…updated' : '—'}</td>
-      <td style="color:var(--text-muted)">${l.ip_address||'—'}</td>
+      <td style="color:var(--gold2)">${esc(l.username || '—')}</td>
+      <td><span class="badge ${l.action==='LOGIN'?'badge-active':(l.action==='DELETE'||l.action==='DELETE_USER')?'badge-inactive':'badge-viewer'}">${esc(l.action || '—')}</span></td>
+      <td>${esc(l.table_name||'—')}</td>
+      <td style="color:var(--text-muted)">${esc(l.record_id||'—')}</td>
+      <td style="font-family:'DM Sans',sans-serif;max-width:360px;white-space:normal;line-height:1.4" title="${esc(l.remark||'')}">${esc(l.remark||'—')}</td>
+      <td style="color:var(--text-muted)">${esc(l.ip_address||'—')}</td>
       <td style="color:var(--text-muted)">${new Date(l.timestamp).toLocaleString()}</td>
     </tr>
-  `).join('') || '<tr><td colspan="9" class="empty-state">No logs</td></tr>';
+  `).join('') || '<tr><td colspan="8" class="empty-state">No logs</td></tr>';
   renderLogPagination();
 }
 
@@ -364,13 +393,13 @@ async function loadImports() {
   tb.innerHTML = d.map(h => `
     <tr>
       <td>${h.id}</td>
-      <td style="color:var(--text)">${h.filename}</td>
-      <td style="color:var(--gold2)">${h.imported_by}</td>
+      <td style="color:var(--text)">${esc(h.filename || '—')}</td>
+      <td style="color:var(--gold2)">${esc(h.imported_by || '—')}</td>
       <td>${(h.total_rows||0).toLocaleString()}</td>
       <td style="color:var(--success)">${(h.new_rows||0).toLocaleString()}</td>
       <td style="color:var(--info)">${(h.updated_rows||0).toLocaleString()}</td>
       <td style="color:var(--warning)">${(h.skipped_rows||0).toLocaleString()}</td>
-      <td><span class="badge ${h.status==='success'?'badge-active':'badge-inactive'}">${h.status}</span></td>
+      <td><span class="badge ${h.status==='success'?'badge-active':h.status==='partial'?'badge-viewer':'badge-inactive'}">${esc(h.status || '—')}</span></td>
       <td style="color:var(--text-muted)">${new Date(h.timestamp).toLocaleString()}</td>
     </tr>
   `).join('') || '<tr><td colspan="9" class="empty-state">No imports yet</td></tr>';
@@ -391,13 +420,9 @@ function buildUserModal(userData = null) {
   editUserId = userData ? userData.id : null;
   document.getElementById('userModalTitle').textContent = userData ? 'Edit User' : 'Add User';
   
-  console.log('buildUserModal called with:', userData);
-  
   // Username - show current for edit mode
   var currentUsername = userData ? (userData.username || '') : '';
-  console.log('Setting username to:', currentUsername);
   document.getElementById('u-username').value = currentUsername;
-  document.getElementById('u-username').disabled = false;
   document.getElementById('u-username').disabled = false;
   
   // Password - clear for both modes, show different placeholder
@@ -407,12 +432,15 @@ function buildUserModal(userData = null) {
   } else {
     document.getElementById('u-password').placeholder = 'Enter new password';
   }
+
+  document.getElementById('u-special-password').value = '';
+  document.getElementById('u-special-password').placeholder = userData ? 'Leave blank to keep current' : 'Set item-change password';
   
   // Role
   document.getElementById('u-role').value = userData ? userData.role : 'viewer';
   
   // Status
-  var isActive = userData && userData.is_active !== false;
+  var isActive = userData ? userData.is_active !== false : true;
   document.getElementById('u-is_active').value = isActive ? 'true' : 'false';
 
   // Pages checkboxes
@@ -428,8 +456,7 @@ function buildUserModal(userData = null) {
   }
   pagesEl.innerHTML = pagesHtml;
 
-  // Column perms
-  var colPermsTable = document.getElementById('colPermsTable');
+  // Column perms - item_master
   var colPerms = userData && userData.column_permissions ? userData.column_permissions.item_master : {};
   var visible = colPerms.visible || ALL_COLS;
   var editable = colPerms.editable || [];
@@ -440,11 +467,31 @@ function buildUserModal(userData = null) {
     var editChecked = editable.indexOf(colName) >= 0;
     colHtml += '<tr>';
     colHtml += '<td style="font-family:\'DM Sans\',sans-serif">' + COL_LABELS[colName] + '</td>';
-    colHtml += '<td><input type="checkbox" class="col-vis" data-col="' + colName + '"' + (visChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
-    colHtml += '<td><input type="checkbox" class="col-edit" data-col="' + colName + '"' + (editChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    colHtml += '<td><input type="checkbox" class="col-vis-item_master" data-col="' + colName + '"' + (visChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    colHtml += '<td><input type="checkbox" class="col-edit-item_master" data-col="' + colName + '"' + (editChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
     colHtml += '</tr>';
   }
-  colPermsTable.innerHTML = colHtml;
+  document.getElementById('colPermsTable_item_master').innerHTML = colHtml;
+
+  // Column perms - amazon_pricing
+  var apPerms = userData && userData.column_permissions ? userData.column_permissions.amazon_pricing : {};
+  var apVisible = apPerms.visible || AMAZON_COLS;
+  var apEditable = apPerms.editable || [];
+  var apHtml = '';
+  for (var c = 0; c < AMAZON_COLS.length; c++) {
+    var apColName = AMAZON_COLS[c];
+    var apVisChecked = apVisible.indexOf(apColName) >= 0;
+    var apEditChecked = apEditable.indexOf(apColName) >= 0;
+    apHtml += '<tr>';
+    apHtml += '<td style="font-family:\'DM Sans\',sans-serif">' + AMAZON_COL_LABELS[apColName] + '</td>';
+    apHtml += '<td><input type="checkbox" class="col-vis-amazon_pricing" data-col="' + apColName + '"' + (apVisChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    apHtml += '<td><input type="checkbox" class="col-edit-amazon_pricing" data-col="' + apColName + '"' + (apEditChecked ? ' checked' : '') + ' style="accent-color:var(--gold)"></td>';
+    apHtml += '</tr>';
+  }
+  document.getElementById('colPermsTable_amazon_pricing').innerHTML = apHtml;
+
+  // Reset to first tab
+  showColPermTab('item_master');
 
   openModal('userModal');
 }
@@ -452,13 +499,8 @@ function buildUserModal(userData = null) {
 function openCreateUser() { buildUserModal(null); }
 
 async function openEditUser(id) {
-  console.log('openEditUser called with id:', id);
   var users = await apiFetch('/api/admin/users');
-  if (!users) {
-    console.log('No users returned');
-    return;
-  }
-  console.log('All users:', users);
+  if (!users) return;
   
   var u = null;
   for (var i = 0; i < users.length; i++) {
@@ -468,22 +510,29 @@ async function openEditUser(id) {
     }
   }
   
-  console.log('Found user:', u);
   if (u) {
     editUserId = id;
     buildUserModal(u);
   } else {
-    console.log('User not found with id:', id);
+    showToast('User not found', 'error');
   }
 }
 
-function checkAllCols(type, val) {
-  document.querySelectorAll(type === 'visible' ? '.col-vis' : '.col-edit').forEach(cb => cb.checked = val);
+function showColPermTab(table) {
+  COL_PERM_TABLES.forEach(t => {
+    document.getElementById('colPermSection_' + t).style.display = t === table ? 'block' : 'none';
+    document.getElementById('colTab_' + t).classList.toggle('active', t === table);
+  });
+}
+
+function checkAllCols(table, type, val) {
+  document.querySelectorAll('.' + (type === 'visible' ? 'col-vis-' : 'col-edit-') + table).forEach(cb => cb.checked = val);
 }
 
 async function saveUser() {
   var username = document.getElementById('u-username').value.trim();
   var password = document.getElementById('u-password').value;
+  var specialPassword = document.getElementById('u-special-password').value;
   var role = document.getElementById('u-role').value;
   var isActive = document.getElementById('u-is_active').value === 'true';
   
@@ -493,23 +542,26 @@ async function saveUser() {
     allowedPages.push(pageCbs[i].value);
   }
   
-  var visibleCols = [];
-  var visCbs = document.querySelectorAll('.col-vis:checked');
-  for (var i = 0; i < visCbs.length; i++) {
-    visibleCols.push(visCbs[i].getAttribute('data-col'));
-  }
-  
-  var editableCols = [];
-  var editCbs = document.querySelectorAll('.col-edit:checked');
-  for (var i = 0; i < editCbs.length; i++) {
-    editableCols.push(editCbs[i].getAttribute('data-col'));
-  }
-  
-  var colPerms = { item_master: { visible: visibleCols, editable: editableCols } };
+  var colPerms = { item_master: { visible: [], editable: [] }, amazon_pricing: { visible: [], editable: [] } };
+
+  COL_PERM_TABLES.forEach(function(table) {
+    var visCbs = document.querySelectorAll('.col-vis-' + table + ':checked');
+    for (var i = 0; i < visCbs.length; i++) {
+      colPerms[table].visible.push(visCbs[i].getAttribute('data-col'));
+    }
+    var editCbs = document.querySelectorAll('.col-edit-' + table + ':checked');
+    for (var i = 0; i < editCbs.length; i++) {
+      colPerms[table].editable.push(editCbs[i].getAttribute('data-col'));
+    }
+  });
 
   if (!editUserId && (!username || !password)) { 
     showToast('Username and password required for new user', 'error'); 
     return; 
+  }
+  if (!editUserId && username.toLowerCase() !== 'admin' && !specialPassword) {
+    showToast('Special password required for non-root users', 'error');
+    return;
   }
 
   var res;
@@ -524,11 +576,15 @@ async function saveUser() {
     if (password && password.length > 0) { 
       body.password = password; 
     }
+    if (specialPassword && specialPassword.length > 0) {
+      body.special_password = specialPassword;
+    }
     res = await apiFetch('/api/admin/users/' + editUserId, { method: 'PUT', body: JSON.stringify(body) });
   } else {
     res = await apiFetch('/api/admin/users', { method: 'POST', body: JSON.stringify({ 
       username: username, 
       password: password, 
+      special_password: specialPassword,
       role: role, 
       allowed_pages: allowedPages, 
       column_permissions: colPerms, 

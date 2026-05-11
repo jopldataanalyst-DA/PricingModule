@@ -68,21 +68,10 @@ def FixedFeeRange(Price):
 # LOAD MYSQL DATA USING DUCKDB
 # ============================================================
 def LoadStockData():
-    Con = duckdb.connect()
-
-    Con.execute("INSTALL mysql")
-    Con.execute("LOAD mysql")
-
-    MysqlConn = (
-        f"host={DbConfig['host']} "
-        f"user={DbConfig['user']} "
-        f"password={DbConfig['password']} "
-        f"database={DbConfig['database']}"
-    )
-
-    Con.execute(f"ATTACH '{MysqlConn}' AS mysql_db (TYPE mysql)")
-
-    ArrowTable = Con.execute(f"""
+    import mysql.connector
+    MysqlConn = mysql.connector.connect(**DbConfig)
+    cursor = MysqlConn.cursor(dictionary=True)
+    cursor.execute(f"""
         SELECT
             sku_code AS Master_SKU,
             category AS Category,
@@ -96,12 +85,28 @@ def LoadStockData():
             location AS LOC,
             price AS Current_Price,
             updated AS Launch_Date
-        FROM mysql_db.{TableName}
-    """).arrow()
+        FROM {TableName}
+    """)
+    rows = cursor.fetchall()
+    cursor.close()
+    MysqlConn.close()
 
-    Con.close()
-
-    return pl.from_arrow(ArrowTable)
+    if not rows:
+        return pl.DataFrame(schema={
+            "Master_SKU": pl.Utf8,
+            "Category": pl.Utf8,
+            "Remark": pl.Utf8,
+            "Cost": pl.Float64,
+            "MRP": pl.Float64,
+            "Uniware": pl.Float64,
+            "FBA": pl.Float64,
+            "Sjit": pl.Float64,
+            "FBF": pl.Float64,
+            "LOC": pl.Utf8,
+            "Current_Price": pl.Float64,
+            "Launch_Date": pl.Utf8
+        })
+    return pl.from_dicts(rows)
 
 
 # ============================================================

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
-from auth import get_current_user
+from auth import get_current_user, check_page_access
 from database import get_db
 import json
 import math
@@ -242,10 +242,12 @@ def build_amazon_csv(rows: List[Dict[str, Any]]) -> bytes:
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
+    check_page_access(user, "amazon_pricing")
     return {"visible": DEFAULT_VISIBLE_COLUMNS, "all": ALL_COLUMNS, "editable": [], "labels": COLUMN_LABELS}
 
 @router.get("/filters")
 async def get_filters(user=Depends(get_current_user)):
+    check_page_access(user, "amazon_pricing")
     return {"categories": []}
 
 @router.get("/filter-options")
@@ -255,6 +257,7 @@ async def get_filter_options(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
+    check_page_access(user, "amazon_pricing")
     if column not in ALL_COLUMNS:
         return {"column": column, "values": []}
 
@@ -272,7 +275,7 @@ async def get_amazon_pricing(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
-    # If role specific access is required, you can implement check_page_access here.
+    check_page_access(user, "amazon_pricing")
     
     items = load_amazon_pricing_db()
     active_filters = parse_json_dict(filters)
@@ -307,6 +310,7 @@ async def get_amazon_pricing(
 
 @router.get("/export")
 async def export_amazon_pricing(user=Depends(get_current_user)):
+    check_page_access(user, "amazon_pricing")
     rows = load_amazon_pricing_db()
     filename = "amazon_pricing_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
     return StreamingResponse(
@@ -317,6 +321,7 @@ async def export_amazon_pricing(user=Depends(get_current_user)):
 
 @router.post("/cost-percent")
 async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(get_current_user)):
+    check_page_access(user, "amazon_pricing")
     if not payload.updates:
         return {"updated": 0}
 

@@ -3,33 +3,210 @@
     "id": 1,
     "username": "admin",
     "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "special_password": "",
     "role": "admin",
     "allowed_pages": [
       "item_master",
+      "amazon_pricing",
       "admin",
       "logs",
       "import"
     ],
-    "is_active": true
+    "is_active": true,
+    "column_permissions": {
+      "item_master": {
+        "visible": [
+          "sku_code",
+          "item_name",
+          "size",
+          "category",
+          "location",
+          "child_remark",
+          "parent_remark",
+          "item_type",
+          "cost",
+          "price",
+          "catalog",
+          "mrp",
+          "up_price",
+          "cost_into_percent",
+          "available_atp",
+          "fba_stock",
+          "fbf_stock",
+          "sjit_stock",
+          "updated"
+        ],
+        "editable": [
+          "sku_code",
+          "item_name",
+          "size",
+          "category",
+          "location",
+          "child_remark",
+          "parent_remark",
+          "item_type",
+          "cost",
+          "price",
+          "catalog",
+          "mrp",
+          "up_price",
+          "cost_into_percent",
+          "available_atp",
+          "fba_stock",
+          "fbf_stock",
+          "sjit_stock",
+          "updated"
+        ]
+      },
+      "amazon_pricing": {
+        "visible": [
+          "master_sku",
+          "item_name",
+          "original_category",
+          "amazon_cat",
+          "remark",
+          "cost",
+          "mrp",
+          "uniware",
+          "fba",
+          "sjit",
+          "fbf",
+          "launch_date",
+          "loc",
+          "cost_into_percent",
+          "cost_after_percent",
+          "return_charge",
+          "gst_on_return",
+          "final_tp",
+          "required_selling_price",
+          "selected_price_range",
+          "selected_fixed_fee_range",
+          "commission_percent",
+          "commission_amount",
+          "fixed_closing_fee",
+          "fba_pick_pack",
+          "technology_fee",
+          "full_shipping_fee",
+          "whf_percent_on_shipping",
+          "shipping_fee_charged",
+          "total_charges",
+          "final_value_after_charges",
+          "old_daily_sp",
+          "old_deal_sp",
+          "sett_acc_panel",
+          "net_profit_on_sp",
+          "net_profit_percent_on_sp",
+          "net_profit_percent_on_tp"
+        ],
+        "editable": []
+      }
+    },
+    "last_login": "2026-05-11T16:55:07.472660"
   },
   {
     "id": 2,
     "username": "vikesh",
     "password": "64407c29de10ca999f080bb94c7a14644fab84dbc47c165071824736a61374ec",
+    "special_password": "64407c29de10ca999f080bb94c7a14644fab84dbc47c165071824736a61374ec",
     "role": "viewer",
     "allowed_pages": [
       "item_master"
     ],
-    "is_active": true
+    "is_active": true,
+    "column_permissions": {
+      "item_master": {
+        "visible": [
+          "sku_code",
+          "item_name",
+          "size",
+          "category",
+          "location",
+          "child_remark",
+          "parent_remark",
+          "item_type",
+          "cost",
+          "price",
+          "catalog",
+          "mrp",
+          "up_price",
+          "cost_into_percent",
+          "available_atp",
+          "fba_stock",
+          "fbf_stock",
+          "sjit_stock",
+          "updated"
+        ],
+        "editable": []
+      },
+      "amazon_pricing": {
+        "visible": [
+          "master_sku",
+          "item_name",
+          "original_category",
+          "amazon_cat",
+          "remark",
+          "cost",
+          "mrp",
+          "uniware",
+          "fba",
+          "sjit",
+          "fbf",
+          "launch_date",
+          "loc",
+          "cost_into_percent",
+          "cost_after_percent",
+          "return_charge",
+          "gst_on_return",
+          "final_tp",
+          "required_selling_price",
+          "sett_acc_panel",
+          "net_profit_on_sp",
+          "net_profit_percent_on_sp",
+          "net_profit_percent_on_tp",
+          "old_daily_sp",
+          "old_deal_sp"
+        ],
+        "editable": []
+      }
+    }
   },
   {
     "id": 3,
     "username": "hitesh",
     "password": "22354a3e6dc6fb244bc41c92656dcea971010620720641c5657e1746ab72b282",
+    "special_password": "22354a3e6dc6fb244bc41c92656dcea971010620720641c5657e1746ab72b282",
     "role": "restricted",
     "allowed_pages": [
       "item_master"
     ],
-    "is_active": true
+    "is_active": true,
+    "column_permissions": {
+      "item_master": {
+        "visible": [
+          "sku_code",
+          "item_name",
+          "size",
+          "category",
+          "available_atp"
+        ],
+        "editable": []
+      },
+      "amazon_pricing": {
+        "visible": [
+          "master_sku",
+          "item_name",
+          "original_category",
+          "amazon_cat",
+          "remark",
+          "cost",
+          "mrp",
+          "uniware",
+          "fba",
+          "sjit",
+          "fbf"
+        ],
+        "editable": []
+      }
+    }
   }
 ]

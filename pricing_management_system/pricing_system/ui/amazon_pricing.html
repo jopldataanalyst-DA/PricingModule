@@ -467,6 +467,10 @@ function setupUser() {
   document.getElementById('userName').textContent = user.username || '—';
   document.getElementById('userRole').textContent = user.role || '—';
   var pages = user.allowed_pages || [];
+  if (pages.indexOf('amazon_pricing') < 0 && user.role !== 'admin') {
+    window.location.href = '/dashboard';
+    return;
+  }
   if (pages.indexOf('admin') < 0 && user.role !== 'admin') {
     document.getElementById('nav-admin').style.display = 'none';
   }
