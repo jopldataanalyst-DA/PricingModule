@@ -289,13 +289,17 @@ async def get_items(
     
     # Calculate Global Stats (before filtering)
     total_skus = count_item_master_rows() or len(all_items)
+    total_available = sum(int(x.get('available_atp') or 0) for x in all_items)
+    total_fba = sum(int(x.get('fba_stock') or 0) for x in all_items)
+    total_sjit = sum(int(x.get('sjit_stock') or 0) for x in all_items)
+    total_fbf = sum(int(x.get('fbf_stock') or 0) for x in all_items)
     stats = {
         "total_skus": total_skus,
-        "total_stock": sum(int(x.get('available_atp') or 0) for x in all_items),
-        "total_available": sum(int(x.get('available_atp') or 0) for x in all_items),
-        "total_fba": sum(int(x.get('fba_stock') or 0) for x in all_items),
-        "total_sjit": sum(int(x.get('sjit_stock') or 0) for x in all_items),
-        "total_fbf": sum(int(x.get('fbf_stock') or 0) for x in all_items)
+        "total_stock": total_available + total_fba + total_sjit + total_fbf,
+        "total_available": total_available,
+        "total_fba": total_fba,
+        "total_sjit": total_sjit,
+        "total_fbf": total_fbf
     }
     
     active_filters = parse_json_dict(filters)

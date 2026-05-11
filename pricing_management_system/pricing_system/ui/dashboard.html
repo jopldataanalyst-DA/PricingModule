@@ -139,6 +139,7 @@ tr.selected td{background:var(--gold-dim)}
 </header>
 <div class="stats-bar" id="statsBar">
 <div class="stat-card"><div class="stat-label">Total SKUs</div><div class="stat-value gold" id="s-total">—</div></div>
+<div class="stat-card"><div class="stat-label">Total Stock</div><div class="stat-value gold" id="s-stock">—</div></div>
 <div class="stat-card"><div class="stat-label">Uniware Stock</div><div class="stat-value green" id="s-avail">—</div></div>
 <div class="stat-card"><div class="stat-label">FBA</div><div class="stat-value blue" id="s-fba">—</div></div>
 <div class="stat-card"><div class="stat-label">SJIT</div><div class="stat-value orange" id="s-sjit">—</div></div>
@@ -466,6 +467,7 @@ function renderTable(items) {
 function updateStats(stats) {
   if (!stats) return;
   document.getElementById('s-total').textContent = (stats.total_skus || 0).toLocaleString();
+  document.getElementById('s-stock').textContent = (stats.total_stock || 0).toLocaleString();
   document.getElementById('s-avail').textContent = (stats.total_available || 0).toLocaleString();
   document.getElementById('s-fba').textContent = (stats.total_fba || 0).toLocaleString();
   document.getElementById('s-sjit').textContent = (stats.total_sjit || 0).toLocaleString();
