@@ -111,10 +111,43 @@ def init_db():
             wholesale_price FLOAT DEFAULT 0.0,
             up_price FLOAT DEFAULT 0.0,
             mrp FLOAT DEFAULT 0.0,
-            cost_into_percent FLOAT DEFAULT 23.0,
             INDEX idx_pricing_sku (master_sku)
         )
     """)
+
+    try:
+        cursor.execute("ALTER TABLE catalog_pricing DROP COLUMN cost_into_percent")
+    except Exception:
+        pass
+
+    # Create platform-wise cost percent table from item_master.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cost_into_percent (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            master_sku VARCHAR(255),
+            style_id VARCHAR(255),
+            Platform VARCHAR(100) DEFAULT 'Amazon',
+            Cost_Into_Percent FLOAT DEFAULT 23.0,
+            INDEX idx_cost_percent_sku (master_sku),
+            INDEX idx_cost_percent_platform (Platform)
+        )
+    """)
+
+    cursor.execute("SHOW TABLES LIKE 'item_master'")
+    item_master_exists = cursor.fetchone() is not None
+    cursor.execute("SELECT COUNT(*) FROM cost_into_percent")
+    cost_percent_count = cursor.fetchone()[0]
+    if item_master_exists and cost_percent_count == 0:
+        cursor.execute("""
+            INSERT INTO cost_into_percent
+                (master_sku, style_id, Platform, Cost_Into_Percent)
+            SELECT
+                `Master SKU`,
+                `Style ID / Parent SKU`,
+                'Amazon',
+                23
+            FROM item_master
+        """)
 
     # Create amazon_pricing_results table
     cursor.execute("""

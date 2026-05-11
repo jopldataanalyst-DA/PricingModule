@@ -170,6 +170,22 @@ def run_pipeline():
                     "mrp": pl.Float64
                 })
 
+            cursor.execute("""
+                SELECT master_sku, MAX(Cost_Into_Percent) AS cost_into_percent
+                FROM cost_into_percent
+                WHERE Platform = 'Amazon'
+                GROUP BY master_sku
+            """)
+            cost_percent_rows = cursor.fetchall()
+            if cost_percent_rows:
+                cost_percent_df = pl.from_dicts(cost_percent_rows).with_columns(
+                    pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
+                )
+            else:
+                cost_percent_df = pl.DataFrame(schema={
+                    "master_sku": pl.String, "cost_into_percent": pl.Float64
+                })
+
             cursor.close()
             conn.close()
 
@@ -198,16 +214,15 @@ def run_pipeline():
                 pl.coalesce(["_new_sjit", "sjit_stock"]).fill_null(0).alias("sjit_stock"),
             ]).drop(["_new_uni", "_new_fba", "_new_fbf", "_new_sjit"])
 
-            # Merge catalog pricing (cost / mrp / launch_date / cost_into_percent) where not already set
+            # Merge catalog pricing (cost / mrp / launch_date) where not already set
             stock_items_df = stock_items_df.join(
                 catalog_pricing_df.select([
-                    "master_sku", "cost", "mrp", "launch_date", "cost_into_percent"
+                    "master_sku", "cost", "mrp", "launch_date"
                 ]).rename({
                     "master_sku": "sku_code",
                     "cost": "_cat_cost",
                     "mrp": "_cat_mrp",
                     "launch_date": "_cat_launch",
-                    "cost_into_percent": "_cat_cost_percent",
                 }),
                 on="sku_code",
                 how="left"
@@ -215,8 +230,18 @@ def run_pipeline():
                 pl.coalesce(["_cat_cost", "cost"]).fill_null(0.0).alias("cost"),
                 pl.coalesce(["_cat_mrp",  "mrp"]).fill_null(0.0).alias("mrp"),
                 pl.coalesce(["_cat_launch", "updated"]).fill_null("").alias("updated"),
-                pl.coalesce(["_cat_cost_percent", pl.lit(23.0)]).fill_null(23.0).alias("cost_into_percent"),
-            ]).drop(["_cat_cost", "_cat_mrp", "_cat_launch", "_cat_cost_percent"])
+            ]).drop(["_cat_cost", "_cat_mrp", "_cat_launch"])
+
+            stock_items_df = stock_items_df.join(
+                cost_percent_df.select(["master_sku", "cost_into_percent"]).rename({
+                    "master_sku": "sku_code",
+                    "cost_into_percent": "_amazon_cost_percent",
+                }),
+                on="sku_code",
+                how="left"
+            ).with_columns([
+                pl.coalesce(["_amazon_cost_percent", pl.lit(23.0)]).fill_null(23.0).alias("cost_into_percent"),
+            ]).drop(["_amazon_cost_percent"])
 
             # Persist updated values back into stock_items
             records = stock_items_df.to_dicts()

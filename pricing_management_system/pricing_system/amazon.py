@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from typing import List, Dict, Any
 from auth import get_current_user
 from database import get_db
 import json
 import math
+import csv
+import io
+from datetime import datetime
 
 router = APIRouter()
 
@@ -77,6 +82,14 @@ NUMERIC_COLUMNS = [
     'net_profit_percent_on_tp'
 ]
 
+class CostPercentUpdate(BaseModel):
+    master_sku: str
+    cost_into_percent: float
+    style_id: str | None = None
+
+class CostPercentUpdateRequest(BaseModel):
+    updates: List[CostPercentUpdate]
+
 def safe_float(value):
     try:
         result = float(value or 0)
@@ -126,22 +139,106 @@ def apply_search_and_filters(items, search="", filters=None, skip_column=None):
 
     return filtered
 
+def round2(value):
+    return round(value + 1e-9, 2)
+
+def round_half_up(value):
+    return int(math.floor(value + 0.5))
+
+def recalculate_pricing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
+    cost = safe_float(row.get("cost"))
+    cost_into_percent = safe_float(row.get("cost_into_percent"))
+    return_charge = safe_float(row.get("return_charge")) or 59.0
+    denominator = 100 - cost_into_percent
+
+    cost_after_percent = cost / denominator * 100 if cost > 0 and denominator > 0 else 0.0
+    gst_on_return = return_charge * 0.18 if cost > 0 else 0.0
+    final_tp = cost_after_percent + return_charge + gst_on_return if cost > 0 else 0.0
+
+    commission_percent = safe_float(row.get("commission_percent"))
+    commission_rate = commission_percent / 100
+    if commission_rate >= 1:
+        commission_rate = 0
+
+    fixed_charges = (
+        safe_float(row.get("fixed_closing_fee"))
+        + safe_float(row.get("fba_pick_pack"))
+        + safe_float(row.get("technology_fee"))
+        + safe_float(row.get("shipping_fee_charged"))
+    )
+
+    required_selling_price = round_half_up(
+        (final_tp + fixed_charges) / (1 - commission_rate)
+        if commission_rate < 1
+        else final_tp + fixed_charges
+    )
+    commission_amount = required_selling_price * commission_rate
+    total_charges = commission_amount + fixed_charges
+    final_value_after_charges = required_selling_price - total_charges
+    net_profit_on_sp = final_value_after_charges - return_charge - gst_on_return - cost
+    net_profit_percent_on_sp = (
+        net_profit_on_sp / required_selling_price * 100
+        if required_selling_price > 0
+        else 0.0
+    )
+    net_profit_percent_on_tp = net_profit_on_sp / final_tp * 100 if final_tp > 0 else 0.0
+
+    return {
+        "cost_into_percent": round2(cost_into_percent),
+        "cost_after_percent": round2(cost_after_percent),
+        "gst_on_return": round2(gst_on_return),
+        "final_tp": round2(final_tp),
+        "required_selling_price": required_selling_price,
+        "commission_amount": round2(commission_amount),
+        "total_charges": round2(total_charges),
+        "final_value_after_charges": round2(final_value_after_charges),
+        "sett_acc_panel": round2(final_value_after_charges),
+        "net_profit_on_sp": round2(net_profit_on_sp),
+        "net_profit_percent_on_sp": round2(net_profit_percent_on_sp),
+        "net_profit_percent_on_tp": round2(net_profit_percent_on_tp),
+    }
+
 def load_amazon_pricing_db() -> List[Dict[str, Any]]:
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT apr.*, si.item_name 
-            FROM amazon_pricing_results apr 
-            LEFT JOIN stock_items si ON apr.master_sku = si.sku_code
+            SELECT
+                apr.*,
+                si.item_name,
+                COALESCE(cip.Cost_Into_Percent, apr.cost_into_percent, 23.0) AS cost_into_percent
+            FROM amazon_pricing_results apr
+            LEFT JOIN (
+                SELECT sku_code, MAX(item_name) AS item_name
+                FROM stock_items
+                GROUP BY sku_code
+            ) si ON apr.master_sku = si.sku_code
+            LEFT JOIN (
+                SELECT master_sku, MAX(Cost_Into_Percent) AS Cost_Into_Percent
+                FROM cost_into_percent
+                WHERE Platform = 'Amazon'
+                GROUP BY master_sku
+            ) cip ON apr.master_sku = cip.master_sku
         """)
         rows = cursor.fetchall()
         cursor.close()
         conn.close()
-        return [{**row, "id": i + 1} for i, row in enumerate(rows)]
+        items = []
+        for i, row in enumerate(rows):
+            row.update(recalculate_pricing_fields(row))
+            items.append({**row, "id": i + 1})
+        return items
     except Exception as e:
         print(f"Error loading amazon pricing from DB: {e}")
         return []
+
+def build_amazon_csv(rows: List[Dict[str, Any]]) -> bytes:
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([COLUMN_LABELS.get(col, col) for col in ALL_COLUMNS])
+    for row in rows:
+        writer.writerow([row.get(col, "") for col in ALL_COLUMNS])
+    return output.getvalue().encode("utf-8-sig")
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
@@ -207,3 +304,64 @@ async def get_amazon_pricing(
     
     return {"items": page_items, "total": total, "page": page, "page_size": page_size,
             "total_pages": (total + page_size - 1) // page_size if total else 1, "stats": stats}
+
+@router.get("/export")
+async def export_amazon_pricing(user=Depends(get_current_user)):
+    rows = load_amazon_pricing_db()
+    filename = "amazon_pricing_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
+    return StreamingResponse(
+        io.BytesIO(build_amazon_csv(rows)),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+@router.post("/cost-percent")
+async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(get_current_user)):
+    if not payload.updates:
+        return {"updated": 0}
+
+    conn = get_db()
+    cursor = conn.cursor()
+    updated = 0
+
+    try:
+        for item in payload.updates:
+            master_sku = (item.master_sku or "").strip()
+            if not master_sku:
+                continue
+            pct = safe_float(item.cost_into_percent)
+            if pct < 0 or pct >= 100:
+                raise HTTPException(status_code=400, detail="Cost into % must be between 0 and 99")
+
+            cursor.execute(
+                "SELECT COUNT(*) FROM cost_into_percent WHERE master_sku=%s AND Platform=%s",
+                (master_sku, "Amazon")
+            )
+            exists = cursor.fetchone()[0] > 0
+
+            if exists:
+                cursor.execute(
+                    "UPDATE cost_into_percent SET Cost_Into_Percent=%s WHERE master_sku=%s AND Platform=%s",
+                    (pct, master_sku, "Amazon")
+                )
+            else:
+                cursor.execute(
+                    """
+                    INSERT INTO cost_into_percent (master_sku, style_id, Platform, Cost_Into_Percent)
+                    VALUES (%s, %s, %s, %s)
+                    """,
+                    (master_sku, item.style_id, "Amazon", pct)
+                )
+            updated += 1
+
+        conn.commit()
+        return {"updated": updated}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update cost into percent: {e}")
+    finally:
+        cursor.close()
+        conn.close()

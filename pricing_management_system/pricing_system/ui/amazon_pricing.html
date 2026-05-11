@@ -141,7 +141,6 @@ td.recalc,td.recalc-neg{font-weight:600}
 <div class="nav-label">Menu</div>
 <a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
 <a class="nav-item active" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
-<a class="nav-item" href="#" id="nav-import" onclick="openImport()"><span class="icon">⬆️</span> Import Data</a>
 <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
 <div class="nav-label">Reports</div>
 <a class="nav-item" href="#" onclick="exportData()"><span class="icon">📊</span> Export Excel</a>
@@ -183,13 +182,6 @@ td.recalc,td.recalc-neg{font-weight:600}
   <button class="op-clear" id="costPctClear" title="Clear" onclick="clearInput('costPctInput','costPctClear')">✕</button>
 </div>
 
-<!-- Cost ₹ override -->
-<div class="override-panel" title="Override Cost ₹ for visible rows on Apply">
-  <span class="op-label">Cost ₹</span>
-  <input class="op-input" type="number" id="costAmtInput" min="0" step="1" placeholder="1200">
-  <button class="op-clear" id="costAmtClear" title="Clear" onclick="clearInput('costAmtInput','costAmtClear')">✕</button>
-</div>
-
 <button class="btn-apply" id="applyOverrideBtn" onclick="applyOverride()">▶ Apply</button>
 <button class="btn-reset-ov" id="resetOverrideBtn" onclick="resetAllOverrides()">✕ Reset</button>
 <span class="override-badge" id="overrideBadge">● 0 overridden</span>
@@ -209,19 +201,6 @@ td.recalc,td.recalc-neg{font-weight:600}
 <div class="modal"><div class="modal-header"><div class="modal-title">Edit Item</div><button class="modal-close" onclick="closeModal('editModal')">✕</button></div>
 <div class="modal-body"><div class="modal-grid" id="editFields"></div></div>
 <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button><button class="btn btn-gold" onclick="saveEdit()">Save Changes</button></div>
-</div>
-</div>
-<div class="modal-overlay" id="importModal">
-<div class="modal"><div class="modal-header"><div class="modal-title">Import / Update Data</div><button class="modal-close" onclick="closeModal('importModal')">✕</button></div>
-<div class="modal-body">
-<div class="import-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
-<div class="icon">📂</div>
-<div style="font-size:15px;font-weight:600;margin-bottom:6px">Drop CSV file here or click to browse</div>
-<div style="font-size:12px;color:var(--text-muted)">Export the dashboard CSV first, fill in the <b>Action</b> column (<code>add</code> / <code>replace</code> / <code>delete</code>), then import. Only rows with an Action value are processed.</div>
-<input type="file" id="fileInput" accept=".csv" style="display:none" onchange="handleFileSelect(this)">
-</div>
-<div id="importResult" style="margin-top:16px;display:none"></div>
-</div>
 </div>
 </div>
 <div class="toast-container" id="toastContainer"></div>
@@ -250,10 +229,10 @@ var PE = (function(){
   function n(v){ var x=parseFloat(String(v==null?'':v).replace(/,/g,'')); return isNaN(x)?0:x; }
   function r2(v){ return Math.round(v*100)/100; }
 
-  // cost       = cost value to use (₹)
   // costIntoPct = cost-into percentage as a number e.g. 23 (NOT 0.23)
   // item        = original row (for pre-computed rate-card charges)
-  function calc(item, cost, costIntoPct){
+  function calc(item, costIntoPct){
+    var cost = n(item.cost);
     var returnCharge  = n(item.return_charge) || 59;
     var costAfter     = cost > 0 ? cost / (100 - costIntoPct) * 100 : 0;
     var gstOnReturn   = cost > 0 ? returnCharge * 0.18 : 0;
@@ -297,18 +276,16 @@ var PE = (function(){
   }
 
   return {
-    // Both overrides applied together; pass null to keep original value
-    recalc: function(item, overridePct, overrideAmt){
-      var cost       = overrideAmt  !== null ? overrideAmt               : n(item.cost);
+    recalc: function(item, overridePct){
       var costIntoPct= overridePct  !== null ? overridePct               : n(item.cost_into_percent);
-      return calc(item, cost, costIntoPct);
+      return calc(item, costIntoPct);
     }
   };
 })();
 
 // Fields that change when pricing is recalculated
 var RECALC_FIELDS = [
-  'cost','cost_into_percent','cost_after_percent','gst_on_return','final_tp',
+  'cost_into_percent','cost_after_percent','gst_on_return','final_tp',
   'required_selling_price','commission_amount','total_charges',
   'final_value_after_charges','sett_acc_panel',
   'net_profit_on_sp','net_profit_percent_on_sp','net_profit_percent_on_tp'
@@ -354,7 +331,7 @@ function _syncBadge(){
 
 // Show ✕ per input as user types
 function _wireInputClears(){
-  [['costPctInput','costPctClear'],['costAmtInput','costAmtClear']].forEach(function(pair){
+  [['costPctInput','costPctClear']].forEach(function(pair){
     var inp = document.getElementById(pair[0]);
     var clr = document.getElementById(pair[1]);
     inp.addEventListener('input', function(){
@@ -368,27 +345,27 @@ function _wireInputClears(){
 
 function applyOverride(){
   var overridePct = _inputVal('costPctInput');
-  var overrideAmt = _inputVal('costAmtInput');
 
-  // Need at least one value
-  if(overridePct === null && overrideAmt === null){
-    showToast('Enter a Cost % or Cost ₹ value (or both) to apply', 'error');
+  if(overridePct === null){
+    showToast('Enter a Cost % value to apply', 'error');
     return;
   }
   if(overridePct !== null && (overridePct < 0 || overridePct >= 100)){
     showToast('Cost % must be between 0 and 99', 'error');
     return;
   }
-  if(overrideAmt !== null && overrideAmt < 0){
-    showToast('Cost ₹ must be a positive number', 'error');
-    return;
-  }
 
   // Apply only to currently visible rows (respects current filter/search/page)
   var applied = 0;
   state.currentItems.forEach(function(item){
-    var newVals = PE.recalc(item, overridePct, overrideAmt);
-    state.overriddenSkus[item.id] = { computed: newVals };
+    var existing = state.overriddenSkus[item.id] || {};
+    var newVals = PE.recalc(item, overridePct);
+    state.overriddenSkus[item.id] = {
+      master_sku: item.master_sku,
+      style_id: item.item_name,
+      original_cost_into_percent: existing.original_cost_into_percent !== undefined ? existing.original_cost_into_percent : item.cost_into_percent,
+      computed: newVals
+    };
     applied++;
   });
 
@@ -397,7 +374,6 @@ function applyOverride(){
 
   var desc = [];
   if(overridePct !== null) desc.push('Cost % = ' + overridePct + '%');
-  if(overrideAmt !== null) desc.push('Cost = ₹' + overrideAmt);
   showToast('Applied to ' + applied + ' visible rows — ' + desc.join(', '), 'info');
 }
 
@@ -406,6 +382,37 @@ function resetAllOverrides(){
   _syncBadge();
   // Re-render from clean original data
   renderTable(state.currentItems);
+}
+
+async function updateCostPercentChanges(){
+  var updates = [];
+  Object.keys(state.overriddenSkus).forEach(function(id){
+    var ov = state.overriddenSkus[id];
+    if(!ov || !ov.computed || ov.computed.cost_into_percent === undefined) return;
+    var original = parseFloat(ov.original_cost_into_percent);
+    var next = parseFloat(ov.computed.cost_into_percent);
+    if(isNaN(next) || Math.abs((isNaN(original) ? -1 : original) - next) < 0.0001) return;
+    updates.push({
+      master_sku: ov.master_sku,
+      style_id: ov.style_id || null,
+      cost_into_percent: next
+    });
+  });
+
+  if(!updates.length){
+    showToast('No Cost % changes to update', 'info');
+    return;
+  }
+
+  var res = await apiFetch('/api/amazon/cost-percent', {
+    method: 'POST',
+    body: JSON.stringify({ updates: updates })
+  });
+  if(res){
+    showToast('Updated Cost % for ' + res.updated + ' rows', 'success');
+    state.overriddenSkus = {};
+    await loadItems();
+  }
 }
 
 // Paint override values onto visible rows (called after render)
@@ -463,10 +470,8 @@ function setupUser() {
   if (pages.indexOf('admin') < 0 && user.role !== 'admin') {
     document.getElementById('nav-admin').style.display = 'none';
   }
-  if (user.role !== 'admin') {
-    document.getElementById('nav-import').style.display = 'none';
-  } else {
-    document.getElementById('adminActions').innerHTML = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button><button class="btn btn-outline btn-sm" id="importBtn" onclick="openImport()">⬆ Import CSV</button>';
+  if (user.role === 'admin') {
+    document.getElementById('adminActions').innerHTML = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button><button class="btn btn-gold btn-sm" id="updateBtn" onclick="updateCostPercentChanges()">Update</button>';
   }
 }
 
@@ -853,46 +858,16 @@ async function deleteItem(id) {
   if (res) { showToast('Item deleted', 'success'); loadItems(); }
 }
 
-function openImport() { openModal('importModal'); }
-function handleFileSelect(input) { var file = input.files[0]; if (file) uploadFile(file); }
-
-var dz = document.getElementById('dropZone');
-dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', function() { dz.classList.remove('drag'); });
-dz.addEventListener('drop', function(e) { e.preventDefault(); dz.classList.remove('drag'); var f = e.dataTransfer.files[0]; if (f) uploadFile(f); });
-
-async function uploadFile(file) {
-  var result = document.getElementById('importResult');
-  result.style.display = 'block';
-  result.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted)"><div class="spinner"></div> Importing data…</div>';
-  var fd = new FormData();
-  fd.append('file', file);
-  try {
-    var res = await fetch('/api/items/import', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: fd });
-    var data = await res.json();
-    if (res.ok) {
-      var errHtml = (data.error_details && data.error_details.length) ? '<div style="margin-top:10px;font-size:11px;color:var(--warning);line-height:1.6">' + data.error_details.join('<br>') + '</div>' : '';
-      result.innerHTML = '<div style="background:var(--success-dim);padding:16px;border-radius:10px"><div style="color:var(--success);font-weight:600;margin-bottom:8px">Import Complete</div><div>Processed: ' + data.total + ' &nbsp;|&nbsp; ➕ Added: ' + data.added + ' &nbsp;|&nbsp; 🔄 Replaced: ' + data.replaced + ' &nbsp;|&nbsp; 🗑 Deleted: ' + data.deleted + (data.errors ? ' &nbsp;|&nbsp; ⚠️ Errors: ' + data.errors : '') + '</div>' + errHtml + '</div>';
-      showToast('Done — ' + data.added + ' added, ' + data.replaced + ' replaced, ' + data.deleted + ' deleted', 'success');
-      loadItems();
-    } else {
-      result.innerHTML = '<div style="color:var(--danger);padding:16px">Error: ' + (data.detail || 'Unknown error') + '</div>';
-    }
-  } catch(e) {
-    result.innerHTML = '<div style="color:var(--danger)">Connection error</div>';
-  }
-}
-
 async function exportDashboard() {
   showToast('Preparing export…', 'info');
   try {
-    var res = await fetch('/api/items/export', { headers: { 'Authorization': 'Bearer ' + token } });
+    var res = await fetch('/api/amazon/export', { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) { showToast('Export failed', 'error'); return; }
     var blob = await res.blob();
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
     a.href = url;
-    a.download = 'dashboard_export_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.download = 'amazon_pricing_export_' + new Date().toISOString().slice(0, 10) + '.csv';
     document.body.appendChild(a);
     a.click();
     a.remove();
