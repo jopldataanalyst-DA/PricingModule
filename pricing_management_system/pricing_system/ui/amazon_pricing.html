@@ -297,10 +297,17 @@ var MONEY_COLS = ['cost','mrp','cost_after_percent','return_charge','gst_on_retu
   'technology_fee','full_shipping_fee','shipping_fee_charged','total_charges',
   'final_value_after_charges','old_daily_sp','old_deal_sp','sett_acc_panel','net_profit_on_sp'];
 
-function fmtCell(col, val){
+function fmtCell(col, val, itemId){
   if(val===null||val===undefined) return '-';
-  if(PCT_COLS.indexOf(col)   !== -1) return parseFloat(val).toFixed(2)+'%';
-  if(MONEY_COLS.indexOf(col) !== -1) return '₹'+parseFloat(val).toFixed(2);
+  if(col === 'cost_into_percent' && itemId) {
+    var pctVal = (val === '-' || isNaN(parseFloat(val))) ? '' : parseFloat(val).toFixed(2);
+    return '<div style="display:flex;align-items:center;gap:2px;">' +
+           '<input type="number" class="op-input single-op-input" style="width:48px;border:1px solid var(--border2);border-radius:4px;padding:2px 4px;font-size:11px;background:var(--surface2);text-align:right;color:var(--gold2);" value="' + pctVal + '" ' +
+           'onblur="applySingleOverride(\'' + itemId + '\', this.value)" onkeydown="if(event.key===\'Enter\')this.blur()" onclick="event.stopPropagation()">' +
+           '<span style="font-size:10px">%</span></div>';
+  }
+  if(PCT_COLS.indexOf(col)   !== -1 && val !== '-') return parseFloat(val).toFixed(2)+'%';
+  if(MONEY_COLS.indexOf(col) !== -1 && val !== '-') return '₹'+parseFloat(val).toFixed(2);
   return String(val);
 }
 
@@ -378,6 +385,38 @@ function applyOverride(){
   showToast('Applied to ' + applied + ' visible rows — ' + desc.join(', '), 'info');
 }
 
+function applySingleOverride(itemId, overridePct) {
+  var item = state.currentItems.find(function(i) { return String(i.id) === String(itemId); });
+  if (!item) return;
+
+  if (overridePct === null || overridePct === '') {
+    if (state.overriddenSkus[item.id]) {
+      delete state.overriddenSkus[item.id];
+      _syncBadge();
+      renderTable(state.currentItems);
+    }
+    return;
+  }
+  
+  overridePct = parseFloat(overridePct);
+  if (isNaN(overridePct) || overridePct < 0 || overridePct >= 100) {
+    showToast('Cost % must be between 0 and 99', 'error');
+    return;
+  }
+
+  var existing = state.overriddenSkus[item.id] || {};
+  var newVals = PE.recalc(item, overridePct);
+  state.overriddenSkus[item.id] = {
+    master_sku: item.master_sku,
+    style_id: item.item_name,
+    original_cost_into_percent: existing.original_cost_into_percent !== undefined ? existing.original_cost_into_percent : item.cost_into_percent,
+    computed: newVals
+  };
+
+  _syncBadge();
+  _paintOverrides();
+}
+
 function resetAllOverrides(){
   state.overriddenSkus = {};
   _syncBadge();
@@ -433,7 +472,7 @@ function _paintOverrides(){
       var td = tds[c + 1]; // +1 for leading # cell
       if(!td) return;
       var val = ov.computed[col];
-      td.innerHTML = fmtCell(col, val);
+      td.innerHTML = fmtCell(col, val, item.id);
       var isNeg = (col==='net_profit_on_sp'||col==='net_profit_percent_on_sp'||col==='net_profit_percent_on_tp') && parseFloat(val)<0;
       td.className = isNeg ? 'recalc-neg' : 'recalc';
       void td.offsetWidth; // re-trigger flash animation
@@ -666,7 +705,9 @@ function renderTable(items) {
           var color = parseInt(val) > 0 ? 'var(--info)' : 'var(--text-muted)';
           val = '<span style="color:' + color + '">' + val + '</span>';
         }
-      } else if (['cost_into_percent', 'commission_percent', 'whf_percent_on_shipping', 'net_profit_percent_on_sp', 'net_profit_percent_on_tp'].indexOf(col) !== -1 && val !== '-') {
+      } else if (col === 'cost_into_percent') {
+        val = fmtCell(col, val, itemId);
+      } else if (['commission_percent', 'whf_percent_on_shipping', 'net_profit_percent_on_sp', 'net_profit_percent_on_tp'].indexOf(col) !== -1 && val !== '-') {
         val = parseFloat(val).toFixed(2) + '%';
       } else if (['cost', 'mrp', 'cost_after_percent', 'return_charge', 'gst_on_return', 'final_tp', 'required_selling_price', 'commission_amount', 'fixed_closing_fee', 'fba_pick_pack', 'technology_fee', 'full_shipping_fee', 'shipping_fee_charged', 'total_charges', 'final_value_after_charges', 'old_daily_sp', 'old_deal_sp', 'sett_acc_panel', 'net_profit_on_sp'].indexOf(col) !== -1 && val !== '-') {
         val = '₹' + parseFloat(val).toFixed(2);
