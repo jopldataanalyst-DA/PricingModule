@@ -1,4 +1,11 @@
-# Amazon Pricing Module
+"""Early standalone Amazon pricing calculator experiment.
+
+Use case:
+    Contains hard-coded category/rate-card data and helper functions used while
+    prototyping the Amazon pricing formula. Kept for reference; production
+    calculations are in AmazonPricing.py.
+"""
+
 # Selling Price - Charges = X
 
 CATEGORY_MAPPING = {

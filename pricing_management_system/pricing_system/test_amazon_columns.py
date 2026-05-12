@@ -1,3 +1,10 @@
+"""Manual smoke test for Amazon pricing column metadata.
+
+Use case:
+    Logs into the local API and prints /api/amazon/columns so a developer can
+    confirm the frontend will receive item_name and other expected columns.
+"""
+
 import requests
 import json
 

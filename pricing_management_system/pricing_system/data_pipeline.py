@@ -1,3 +1,11 @@
+"""Data refresh pipelines for inventory and Amazon pricing.
+
+Use case:
+    Pulls the latest stock data, rebuilds the Item Master dashboard table from
+    item_master/catalog_pricing/stock_update, and runs the Amazon pricing model
+    so the frontend can read fast, precomputed MySQL tables.
+"""
+
 import polars as pl
 import requests
 from io import BytesIO
@@ -17,6 +25,7 @@ from AmazonPricing import run_amazon_pricing
 STOCK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTW9CQgk8R7IxKynojzBc0HOB-bMaEHafeBLsAjzc91H9ilRP14PCmdOWvkt8NHzjNeX-HOyjcOwIXh/pub?gid=1527427362&single=true&output=csv"
 
 def clean_stock_data(url: str) -> pl.DataFrame:
+    """Download the stock Google Sheet CSV and normalize its raw columns."""
     response = requests.get(url)
     response.raise_for_status()
     raw_df = pl.read_csv(BytesIO(response.content), has_header=False)
@@ -45,9 +54,10 @@ def clean_stock_data(url: str) -> pl.DataFrame:
     )
     return df
 
-def run_pipeline():
+def run_inventory_pipeline():
+    """Refresh stock_update and rebuild stock_items for the Item Master page."""
     init_db()
-    print(f"[{datetime.now()}] Starting data pipeline upgrade...")
+    print(f"[{datetime.now()}] Starting inventory pipeline upgrade...")
     
     # 1. Fetch & Clean Stock Data
     stock_raw = clean_stock_data(STOCK_URL)
@@ -67,6 +77,7 @@ def run_pipeline():
     ])
 
     def make_stock_df(sku_col, stock_col):
+        """Aggregate one stock channel by Master SKU."""
         return (
             stock
             .select([pl.col(sku_col).alias("Master SKU"), pl.col(stock_col)])
@@ -265,36 +276,6 @@ def run_pipeline():
                 pl.coalesce(["_new_sjit", "sjit_stock"]).fill_null(0).alias("sjit_stock"),
             ]).drop(["_new_uni", "_new_fba", "_new_fbf", "_new_sjit"])
 
-            # Include stock SKUs that are not present in item_master so dashboard
-            # stock totals match the latest stock_update snapshot.
-            stock_only_df = (
-                stock_update_df
-                .select(["master_sku", "uniware_stock", "fba_stock", "fbf_stock", "sjit_stock"])
-                .rename({
-                    "master_sku": "sku_code",
-                    "uniware_stock": "available_atp",
-                })
-                .join(stock_items_df.select(["sku_code"]).unique(), on="sku_code", how="anti")
-            )
-            if stock_only_df.height:
-                stock_only_df = stock_only_df.with_columns([
-                    pl.lit("").alias("item_name"),
-                    pl.lit("").alias("size"),
-                    pl.lit("Stock Only").alias("category"),
-                    pl.lit("").alias("location"),
-                    pl.lit("").alias("child_remark"),
-                    pl.lit("Stock SKU missing from item_master").alias("parent_remark"),
-                    pl.lit("").alias("item_type"),
-                    pl.lit("").alias("catalog"),
-                    pl.lit(0.0).alias("cost"),
-                    pl.lit(0.0).alias("price"),
-                    pl.lit(0.0).alias("mrp"),
-                    pl.lit(0.0).alias("up_price"),
-                    pl.lit(23.0).alias("cost_into_percent"),
-                    pl.lit("").alias("updated"),
-                ]).select(stock_items_df.columns)
-                stock_items_df = pl.concat([stock_items_df, stock_only_df], how="vertical")
-
             # Merge catalog pricing (cost / mrp / price / up_price / catalog / launch_date)
             stock_items_df = stock_items_df.join(
                 catalog_pricing_df.select([
@@ -365,6 +346,9 @@ def run_pipeline():
     except Exception as e:
         print(f"[{datetime.now()}] Error in dashboard rebuild step: {e}")
 
+def run_amazon_pipeline():
+    """Run the Amazon pricing workbook logic and persist the result table."""
+    init_db()
     # 5. Run Amazon Pricing Module and save to database
     print(f"[{datetime.now()}] Running Amazon Pricing Module...")
     try:
@@ -378,6 +362,7 @@ def run_pipeline():
         
         import math
         def safe_float(val):
+            """Convert workbook values to finite floats for MySQL."""
             try:
                 v = float(val or 0)
                 if math.isinf(v) or math.isnan(v):
@@ -387,6 +372,7 @@ def run_pipeline():
                 return 0.0
 
         def safe_int(val):
+            """Convert workbook values to ints through the same float cleanup."""
             try:
                 return int(safe_float(val))
             except:
@@ -412,6 +398,11 @@ def run_pipeline():
         print(f"[{datetime.now()}] Amazon pricing complete! Saved {len(amazon_records)} records.")
     except Exception as e:
         print(f"[{datetime.now()}] Error updating amazon pricing database: {e}")
+
+def run_pipeline():
+    """Run both dashboard refresh steps in the required order."""
+    run_inventory_pipeline()
+    run_amazon_pipeline()
 
 if __name__ == "__main__":
     run_pipeline()

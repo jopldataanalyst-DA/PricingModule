@@ -1,3 +1,11 @@
+"""One-time source patch script for AmazonPricing.py.
+
+Use case:
+    Replaces an older DuckDB/MySQL stock-loading implementation with a direct
+    mysql.connector implementation. This is historical maintenance tooling and
+    should not be run during normal application startup.
+"""
+
 import re
 
 with open('d:/VatsalFiles/PricingModule/pricing_management_system/ProcessFiles/AmazonPricingModule/AmazonPricing.py', 'r', encoding='utf-8') as f:

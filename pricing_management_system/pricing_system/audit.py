@@ -1,3 +1,10 @@
+"""JSON-backed audit and import history helpers.
+
+Use case:
+    Provides lightweight persistence for user actions and CSV imports so the
+    admin panel can show accountability without needing separate audit tables.
+"""
+
 import json
 from datetime import datetime
 from pathlib import Path
@@ -11,6 +18,7 @@ IMPORTS_FILE = DATA_DIR / "imports.json"
 
 
 def _read_list(path: Path) -> list[dict[str, Any]]:
+    """Read a JSON list from disk, returning an empty list on missing/bad data."""
     if not path.exists():
         return []
     try:
@@ -22,6 +30,7 @@ def _read_list(path: Path) -> list[dict[str, Any]]:
 
 
 def _write_list(path: Path, rows: list[dict[str, Any]]) -> None:
+    """Write a JSON list through a temp file to reduce partial-write risk."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     temp_path = path.with_suffix(path.suffix + ".tmp")
     with open(temp_path, "w", encoding="utf-8") as f:
@@ -38,10 +47,12 @@ def _write_list(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def _next_id(rows: list[dict[str, Any]]) -> int:
+    """Return the next integer id for a persisted JSON list."""
     return max((int(row.get("id", 0) or 0) for row in rows), default=0) + 1
 
 
 def load_audit_logs() -> list[dict[str, Any]]:
+    """Load audit logs and normalize older entries to the current shape."""
     logs = _read_list(LOGS_FILE)
     for log in logs:
         if "remark" not in log:
@@ -60,10 +71,12 @@ def load_audit_logs() -> list[dict[str, Any]]:
 
 
 def save_audit_logs(logs: list[dict[str, Any]]) -> None:
+    """Persist the audit log list."""
     _write_list(LOGS_FILE, logs)
 
 
 def _json_text(value: Any) -> str:
+    """Convert arbitrary audit details into readable text."""
     if value is None or value == "":
         return ""
     if isinstance(value, str):
@@ -82,6 +95,7 @@ def record_audit_log(
     remark: str = "",
     request: Optional[Request] = None,
 ) -> dict[str, Any]:
+    """Create and persist one audit entry for user or system activity."""
     logs = load_audit_logs()
     if not remark:
         parts = []
@@ -107,6 +121,7 @@ def record_audit_log(
 
 
 def load_import_history() -> list[dict[str, Any]]:
+    """Load CSV import history shown in the admin panel."""
     return _read_list(IMPORTS_FILE)
 
 
@@ -123,6 +138,7 @@ def record_import_history(
     status: str = "success",
     details: Optional[list[str]] = None,
 ) -> dict[str, Any]:
+    """Create and persist a summary entry for one import operation."""
     imports = load_import_history()
     entry = {
         "id": _next_id(imports),

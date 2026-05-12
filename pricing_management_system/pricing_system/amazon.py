@@ -1,4 +1,12 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+"""Amazon pricing API routes.
+
+Use case:
+    Serves the Amazon Pricing dashboard from precomputed pricing rows, supports
+    filtering/export, recalculates profit fields after Cost Into % overrides,
+    and triggers the Amazon pricing pipeline refresh.
+"""
+
+from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
@@ -9,6 +17,7 @@ import math
 import csv
 import io
 from datetime import datetime
+from data_pipeline import run_amazon_pipeline
 
 router = APIRouter()
 
@@ -83,14 +92,17 @@ NUMERIC_COLUMNS = [
 ]
 
 class CostPercentUpdate(BaseModel):
+    """One Cost Into % override for a Master SKU/style row."""
     master_sku: str
     cost_into_percent: float
     style_id: str | None = None
 
 class CostPercentUpdateRequest(BaseModel):
+    """Batch update payload for Cost Into % overrides."""
     updates: List[CostPercentUpdate]
 
 def safe_float(value):
+    """Convert a value to a finite float for pricing math."""
     try:
         result = float(value or 0)
         if math.isinf(result) or math.isnan(result):
@@ -100,14 +112,17 @@ def safe_float(value):
         return 0.0
 
 def safe_int(value):
+    """Convert a value to int after safe float normalization."""
     return int(safe_float(value))
 
 def display_value(value):
+    """Convert values to comparable strings for filter logic."""
     if value is None:
         return ""
     return str(value)
 
 def parse_json_dict(value):
+    """Parse JSON query parameters used by column filters."""
     if not value:
         return {}
     try:
@@ -117,6 +132,7 @@ def parse_json_dict(value):
         return {}
 
 def apply_search_and_filters(items, search="", filters=None, skip_column=None):
+    """Apply dashboard search text and selected column filters."""
     filtered = items
     if search:
         q = search.lower()
@@ -140,12 +156,15 @@ def apply_search_and_filters(items, search="", filters=None, skip_column=None):
     return filtered
 
 def round2(value):
+    """Round currency/percentage values to two decimals consistently."""
     return round(value + 1e-9, 2)
 
 def round_half_up(value):
+    """Round selling prices using half-up behavior expected by the business."""
     return int(math.floor(value + 0.5))
 
 def recalculate_pricing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Recalculate dependent Amazon pricing/profit fields for one row."""
     cost = safe_float(row.get("cost"))
     cost_into_percent = safe_float(row.get("cost_into_percent"))
     return_charge = safe_float(row.get("return_charge")) or 59.0
@@ -199,6 +218,7 @@ def recalculate_pricing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 def load_amazon_pricing_db() -> List[Dict[str, Any]]:
+    """Load Amazon pricing rows and recalculate UI-facing derived fields."""
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -233,6 +253,7 @@ def load_amazon_pricing_db() -> List[Dict[str, Any]]:
         return []
 
 def build_amazon_csv(rows: List[Dict[str, Any]]) -> bytes:
+    """Build a CSV export using human-readable Amazon column labels."""
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([COLUMN_LABELS.get(col, col) for col in ALL_COLUMNS])
@@ -242,11 +263,13 @@ def build_amazon_csv(rows: List[Dict[str, Any]]) -> bytes:
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
+    """Return visible/editable Amazon Pricing columns for the current user."""
     check_page_access(user, "amazon_pricing")
     return {"visible": DEFAULT_VISIBLE_COLUMNS, "all": ALL_COLUMNS, "editable": [], "labels": COLUMN_LABELS}
 
 @router.get("/filters")
 async def get_filters(user=Depends(get_current_user)):
+    """Return legacy filter metadata for the Amazon Pricing page."""
     check_page_access(user, "amazon_pricing")
     return {"categories": []}
 
@@ -257,6 +280,7 @@ async def get_filter_options(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
+    """Return distinct values for one Amazon Pricing column filter menu."""
     check_page_access(user, "amazon_pricing")
     if column not in ALL_COLUMNS:
         return {"column": column, "values": []}
@@ -275,6 +299,7 @@ async def get_amazon_pricing(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
+    """Return paginated Amazon pricing rows plus stock summary stats."""
     check_page_access(user, "amazon_pricing")
     
     items = load_amazon_pricing_db()
@@ -310,6 +335,7 @@ async def get_amazon_pricing(
 
 @router.get("/export")
 async def export_amazon_pricing(user=Depends(get_current_user)):
+    """Export the full Amazon Pricing table as CSV."""
     check_page_access(user, "amazon_pricing")
     rows = load_amazon_pricing_db()
     filename = "amazon_pricing_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
@@ -321,6 +347,7 @@ async def export_amazon_pricing(user=Depends(get_current_user)):
 
 @router.post("/cost-percent")
 async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(get_current_user)):
+    """Persist Cost Into % overrides and return recalculated pricing rows."""
     check_page_access(user, "amazon_pricing")
     if not payload.updates:
         return {"updated": 0}
@@ -370,3 +397,10 @@ async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(ge
     finally:
         cursor.close()
         conn.close()
+
+@router.post("/refresh-data")
+async def refresh_amazon_data(background_tasks: BackgroundTasks, user=Depends(get_current_user)):
+    """Trigger the Amazon pricing pipeline in the background."""
+    check_page_access(user, "amazon_pricing")
+    background_tasks.add_task(run_amazon_pipeline)
+    return {"message": "Amazon pricing refresh started in the background."}

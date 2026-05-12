@@ -1,3 +1,10 @@
+"""Manual local-server smoke test.
+
+Use case:
+    Waits for a running FastAPI server, logs in as admin, and checks that the
+    Amazon columns API returns expected metadata. This is not part of pytest.
+"""
+
 import requests
 import time
 

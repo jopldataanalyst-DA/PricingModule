@@ -1,3 +1,10 @@
+"""Admin audit-log API routes.
+
+Use case:
+    Lets the admin panel page through audit entries and discover the available
+    action names for filtering.
+"""
+
 from fastapi import APIRouter, Depends, Query
 from auth import require_admin
 from audit import load_audit_logs
@@ -12,6 +19,7 @@ async def get_logs(
     username: str = Query(""),
     user=Depends(require_admin)
 ):
+    """Return paginated audit log entries filtered by action and username."""
     logs = load_audit_logs()
     
     if action:
@@ -33,6 +41,7 @@ async def get_logs(
 
 @router.get("/actions")
 async def get_actions(user=Depends(require_admin)):
+    """Return distinct audit action names for the admin filter dropdown."""
     logs = load_audit_logs()
     actions = list(set(l.get("action") for l in logs if l.get("action")))
     return sorted(actions)

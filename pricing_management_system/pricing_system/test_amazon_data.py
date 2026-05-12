@@ -1,3 +1,11 @@
+"""Manual smoke test for Amazon pricing API data.
+
+Use case:
+    Logs into a local FastAPI server as admin and verifies that Amazon pricing
+    data includes joined item_name values. This is a script-style check, not a
+    pytest test.
+"""
+
 import requests
 
 BASE_URL = "http://localhost:8000"

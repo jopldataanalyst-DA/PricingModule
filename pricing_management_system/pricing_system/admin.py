@@ -1,3 +1,10 @@
+"""Admin API routes for users, dashboard stats, and import history.
+
+Use case:
+    Powers the Admin Panel UI where administrators create users, assign page
+    and column permissions, inspect high-level system stats, and review imports.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional, List
@@ -14,6 +21,7 @@ ITEM_MASTER_COLUMNS = set(DEFAULT_COLUMN_PERMISSIONS["item_master"]["visible"])
 AMAZON_PRICING_COLUMNS_SET = set(AMAZON_PRICING_COLUMNS)
 
 class UserUpdate(BaseModel):
+    """Payload used for creating and updating local users."""
     username: Optional[str] = None
     password: Optional[str] = None
     special_password: Optional[str] = None
@@ -24,6 +32,7 @@ class UserUpdate(BaseModel):
 
 
 def _public_user(user: dict) -> dict:
+    """Return a user record without password or special-password hashes."""
     data = dict(user)
     data.pop("password", None)
     data.pop("special_password", None)
@@ -31,6 +40,7 @@ def _public_user(user: dict) -> dict:
 
 
 def _validate_user_payload(data: UserUpdate, *, creating: bool) -> dict:
+    """Validate user-management input before it is saved."""
     username = data.username.strip() if data.username else None
     if creating and not username:
         raise HTTPException(status_code=400, detail="Username is required")
@@ -95,6 +105,7 @@ def _validate_user_payload(data: UserUpdate, *, creating: bool) -> dict:
 
 
 def _default_permissions(role: str) -> dict:
+    """Return the default page/column permissions for a role."""
     if role == "admin":
         return ADMIN_COLUMN_PERMISSIONS
     if role == "restricted":
@@ -103,11 +114,13 @@ def _default_permissions(role: str) -> dict:
 
 @router.get("/users")
 async def get_users(user=Depends(require_admin)):
+    """Return all users in a public-safe shape."""
     users = load_users()
     return [_public_user(u) for u in users]
 
 @router.post("/users")
 async def create_user(user_data: UserUpdate, request: Request, user=Depends(require_admin)):
+    """Create a new local application user."""
     users = load_users()
     payload = _validate_user_payload(user_data, creating=True)
     
@@ -136,6 +149,7 @@ async def create_user(user_data: UserUpdate, request: Request, user=Depends(requ
 
 @router.put("/users/{user_id}")
 async def update_user(user_id: int, update: UserUpdate, request: Request, user=Depends(require_admin)):
+    """Update role, permissions, passwords, or active status for one user."""
     users = load_users()
     payload = _validate_user_payload(update, creating=False)
     
@@ -173,6 +187,7 @@ async def update_user(user_id: int, update: UserUpdate, request: Request, user=D
 
 @router.delete("/users/{user_id}")
 async def delete_user(user_id: int, request: Request, user=Depends(require_admin)):
+    """Delete a user while preventing loss of the last active admin."""
     users = load_users()
     if user.get("user_id") == user_id:
         raise HTTPException(status_code=400, detail="You cannot delete your own account")
@@ -192,6 +207,7 @@ async def delete_user(user_id: int, request: Request, user=Depends(require_admin
 
 @router.get("/stats")
 async def get_stats(user=Depends(require_admin)):
+    """Return summary counts used by the Admin Panel cards."""
     from items import load_items_db
     
     items = load_items_db()
@@ -215,4 +231,5 @@ async def get_stats(user=Depends(require_admin)):
 
 @router.get("/import-history")
 async def get_import_history(user=Depends(require_admin)):
+    """Return recorded CSV imports for the Admin Panel history tab."""
     return load_import_history()

@@ -1,3 +1,10 @@
+"""Amazon rate-card workbook prototype.
+
+Use case:
+    Loads AmazonRateCard.xlsx sheets and tests the category/range/fee lookup
+    functions that were later consolidated into AmazonPricing.py.
+"""
+
 import polars as pl
 
 RATE_CARD_PATH = r"D:\VatsalFiles\PricingModule\Data\AmazonData\AmazonRateCard.xlsx"

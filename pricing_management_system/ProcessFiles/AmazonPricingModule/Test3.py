@@ -1,3 +1,11 @@
+"""Intermediate Amazon pricing pipeline prototype.
+
+Use case:
+    A working-draft version of the Amazon pricing engine that loads stock_items,
+    rate-card sheets, computes pricing fields, and writes Excel/CSV outputs.
+    Kept as reference beside the production AmazonPricing.py module.
+"""
+
 import duckdb
 import polars as pl
 

@@ -1,3 +1,11 @@
+"""Amazon pricing calculation engine.
+
+Use case:
+    Reads stock_items from MySQL and Amazon rate-card sheets, maps each product
+    to an Amazon category, calculates fees/required selling price/profit fields,
+    and returns the result DataFrame consumed by data_pipeline.run_amazon_pipeline.
+"""
+
 import duckdb
 import polars as pl
 
@@ -28,6 +36,7 @@ GstPercent = 18
 # HELPERS
 # ============================================================
 def Num(Value):
+    """Convert spreadsheet values to float, treating blanks/errors as zero."""
     try:
         if Value is None:
             return 0.0
@@ -38,11 +47,13 @@ def Num(Value):
 
 
 def Percent(Value):
+    """Normalize a percent value so 23 and 0.23 both become 0.23."""
     Value = Num(Value)
     return Value / 100 if Value > 1 else Value
 
 
 def PriceRange(Price):
+    """Map a selling price to Amazon commission range labels."""
     Price = Num(Price)
     if Price <= 300:
         return "0-300"
@@ -54,6 +65,7 @@ def PriceRange(Price):
 
 
 def FixedFeeRange(Price):
+    """Map a selling price to Amazon fixed-closing-fee range labels."""
     Price = Num(Price)
     if Price <= 250:
         return "0-250"
@@ -68,6 +80,7 @@ def FixedFeeRange(Price):
 # LOAD MYSQL DATA USING DUCKDB
 # ============================================================
 def LoadStockData():
+    """Load source product/stock/pricing fields from stock_items."""
     import mysql.connector
     MysqlConn = mysql.connector.connect(**DbConfig)
     cursor = MysqlConn.cursor(dictionary=True)

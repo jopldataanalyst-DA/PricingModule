@@ -1,3 +1,11 @@
+"""One-off catalog_pricing synchronization script.
+
+Use case:
+    Reads Data/CatalogData.csv and upserts pricing/catalog fields by Master SKU
+    into the catalog_pricing MySQL table. Run manually when the catalog CSV has
+    been updated outside the normal import workflow.
+"""
+
 import polars as pl
 from database import get_db
 from pathlib import Path
@@ -6,6 +14,7 @@ DATA_DIR = Path(r"D:\VatsalFiles\PricingModule\Data")
 CATALOG_CSV = DATA_DIR / "CatalogData.csv"
 
 def sync_catalog():
+    """Load CatalogData.csv and upsert each SKU into catalog_pricing."""
     if not CATALOG_CSV.exists():
         print(f"File not found: {CATALOG_CSV}")
         return

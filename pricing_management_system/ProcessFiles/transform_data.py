@@ -1,3 +1,11 @@
+"""Legacy stock transformation prototype.
+
+Use case:
+    Downloads stock data from the Google Sheet, creates per-channel stock
+    aggregates, joins them to ItemMaster/Catalog CSVs, and writes local CSV
+    outputs. The production version of this logic now lives in data_pipeline.py.
+"""
+
 import polars as pl
 import requests
 from io import BytesIO

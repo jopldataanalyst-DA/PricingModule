@@ -141,6 +141,7 @@ td.recalc,td.recalc-neg{font-weight:600}
 <div class="nav-label">Menu</div>
 <a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
 <a class="nav-item active" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
+<a class="nav-item" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
 <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
 <div class="nav-label">Reports</div>
 <a class="nav-item" href="#" onclick="exportData()"><span class="icon">📊</span> Export Excel</a>
@@ -156,7 +157,7 @@ td.recalc,td.recalc-neg{font-weight:600}
 <span class="header-badge" id="headerBadge">Loading…</span>
 <div class="header-right">
 <span class="sync-time" id="syncTime">—</span>
-<button class="btn btn-gold btn-sm" onclick="loadItems()" title="Refresh">↻ Refresh</button>
+<button class="btn btn-gold btn-sm" onclick="refreshPipeline()" title="Refresh">↻ Refresh</button>
 </div>
 </header>
 <div class="stats-bar" id="statsBar">
@@ -474,6 +475,9 @@ function setupUser() {
   if (pages.indexOf('admin') < 0 && user.role !== 'admin') {
     document.getElementById('nav-admin').style.display = 'none';
   }
+  if (pages.indexOf('item_master') < 0 && user.role !== 'admin') {
+    document.getElementById('nav-errors').style.display = 'none';
+  }
   if (user.role === 'admin') {
     document.getElementById('adminActions').innerHTML = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button><button class="btn btn-gold btn-sm" id="updateBtn" onclick="updateCostPercentChanges()">Update</button>';
   }
@@ -572,6 +576,20 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+async function refreshPipeline() {
+  var btn = document.querySelector('button[title="Refresh"]');
+  var origText = btn.innerHTML;
+  btn.innerHTML = '<div class="spinner" style="width:12px;height:12px;border-width:2px;margin-right:4px;display:inline-block;vertical-align:middle;"></div> Processing...';
+  btn.disabled = true;
+  var res = await apiFetch('/api/amazon/refresh-data', { method: 'POST' });
+  if (res) {
+    showToast('Amazon pricing processing started. It may take a minute to reflect changes.', 'info');
+  }
+  btn.innerHTML = origText;
+  btn.disabled = false;
+  loadItems();
 }
 
 async function loadItems() {

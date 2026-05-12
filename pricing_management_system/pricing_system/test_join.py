@@ -1,3 +1,10 @@
+"""Manual diagnostic for Amazon pricing to stock_items joins.
+
+Use case:
+    Connects directly to MySQL and prints counts/sample rows to verify that
+    amazon_pricing_results.master_sku joins to stock_items.sku_code.
+"""
+
 import mysql.connector
 
 DB_CONFIG = {

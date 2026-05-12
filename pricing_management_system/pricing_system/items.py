@@ -1,3 +1,11 @@
+"""Item Master API routes and import/export logic.
+
+Use case:
+    Powers the Item Master dashboard, including pagination, sorting, column
+    permissions, CSV import/export, item edits with audit remarks, inventory
+    refresh, and stock_update rows that do not match item_master.
+"""
+
 import time
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Query, BackgroundTasks, Form
 from fastapi.responses import StreamingResponse
@@ -13,7 +21,7 @@ import polars as pl
 import requests
 from io import BytesIO
 import time
-from data_pipeline import run_pipeline
+from data_pipeline import run_pipeline, run_inventory_pipeline
 from audit import record_audit_log, record_import_history
 
 router = APIRouter()
@@ -26,10 +34,19 @@ STOCK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTW9CQgk8R7IxKynojz
 from database import get_db
 
 def load_items_db() -> List[Dict[str, Any]]:
+    """Load dashboard rows that have a matching SKU in item_master."""
     try:
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM stock_items")
+        cursor.execute("""
+            SELECT si.*
+            FROM stock_items si
+            WHERE EXISTS (
+                SELECT 1
+                FROM item_master im
+                WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(si.sku_code))
+            )
+        """)
         rows = cursor.fetchall()
         cursor.close()
         conn.close()
@@ -40,6 +57,7 @@ def load_items_db() -> List[Dict[str, Any]]:
 
 
 def count_item_master_rows() -> int:
+    """Return the authoritative item_master row count for dashboard stats."""
     try:
         conn = get_db()
         cursor = conn.cursor()
@@ -70,6 +88,17 @@ COLUMN_LABELS = {
     "cost_into_percent": "Cost into %",
     "available_atp": "Uniware Stock", "fba_stock": "FBA", "fbf_stock": "FBF",
     "sjit_stock": "SJIT", "updated": "Launch Date"
+}
+
+STOCK_ERROR_COLUMNS = ["master_sku", "uniware_stock", "fba_stock", "fbf_stock", "sjit_stock", "total_stock"]
+
+STOCK_ERROR_LABELS = {
+    "master_sku": "Master SKU",
+    "uniware_stock": "Uniware Stock",
+    "fba_stock": "FBA",
+    "fbf_stock": "FBF",
+    "sjit_stock": "SJIT",
+    "total_stock": "Total Stock",
 }
 
 ITEM_MASTER_DB_COLUMNS = {
@@ -105,10 +134,12 @@ CATALOG_PRICING_COLUMN_ALIASES = {
 
 
 def quote_identifier(name: str) -> str:
+    """Quote a MySQL identifier used for catalog_pricing compatibility."""
     return "`" + name.replace("`", "``") + "`"
 
 
 def get_catalog_pricing_columns(cursor) -> dict[str, str]:
+    """Resolve current catalog_pricing column names across old/new schemas."""
     cursor.execute("SHOW COLUMNS FROM catalog_pricing")
     existing = {row[0] for row in cursor.fetchall()}
     columns = {}
@@ -123,6 +154,7 @@ def get_catalog_pricing_columns(cursor) -> dict[str, str]:
 
 
 def upsert_catalog_pricing(cursor, sku: str, values: dict[str, Any]):
+    """Insert or update pricing fields for one Master SKU."""
     columns = get_catalog_pricing_columns(cursor)
     sku_col = columns["master_sku"]
     cursor.execute(f"SELECT COUNT(*) FROM catalog_pricing WHERE {sku_col}=%s", (sku,))
@@ -150,11 +182,13 @@ def upsert_catalog_pricing(cursor, sku: str, values: dict[str, Any]):
 
 
 def delete_catalog_pricing(cursor, sku: str):
+    """Delete catalog_pricing data tied to one Master SKU."""
     columns = get_catalog_pricing_columns(cursor)
     cursor.execute(f"DELETE FROM catalog_pricing WHERE {columns['master_sku']}=%s", (sku,))
 
 
 class ItemChangeRequest(BaseModel):
+    """Editable Item Master fields accepted by PUT /api/items/{item_id}."""
     change_remark: str
     special_password: Optional[str] = None
     sku_code: Optional[str] = None
@@ -179,6 +213,7 @@ class ItemChangeRequest(BaseModel):
 
 
 def editable_columns_for_user(user: dict) -> list[str]:
+    """Return the item columns the current user is allowed to update."""
     if user.get("role") == "admin":
         return list(SELECTED_COLUMNS)
     permissions = user.get("column_permissions", {}).get("item_master", {})
@@ -188,18 +223,21 @@ def editable_columns_for_user(user: dict) -> list[str]:
 
 
 def require_change_remark(change_remark: str):
+    """Require a non-empty audit remark for item changes/imports."""
     if not change_remark or not change_remark.strip():
         raise HTTPException(status_code=400, detail="Change remark is required")
     return change_remark.strip()
 
 
 def display_value(value):
+    """Convert values to comparable strings for filter logic."""
     if value is None:
         return ""
     return str(value)
 
 
 def parse_json_dict(value):
+    """Parse JSON query parameters used by column filters."""
     if not value:
         return {}
     try:
@@ -210,6 +248,7 @@ def parse_json_dict(value):
 
 
 def apply_search_and_filters(items, search="", filters=None, skip_column=None):
+    """Apply dashboard search text and selected column filters."""
     filtered = items
     if search:
         q = search.lower()
@@ -233,6 +272,7 @@ def apply_search_and_filters(items, search="", filters=None, skip_column=None):
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
+    """Return visible/editable Item Master columns for the current user."""
     if user.get('role') == 'admin':
         visible = SELECTED_COLUMNS
         editable = SELECTED_COLUMNS
@@ -250,6 +290,7 @@ async def get_columns(user=Depends(get_current_user)):
 
 @router.get("/filters")
 async def get_filters(user=Depends(get_current_user)):
+    """Return legacy filter metadata for the Item Master page."""
     items = load_items_db()
     categories = sorted(set(str(x.get('category', '')) for x in items if x.get('category')))
     return {"statuses": [], "categories": [c for c in categories if c]}
@@ -262,6 +303,7 @@ async def get_filter_options(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
+    """Return distinct values for one Item Master column filter menu."""
     check_page_access(user, "item_master")
     if column not in SELECTED_COLUMNS:
         return {"column": column, "values": []}
@@ -282,6 +324,7 @@ async def get_items(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
+    """Return paginated Item Master rows plus global stock stats."""
     check_page_access(user, "item_master")
     
     items = load_items_db()
@@ -338,7 +381,17 @@ async def export_items(user=Depends(get_current_user)):
     check_page_access(user, "item_master")
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT sku_code, item_name, size, category, location, child_remark, parent_remark, item_type, cost, price, catalog, mrp, up_price, cost_into_percent, available_atp, fba_stock, fbf_stock, sjit_stock, updated FROM stock_items")
+    cursor.execute("""
+        SELECT sku_code, item_name, size, category, location, child_remark, parent_remark,
+               item_type, cost, price, catalog, mrp, up_price, cost_into_percent,
+               available_atp, fba_stock, fbf_stock, sjit_stock, updated
+        FROM stock_items si
+        WHERE EXISTS (
+            SELECT 1
+            FROM item_master im
+            WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(si.sku_code))
+        )
+    """)
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -375,8 +428,95 @@ async def export_items(user=Depends(get_current_user)):
     )
 
 
+@router.get("/stock-errors")
+async def get_stock_errors(
+    page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=500),
+    search: str = Query(""),
+    sort_by: str = Query("master_sku"), sort_dir: str = Query("asc"),
+    user=Depends(get_current_user)
+):
+    """Return stock_update SKUs that are missing from item_master."""
+    check_page_access(user, "item_master")
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT
+                su.master_sku,
+                COALESCE(su.uniware_stock, 0) AS uniware_stock,
+                COALESCE(su.fba_stock, 0) AS fba_stock,
+                COALESCE(su.fbf_stock, 0) AS fbf_stock,
+                COALESCE(su.sjit_stock, 0) AS sjit_stock
+            FROM stock_update su
+            WHERE su.master_sku IS NOT NULL
+              AND TRIM(su.master_sku) <> ''
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM item_master im
+                  WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(su.master_sku))
+              )
+        """)
+        rows = cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+    error_items = []
+    for i, row in enumerate(rows, 1):
+        item = {
+            "id": i,
+            "master_sku": str(row.get("master_sku") or "").strip().upper(),
+            "uniware_stock": int(row.get("uniware_stock") or 0),
+            "fba_stock": int(row.get("fba_stock") or 0),
+            "fbf_stock": int(row.get("fbf_stock") or 0),
+            "sjit_stock": int(row.get("sjit_stock") or 0),
+        }
+        item["total_stock"] = (
+            item["uniware_stock"] + item["fba_stock"] +
+            item["fbf_stock"] + item["sjit_stock"]
+        )
+        error_items.append(item)
+
+    if search:
+        q = search.lower()
+        error_items = [row for row in error_items if q in row["master_sku"].lower()]
+
+    reverse = sort_dir == "desc"
+    if sort_by not in STOCK_ERROR_COLUMNS and sort_by != "id":
+        sort_by = "master_sku"
+    if sort_by in ["id", "uniware_stock", "fba_stock", "fbf_stock", "sjit_stock", "total_stock"]:
+        error_items.sort(key=lambda x: int(x.get(sort_by, 0) or 0), reverse=reverse)
+    else:
+        error_items.sort(key=lambda x: str(x.get(sort_by, "") or "").lower(), reverse=reverse)
+
+    total = len(error_items)
+    start = (page - 1) * page_size
+    end = start + page_size
+    page_items = error_items[start:end]
+    stats = {
+        "total_error_skus": total,
+        "total_stock": sum(row["total_stock"] for row in error_items),
+        "total_available": sum(row["uniware_stock"] for row in error_items),
+        "total_fba": sum(row["fba_stock"] for row in error_items),
+        "total_fbf": sum(row["fbf_stock"] for row in error_items),
+        "total_sjit": sum(row["sjit_stock"] for row in error_items),
+    }
+
+    return {
+        "items": page_items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size if total else 1,
+        "columns": STOCK_ERROR_COLUMNS,
+        "labels": STOCK_ERROR_LABELS,
+        "stats": stats,
+    }
+
+
 @router.get("/{item_id}")
 async def get_item(item_id: int, user=Depends(get_current_user)):
+    """Return one Item Master row by its dashboard row id."""
     check_page_access(user, "item_master")
     item_list = load_items_db()
     if item_id < 1 or item_id > len(item_list):
@@ -386,6 +526,7 @@ async def get_item(item_id: int, user=Depends(get_current_user)):
 
 @router.put("/{item_id}")
 async def update_item(item_id: int, payload: ItemChangeRequest, user=Depends(get_current_user)):
+    """Update editable fields for one item and write an audit log entry."""
     check_page_access(user, "item_master")
     change_remark = require_change_remark(payload.change_remark)
     verify_special_password(user, payload.special_password)
@@ -459,6 +600,7 @@ async def update_item(item_id: int, payload: ItemChangeRequest, user=Depends(get
 
 @router.delete("/{item_id}")
 async def delete_item(item_id: int, user=Depends(get_current_user)):
+    """Placeholder route; delete is intentionally not implemented."""
     check_page_access(user, "edit_items")
     raise HTTPException(status_code=501, detail="Delete not implemented")
 
@@ -614,3 +756,11 @@ async def import_items(
         "errors": errors,
         "error_details": error_details[:20]
     }
+
+
+@router.post("/refresh-data")
+async def refresh_inventory_data(background_tasks: BackgroundTasks, user=Depends(get_current_user)):
+    """Trigger the inventory data pipeline in the background."""
+    check_page_access(user, "item_master")
+    background_tasks.add_task(run_inventory_pipeline)
+    return {"message": "Inventory data refresh started in the background."}

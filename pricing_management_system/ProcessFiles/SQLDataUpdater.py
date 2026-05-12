@@ -1,3 +1,11 @@
+"""Generic CSV/Excel to MySQL table loader.
+
+Use case:
+    Utility script for quickly uploading a spreadsheet into MySQL either by
+    appending rows or replacing the target table. It is useful for ad-hoc data
+    staging, not part of the FastAPI request path.
+"""
+
 import mysql.connector
 import pandas as pd
 import os
@@ -13,12 +21,14 @@ DB_CONFIG = {
 
 
 def clean_column_name(col):
+    """Strip unsafe MySQL backticks from a source column name."""
     col = str(col).strip()
     col = re.sub(r"`", "", col)
     return col
 
 
 def read_file(file_path):
+    """Read CSV/XLS/XLSX data into a pandas DataFrame."""
     ext = os.path.splitext(file_path)[1].lower()
 
     if ext == ".csv":
@@ -32,11 +42,13 @@ def read_file(file_path):
 
 
 def table_exists(cursor, table_name):
+    """Return true if a MySQL table already exists."""
     cursor.execute("SHOW TABLES LIKE %s", (table_name,))
     return cursor.fetchone() is not None
 
 
 def create_table(cursor, table_name, df):
+    """Create a simple TEXT-column table matching DataFrame columns."""
     column_defs = ["id INT AUTO_INCREMENT PRIMARY KEY"]
 
     for col in df.columns:
@@ -52,6 +64,7 @@ def create_table(cursor, table_name, df):
 
 
 def insert_data(cursor, table_name, df):
+    """Insert all DataFrame rows into the target MySQL table."""
     csv_cols = ", ".join([f"`{col}`" for col in df.columns])
     placeholders = ", ".join(["%s"] * len(df.columns))
 
@@ -67,6 +80,8 @@ def insert_data(cursor, table_name, df):
 
 def upload_table(file_path, table_name, action="append"):
     """
+    Upload one spreadsheet into MySQL.
+
     action:
         append  -> add data
         replace -> drop and recreate table

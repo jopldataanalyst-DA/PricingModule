@@ -1,3 +1,10 @@
+"""Manual diagnostic for cost_into_percent defaults.
+
+Use case:
+    Connects directly to MySQL and prints sample stock_items Cost Into % values
+    plus a count of rows still using the default 23.0 setting.
+"""
+
 import mysql.connector
 
 DB_CONFIG = {

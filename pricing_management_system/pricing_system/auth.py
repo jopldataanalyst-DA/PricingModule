@@ -1,3 +1,11 @@
+"""Authentication and authorization routes.
+
+Use case:
+    Handles login/logout, JWT token creation, current-user lookup, page access
+    checks, admin-only guards, and the special password gate used for sensitive
+    item-master changes.
+"""
+
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -18,15 +26,18 @@ security = HTTPBearer()
 DATA_DIR = Path(__file__).parent.parent.parent / "Data"
 
 class LoginRequest(BaseModel):
+    """Request body accepted by POST /api/auth/login."""
     username: str
     password: str
 
 def create_token(data: dict) -> str:
+    """Create a short-lived JWT containing the user's permissions."""
     payload = data.copy()
     payload["exp"] = datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def decode_token(token: str) -> dict:
+    """Validate a JWT and return its payload or raise HTTP 401."""
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except jwt.ExpiredSignatureError:
@@ -35,17 +46,21 @@ def decode_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """FastAPI dependency that returns the authenticated token payload."""
     return decode_token(credentials.credentials)
 
 def require_admin(user=Depends(get_current_user)):
+    """FastAPI dependency that allows only admin users."""
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
 def is_root_user(user: dict):
+    """Return true for the built-in root/admin user that bypasses special auth."""
     return int(user.get("user_id") or user.get("id") or 0) == 1 or user.get("username") == "admin"
 
 def verify_special_password(user: dict, special_password: str | None):
+    """Validate the secondary password required for non-root item changes."""
     if is_root_user(user):
         return True
     if not special_password:
@@ -64,6 +79,7 @@ def verify_special_password(user: dict, special_password: str | None):
     return True
 
 def check_page_access(user: dict, page: str):
+    """Raise 403 if the token does not allow access to a named UI page/API."""
     allowed = user.get("allowed_pages", [])
     if isinstance(allowed, str):
         allowed = json.loads(allowed)
@@ -75,6 +91,7 @@ def check_page_access(user: dict, page: str):
 
 @router.post("/login")
 async def login(req: LoginRequest, request: Request):
+    """Authenticate credentials, record login audit, and return a JWT."""
     users = load_users()
     
     for user in users:
@@ -103,9 +120,11 @@ async def login(req: LoginRequest, request: Request):
 
 @router.post("/logout")
 async def logout(request: Request, user=Depends(get_current_user)):
+    """Record logout in the audit log."""
     record_audit_log(user, "LOGOUT", table_name="users", record_id=user.get("user_id"), remark="Logout", request=request)
     return {"message": "Logged out"}
 
 @router.get("/me")
 async def get_me(user=Depends(get_current_user)):
+    """Return the authenticated token payload for the frontend."""
     return user

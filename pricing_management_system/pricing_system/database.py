@@ -1,11 +1,26 @@
+"""Database, user, and permission bootstrap helpers.
+
+Use case:
+    Centralizes MySQL connection settings, creates all tables needed by the
+    application, manages the JSON-backed user store, and derives schemas for
+    imported Amazon sales history CSVs.
+"""
+
 import json
 from pathlib import Path
 import hashlib
+import csv
 from typing import Any
 
 DATA_DIR = Path(__file__).parent.parent.parent / "Data"
+AMAZON_SALES_HISTORY_DIR = DATA_DIR / "AmazonData" / "AmazonSalesHistory"
+AMAZON_SALES_TABLES = {
+    "b2b": "amazon_sales_b2b",
+    "b2c": "amazon_sales_b2c",
+}
 
 def hash_password(password: str) -> str:
+    """Return the SHA-256 hash used for local user passwords."""
     return hashlib.sha256(password.encode()).hexdigest()
 
 USERS_FILE = DATA_DIR / "users.json"
@@ -77,6 +92,7 @@ DEFAULT_USERS = [
 
 
 def _as_list(value: Any, fallback: list[str]) -> list[str]:
+    """Normalize persisted permission values into a list of strings."""
     if isinstance(value, list):
         return [str(v) for v in value]
     if isinstance(value, str):
@@ -90,6 +106,7 @@ def _as_list(value: Any, fallback: list[str]) -> list[str]:
 
 
 def normalize_user(user: dict[str, Any], next_id: int | None = None) -> dict[str, Any]:
+    """Apply role defaults and permission shape expected by the UI/API."""
     role = str(user.get("role") or "viewer").lower()
     if role == "admin":
         default_perms = ADMIN_COLUMN_PERMISSIONS
@@ -127,6 +144,7 @@ def normalize_user(user: dict[str, Any], next_id: int | None = None) -> dict[str
     return normalized
 
 def load_users():
+    """Load users from Data/users.json, creating default users if missing."""
     if not USERS_FILE.exists():
         save_users(DEFAULT_USERS)
         return [normalize_user(u) for u in DEFAULT_USERS]
@@ -146,6 +164,7 @@ def load_users():
     return users
 
 def save_users(users):
+    """Persist normalized users atomically to Data/users.json."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     normalized_users = [normalize_user(u) for u in users]
     temp_file = USERS_FILE.with_suffix(".json.tmp")
@@ -162,6 +181,7 @@ def save_users(users):
             pass
 
 def init_users():
+    """Ensure the user JSON file exists before the API starts."""
     if not USERS_FILE.exists():
         save_users(DEFAULT_USERS)
         print("✅ Users file created")
@@ -175,7 +195,138 @@ DB_CONFIG = {
     "database": "pricing_module"
 }
 
+
+def quote_identifier(name: str) -> str:
+    """Quote a MySQL identifier, preserving names with spaces or punctuation."""
+    return "`" + str(name).replace("`", "``") + "`"
+
+
+def amazon_sales_column_name(header: str) -> str:
+    """Convert an Amazon CSV header into the requested DB column name.
+
+    Only spaces are replaced with underscores; other punctuation such as
+    ``Hsn/sac`` is preserved and safely quoted when used in SQL.
+    """
+    name = str(header or "").strip().replace(" ", "_")
+    return name or "Unnamed_Column"
+
+
+def amazon_sales_column_type(header: str) -> str:
+    """Infer a pragmatic MySQL type for an Amazon sales CSV column."""
+    label = str(header or "").strip().lower()
+    if "date" in label:
+        return "DATETIME NULL"
+    if label == "quantity":
+        return "INT NULL"
+    numeric_markers = [
+        "amount", "gross", "tax", "rate", "basis", "cess", "principal",
+        "discount", "total", "invoice amount"
+    ]
+    if any(marker in label for marker in numeric_markers):
+        return "DECIMAL(18,4) NULL"
+    if label in {"item description"}:
+        return "TEXT"
+    return "VARCHAR(255) NULL"
+
+
+def discover_amazon_sales_headers(kind: str) -> list[str]:
+    """Return the ordered union of CSV headers for B2B or B2C sales files."""
+    kind_upper = kind.upper()
+    headers: list[str] = []
+    if not AMAZON_SALES_HISTORY_DIR.exists():
+        return headers
+
+    for path in sorted(AMAZON_SALES_HISTORY_DIR.rglob("*.csv")):
+        if kind_upper not in path.name.upper():
+            continue
+        try:
+            with path.open("r", encoding="utf-8-sig", newline="") as file:
+                row = next(csv.reader(file), [])
+        except OSError:
+            continue
+        for header in row:
+            header = str(header or "").strip()
+            if header and header not in headers:
+                headers.append(header)
+    return headers
+
+
+def get_amazon_sales_schema(kind: str) -> dict[str, Any]:
+    """Build the target table name and column metadata for one sales type."""
+    normalized_kind = str(kind or "").lower()
+    if normalized_kind not in AMAZON_SALES_TABLES:
+        raise ValueError("Amazon sales kind must be 'b2b' or 'b2c'")
+
+    seen: dict[str, int] = {}
+    columns = []
+    for header in discover_amazon_sales_headers(normalized_kind):
+        base_col = amazon_sales_column_name(header)
+        col_name = base_col
+        if col_name in seen:
+            seen[col_name] += 1
+            suffix = f"_{seen[col_name]}"
+            col_name = base_col + suffix
+        else:
+            seen[col_name] = 1
+        columns.append({
+            "header": header,
+            "name": col_name,
+            "type": amazon_sales_column_type(header),
+        })
+
+    return {
+        "kind": normalized_kind,
+        "table": AMAZON_SALES_TABLES[normalized_kind],
+        "columns": columns,
+    }
+
+
+def create_amazon_sales_table(cursor, kind: str):
+    """Create or extend the Amazon sales table for B2B or B2C history."""
+    schema = get_amazon_sales_schema(kind)
+    table = schema["table"]
+    columns = schema["columns"]
+    data_columns_sql = ",\n            ".join(
+        f"{quote_identifier(col['name'])} {col['type']}" for col in columns
+    )
+    if data_columns_sql:
+        data_columns_sql += ","
+
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS `{table}` (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            source_year VARCHAR(10),
+            source_file VARCHAR(255),
+            source_row INT,
+            imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            {data_columns_sql}
+            UNIQUE KEY uq_source_row (source_file, source_row),
+            INDEX idx_source_year (source_year)
+        )
+    """)
+
+    cursor.execute(f"SHOW COLUMNS FROM `{table}`")
+    existing_cols = {row[0] for row in cursor.fetchall()}
+    for col in columns:
+        if col["name"] not in existing_cols:
+            cursor.execute(f"ALTER TABLE `{table}` ADD COLUMN {quote_identifier(col['name'])} {col['type']}")
+            existing_cols.add(col["name"])
+
+    for index_name, col_name in [
+        (f"idx_{table}_sku", "Sku"),
+        (f"idx_{table}_order_id", "Order_Id"),
+        (f"idx_{table}_invoice_date", "Invoice_Date"),
+        (f"idx_{table}_transaction_type", "Transaction_Type"),
+    ]:
+        if col_name in existing_cols:
+            try:
+                cursor.execute(f"CREATE INDEX `{index_name}` ON `{table}` ({quote_identifier(col_name)})")
+            except Exception:
+                pass
+
+
 def init_db():
+    """Create the application database and all required tables/indexes."""
     init_users()
     
     # First connect without database to create it if it doesn't exist
@@ -382,6 +533,10 @@ def init_db():
     except Exception:
         pass
 
+    # Amazon sales history tables are populated from Data/AmazonData/AmazonSalesHistory.
+    create_amazon_sales_table(cursor, "b2b")
+    create_amazon_sales_table(cursor, "b2c")
+
     for ddl in [
         "ALTER TABLE stock_items ADD COLUMN child_remark TEXT AFTER location",
         "ALTER TABLE stock_items ADD COLUMN parent_remark TEXT AFTER child_remark",
@@ -397,9 +552,11 @@ def init_db():
     conn.close()
 
 def get_db():
+    """Open a new MySQL connection using the application configuration."""
     conn = mysql.connector.connect(**DB_CONFIG)
     return conn
 
 # For update_item_csv function referenced in items.py
 async def update_item_csv(item_id, user):
+    """Legacy compatibility placeholder; item updates now flow through MySQL."""
     raise NotImplementedError("Direct item update not fully implemented in pipeline mode yet.")

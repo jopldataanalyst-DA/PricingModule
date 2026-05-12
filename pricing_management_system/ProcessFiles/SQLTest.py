@@ -1,3 +1,10 @@
+"""Small DuckDB-to-MySQL proof-of-concept script.
+
+Use case:
+    Demonstrates creating a pandas DataFrame, querying it with DuckDB, and
+    writing the result into MySQL through SQLAlchemy. It is not used by the app.
+"""
+
 import duckdb
 import pandas as pd
 from sqlalchemy import create_engine
