@@ -180,7 +180,6 @@ def run_inventory_pipeline():
                 pl.lit(0.0).alias("price"),
                 pl.lit(0.0).alias("mrp"),
                 pl.lit(0.0).alias("up_price"),
-                pl.lit(23.0).alias("cost_into_percent"),
                 pl.lit(0).alias("available_atp"),
                 pl.lit(0).alias("fba_stock"),
                 pl.lit(0).alias("fbf_stock"),
@@ -230,22 +229,6 @@ def run_inventory_pipeline():
                     "master_sku": pl.String, "launch_date": pl.String, "catalog_name": pl.String,
                     "cost": pl.Float64, "wholesale_price": pl.Float64, "up_price": pl.Float64,
                     "mrp": pl.Float64
-                })
-
-            cursor.execute("""
-                SELECT master_sku, MAX(Cost_Into_Percent) AS cost_into_percent
-                FROM cost_into_percent
-                WHERE Platform = 'Amazon'
-                GROUP BY master_sku
-            """)
-            cost_percent_rows = cursor.fetchall()
-            if cost_percent_rows:
-                cost_percent_df = pl.from_dicts(cost_percent_rows).with_columns(
-                    pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
-                )
-            else:
-                cost_percent_df = pl.DataFrame(schema={
-                    "master_sku": pl.String, "cost_into_percent": pl.Float64
                 })
 
             cursor.close()
@@ -300,17 +283,6 @@ def run_inventory_pipeline():
                 pl.coalesce(["_cat_launch", "updated"]).fill_null("").alias("updated"),
             ]).drop(["_cat_cost", "_cat_mrp", "_cat_price", "_cat_up_price", "_cat_catalog", "_cat_launch"])
 
-            stock_items_df = stock_items_df.join(
-                cost_percent_df.select(["master_sku", "cost_into_percent"]).rename({
-                    "master_sku": "sku_code",
-                    "cost_into_percent": "_amazon_cost_percent",
-                }),
-                on="sku_code",
-                how="left"
-            ).with_columns([
-                pl.coalesce(["_amazon_cost_percent", pl.lit(23.0)]).fill_null(23.0).alias("cost_into_percent"),
-            ]).drop(["_amazon_cost_percent"])
-
             # Persist updated values back into stock_items
             records = stock_items_df.to_dicts()
             try:
@@ -321,16 +293,15 @@ def run_inventory_pipeline():
                     cursor2.execute("""
                         INSERT INTO stock_items
                         (sku_code, item_name, size, category, location, child_remark, parent_remark,
-                         item_type, catalog, cost, price, mrp, up_price, cost_into_percent,
+                         item_type, catalog, cost, price, mrp, up_price,
                          available_atp, fba_stock, fbf_stock, sjit_stock, updated)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                     """, (
                         row.get("sku_code"), row.get("item_name"), row.get("size"),
                         row.get("category"), row.get("location"), row.get("child_remark"),
                         row.get("parent_remark"), row.get("item_type"), row.get("catalog"),
                         float(row.get("cost") or 0), float(row.get("price") or 0),
                         float(row.get("mrp") or 0), float(row.get("up_price") or 0),
-                        float(row.get("cost_into_percent") or 23.0),
                         int(row.get("available_atp") or 0),
                         int(row.get("fba_stock") or 0), int(row.get("fbf_stock") or 0),
                         int(row.get("sjit_stock") or 0), row.get("updated")

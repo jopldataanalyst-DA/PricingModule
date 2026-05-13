@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Item Master — Rajnandini ERP</title>
+<link rel="icon" type="image/png" href="/ui/Images/Icon%20WHITE%20COLOR.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root { --bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724; --gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15); --green:#2d6a4f;--green-light:#40916c;--green-dim:rgba(64,145,108,0.15); --text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550; --border:#222c28;--border2:#2a3530; --danger:#e05252;--danger-dim:rgba(224,82,82,0.12); --warning:#f4a261;--warning-dim:rgba(244,162,97,0.12); --info:#4db8d4;--info-dim:rgba(77,184,212,0.12); --success:#52b788;--success-dim:rgba(82,183,136,0.12); --sidebar-w:220px;--header-h:60px;--radius:10px; }
@@ -64,14 +65,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid rgba(224,82,82,0.2)}
 .btn-sm{padding:5px 10px;font-size:11px}
 .table-wrap{flex:1;overflow:auto;position:relative}
-table{width:100%;border-collapse:collapse;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
 thead{position:sticky;top:0;z-index:10}
-th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;font-size:10px;letter-spacing:0.5px;text-transform:uppercase}
+th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:6px 8px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;font-size:11px;letter-spacing:0.5px;text-transform:uppercase}
 th:hover{color:var(--gold)}.th.sorted{color:var(--gold)}
-td{padding:9px 12px;border-bottom:1px solid rgba(34,44,40,0.6);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:11px}
+td{padding:4px 8px;border-bottom:1px solid rgba(34,44,40,0.6);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:13px;line-height:1.35}
 tr:hover td{background:rgba(255,255,255,0.02)}
 tr.selected td{background:var(--gold-dim)}
-.badge-avail{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif}
+.badge-avail{padding:2px 6px;border-radius:20px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif}
 .badge-yes{background:var(--success-dim);color:var(--success)}.badge-no{background:var(--danger-dim);color:var(--danger)}
 .pagination{background:var(--surface);border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .page-info{font-size:12px;color:var(--text-muted);margin-right:auto}
@@ -106,10 +107,12 @@ tr.selected td{background:var(--gold-dim)}
 .actions-cell{display:flex;gap:4px}
 .col-blurred{filter:blur(4px);pointer-events:none}
 </style>
+<link rel="stylesheet" href="/ui/app-theme.css">
+<script src="/ui/app-theme.js"></script>
 </head>
 <body>
 <aside class="sidebar" id="sidebar">
-<div class="sidebar-logo"><div class="logo-text">Rajnandini</div><div class="logo-sub">ERP Suite · Pricing</div></div>
+<div class="sidebar-logo"><img class="sidebar-logo-img" src="/ui/Images/Icon%20COLOR.png" alt="Rajnandini"><div class="sidebar-logo-copy"><div class="logo-text">Rajnandini</div></div></div>
 <div class="sidebar-user" id="sidebarUser">
 <div class="user-avatar" id="userAvatar">A</div>
 <div class="user-info"><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div>
@@ -121,8 +124,6 @@ tr.selected td{background:var(--gold-dim)}
 <a class="nav-item" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
 <a class="nav-item" href="#" id="nav-import" onclick="openImport()"><span class="icon">⬆️</span> Import Data</a>
 <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
-<div class="nav-label">Reports</div>
-<a class="nav-item" href="#" onclick="exportData()"><span class="icon">📊</span> Export Excel</a>
 </nav>
 <div class="sidebar-footer">
 <a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Sign Out</a>
@@ -130,11 +131,11 @@ tr.selected td{background:var(--gold-dim)}
 </aside>
 <main class="main">
 <header class="header">
-<span class="icon" style="font-size:18px">📦</span>
 <span class="header-title">Item Master</span>
 <span class="header-badge" id="headerBadge">Loading…</span>
 <div class="header-right">
 <span class="sync-time" id="syncTime">—</span>
+<select class="theme-select" data-theme-select title="Theme"></select>
 <button class="btn btn-gold btn-sm" onclick="refreshPipeline()" title="Refresh">↻ Refresh</button>
 </div>
 </header>
@@ -245,11 +246,13 @@ function setupUser() {
   if (pages.indexOf('item_master') < 0 && user.role !== 'admin') {
     document.getElementById('nav-errors').style.display = 'none';
   }
+  var actions = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button>';
   if (pages.indexOf('import') < 0 && user.role !== 'admin') {
     document.getElementById('nav-import').style.display = 'none';
   } else {
-    document.getElementById('adminActions').innerHTML = '<button class="btn btn-outline btn-sm" id="exportBtn" onclick="exportDashboard()">⬇ Export CSV</button><button class="btn btn-outline btn-sm" id="importBtn" onclick="openImport()">⬆ Import CSV</button>';
+    actions += '<button class="btn btn-outline btn-sm" id="importBtn" onclick="openImport()">⬆ Import CSV</button>';
   }
+  document.getElementById('adminActions').innerHTML = actions;
 }
 
 async function loadColumns() {
@@ -399,7 +402,7 @@ function renderTable(items) {
   var isAdmin = user.role === 'admin';
 
   var html = '<table><thead><tr>';
-  if (isAdmin) html += '<th style="width:30px"><input type="checkbox" onchange="toggleAll(this)"></th>';
+  html += '<th style="width:30px"><input type="checkbox" onchange="toggleAll(this)"></th>';
   html += '<th>#</th>';
   
   for (var c = 0; c < cols.length; c++) {
@@ -416,7 +419,7 @@ function renderTable(items) {
     var item = items[i];
     var itemId = item.id;
     html += '<tr id="row-' + itemId + '">';
-    if (isAdmin) html += '<td><input type="checkbox" class="row-check" value="' + itemId + '"></td>';
+    html += '<td><input type="checkbox" class="row-check" value="' + itemId + '"></td>';
     html += '<td style="color:var(--text-muted)">' + itemId + '</td>';
     
     for (var c = 0; c < cols.length; c++) {
@@ -437,8 +440,6 @@ function renderTable(items) {
         }
       } else if ((col === 'price' || col === 'cost' || col === 'mrp') && val !== '-') {
         val = '₹' + parseFloat(val).toFixed(2);
-      } else if (col === 'cost_into_percent' && val !== '-') {
-        val = parseFloat(val).toFixed(2) + '%';
       } else {
         val = escapeHtml(val);
       }
@@ -459,7 +460,7 @@ function renderTable(items) {
   }
 
   if (items.length === 0) {
-    var colspan = cols.length + (isAdmin ? 3 : 2);
+    var colspan = cols.length + ((editable.length > 0 || isAdmin) ? 3 : 2);
     html += '<tr><td colspan="' + colspan + '" style="text-align:center;padding:40px;color:var(--text-muted)">No items found</td></tr>';
   }
 
@@ -667,9 +668,9 @@ async function openEdit(id) {
   for (var i = 0; i < editableFields.length; i++) {
     var col = editableFields[i];
     var isEditable = editable.indexOf(col) >= 0 || user.role === 'admin';
-    var val = item[col] || '';
+    var val = item[col] === undefined || item[col] === null ? '' : item[col];
     var inputType = 'text';
-    if (col === 'price' || col === 'cost' || col === 'mrp' || col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock' || col === 'cost_into_percent') inputType = 'number';
+    if (col === 'price' || col === 'cost' || col === 'mrp' || col === 'total_stock' || col === 'available_atp' || col === 'fba_stock' || col === 'sjit_stock' || col === 'fbf_stock') inputType = 'number';
     else if (col === 'updated') inputType = 'date';
     fieldsHtml += '<div class="form-field"><label>' + (labels[col] || col) + '</label><input name="' + col + '" type="' + inputType + '" value="' + val + '"' + (!isEditable ? ' disabled' : '') + '></div>';
   }
@@ -745,7 +746,7 @@ async function uploadFile(file) {
 async function exportDashboard() {
   showToast('Preparing export…', 'info');
   try {
-    var res = await fetch('/api/items/export', { headers: { 'Authorization': 'Bearer ' + token } });
+    var res = await fetch('/api/items/export?' + buildExportParams(), { headers: { 'Authorization': 'Bearer ' + token } });
     if (!res.ok) { showToast('Export failed', 'error'); return; }
     var blob = await res.blob();
     var url = URL.createObjectURL(blob);
@@ -760,6 +761,20 @@ async function exportDashboard() {
   } catch(e) { showToast('Export error: ' + e.message, 'error'); }
 }
 function exportData() { exportDashboard(); }
+function selectedRowIds() {
+  var boxes = document.querySelectorAll('.row-check:checked');
+  var ids = [];
+  for (var i = 0; i < boxes.length; i++) ids.push(boxes[i].value);
+  return ids;
+}
+function buildExportParams() {
+  var selected = selectedRowIds();
+  return 'search=' + encodeURIComponent(document.getElementById('searchInput').value) +
+    '&sort_by=' + encodeURIComponent(state.sortBy) +
+    '&sort_dir=' + encodeURIComponent(state.sortDir) +
+    '&filters=' + encodeURIComponent(JSON.stringify(state.activeFilters)) +
+    '&selected_ids=' + encodeURIComponent(selected.join(','));
+}
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 

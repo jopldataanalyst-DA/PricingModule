@@ -252,20 +252,44 @@ def load_amazon_pricing_db() -> List[Dict[str, Any]]:
         print(f"Error loading amazon pricing from DB: {e}")
         return []
 
-def build_amazon_csv(rows: List[Dict[str, Any]]) -> bytes:
+
+def visible_columns_for_user(user: dict) -> list[str]:
+    """Return Amazon Pricing columns the current user is allowed to view/export."""
+    if user.get("role") == "admin":
+        return list(ALL_COLUMNS)
+    permissions = user.get("column_permissions", {}).get("amazon_pricing", {})
+    visible = permissions.get("visible") or DEFAULT_VISIBLE_COLUMNS
+    allowed = [c for c in visible if c in ALL_COLUMNS]
+    return allowed or DEFAULT_VISIBLE_COLUMNS
+
+
+def editable_columns_for_user(user: dict) -> list[str]:
+    """Return Amazon Pricing columns the current user is allowed to edit."""
+    if user.get("role") == "admin":
+        return []
+    permissions = user.get("column_permissions", {}).get("amazon_pricing", {})
+    visible = visible_columns_for_user(user)
+    editable = permissions.get("editable") or []
+    return [c for c in editable if c in visible and c in ALL_COLUMNS]
+
+
+def build_amazon_csv(rows: List[Dict[str, Any]], columns: List[str]) -> bytes:
     """Build a CSV export using human-readable Amazon column labels."""
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow([COLUMN_LABELS.get(col, col) for col in ALL_COLUMNS])
+    writer.writerow([COLUMN_LABELS.get(col, col) for col in columns])
     for row in rows:
-        writer.writerow([row.get(col, "") for col in ALL_COLUMNS])
+        writer.writerow([row.get(col, "") for col in columns])
     return output.getvalue().encode("utf-8-sig")
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
     """Return visible/editable Amazon Pricing columns for the current user."""
     check_page_access(user, "amazon_pricing")
-    return {"visible": DEFAULT_VISIBLE_COLUMNS, "all": ALL_COLUMNS, "editable": [], "labels": COLUMN_LABELS}
+    visible = visible_columns_for_user(user)
+    all_columns = ALL_COLUMNS if user.get("role") == "admin" else visible
+    editable = editable_columns_for_user(user)
+    return {"visible": visible, "all": all_columns, "editable": editable, "labels": COLUMN_LABELS}
 
 @router.get("/filters")
 async def get_filters(user=Depends(get_current_user)):
@@ -334,13 +358,45 @@ async def get_amazon_pricing(
             "total_pages": (total + page_size - 1) // page_size if total else 1, "stats": stats}
 
 @router.get("/export")
-async def export_amazon_pricing(user=Depends(get_current_user)):
-    """Export the full Amazon Pricing table as CSV."""
+async def export_amazon_pricing(
+    search: str = Query(""),
+    sort_by: str = Query("id"),
+    sort_dir: str = Query("asc"),
+    filters: str = Query(""),
+    selected_ids: str = Query(""),
+    user=Depends(get_current_user),
+):
+    """Export selected rows, filtered rows, or the full Amazon Pricing table."""
     check_page_access(user, "amazon_pricing")
     rows = load_amazon_pricing_db()
+    export_columns = visible_columns_for_user(user)
+    selected = {
+        int(value)
+        for value in selected_ids.split(",")
+        if value.strip().isdigit()
+    }
+    if selected:
+        rows = [row for row in rows if int(row.get("id", 0)) in selected]
+    else:
+        active_filters = {
+            col: values
+            for col, values in parse_json_dict(filters).items()
+            if col in export_columns
+        }
+        rows = apply_search_and_filters(rows, search=search, filters=active_filters)
+
+    if sort_by and sort_dir:
+        reverse = sort_dir == "desc"
+        if sort_by not in export_columns and sort_by != "id":
+            sort_by = "id"
+        if sort_by in NUMERIC_COLUMNS:
+            rows.sort(key=lambda x: float(x.get(sort_by, 0) or 0), reverse=reverse)
+        else:
+            rows.sort(key=lambda x: (str(x.get(sort_by, "")) or "").lower(), reverse=reverse)
+
     filename = "amazon_pricing_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
     return StreamingResponse(
-        io.BytesIO(build_amazon_csv(rows)),
+        io.BytesIO(build_amazon_csv(rows, export_columns)),
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Panel — Rajnandini ERP</title>
+<link rel="icon" type="image/png" href="/ui/Images/Icon%20WHITE%20COLOR.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -52,9 +53,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .data-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 .data-table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .data-table-title{font-size:14px;font-weight:600}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10px 14px;text-align:left;white-space:nowrap;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
-td{padding:10px 14px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:11px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:6px 10px;text-align:left;white-space:nowrap;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+td{padding:5px 10px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:13px;line-height:1.35}
 tr:hover td{background:rgba(255,255,255,0.02)}
 
 /* Buttons */
@@ -85,7 +86,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .form-field input:focus,.form-field select:focus{border-color:var(--gold)}
 
 /* Badges */
-.badge{padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif}
+.badge{padding:2px 6px;border-radius:20px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif}
 .badge-admin{background:var(--gold-dim);color:var(--gold)}.badge-viewer{background:var(--info-dim);color:var(--info)}.badge-restricted{background:var(--danger-dim);color:var(--danger)}
 .badge-active{background:var(--success-dim);color:var(--success)}.badge-inactive{background:var(--danger-dim);color:var(--danger)}
 
@@ -104,10 +105,12 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .log-new{color:var(--success);font-size:10px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .empty-state{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
 </style>
+<link rel="stylesheet" href="/ui/app-theme.css">
+<script src="/ui/app-theme.js"></script>
 </head>
 <body>
 <aside class="sidebar">
-  <div class="sidebar-logo"><div class="logo-text">Rajnandini</div><div class="logo-sub">ERP Suite · Admin</div></div>
+  <div class="sidebar-logo"><img class="sidebar-logo-img" src="/ui/Images/Icon%20COLOR.png" alt="Rajnandini"><div class="sidebar-logo-copy"><div class="logo-text">Rajnandini</div></div></div>
   <div class="sidebar-user">
     <div class="user-avatar" id="userAvatar">A</div>
     <div><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div>
@@ -126,9 +129,9 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
 <main class="main">
   <header class="header">
-    <span style="font-size:18px">⚙️</span>
     <span class="header-title">Admin Panel</span>
     <div class="header-right">
+      <select class="theme-select" data-theme-select title="Theme"></select>
       <button class="btn btn-gold btn-sm" onclick="loadAll()">↻ Refresh</button>
     </div>
   </header>
@@ -252,7 +255,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
             <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','editable',true)">Edit All</button>
             <button class="btn btn-outline btn-sm" onclick="checkAllCols('item_master','editable',false)">Edit None</button>
           </div>
-          <table style="width:100%;font-size:12px">
+          <table style="width:100%;font-size:13px">
             <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
             <tbody id="colPermsTable_item_master"></tbody>
           </table>
@@ -264,7 +267,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
             <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','editable',true)">Edit All</button>
             <button class="btn btn-outline btn-sm" onclick="checkAllCols('amazon_pricing','editable',false)">Edit None</button>
           </div>
-          <table style="width:100%;font-size:12px">
+          <table style="width:100%;font-size:13px">
             <thead><tr><th style="background:var(--surface2)">Column</th><th style="background:var(--surface2)">Visible</th><th style="background:var(--surface2)">Editable</th></tr></thead>
             <tbody id="colPermsTable_amazon_pricing"></tbody>
           </table>
@@ -289,8 +292,8 @@ document.getElementById('userAvatar').textContent = (loggedInUser.username||'A')
 document.getElementById('userName').textContent = loggedInUser.username || '—';
 document.getElementById('userRole').textContent = loggedInUser.role || '—';
 
-const ALL_COLS = ["sku_code","item_name","size","category","location","child_remark","parent_remark","item_type","cost","price","catalog","mrp","up_price","cost_into_percent","available_atp","fba_stock","fbf_stock","sjit_stock","updated"];
-const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",child_remark:"Child Remark",parent_remark:"Parent Remark",item_type:"Type",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"MRP",up_price:"Up Price",cost_into_percent:"Cost into %",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
+const ALL_COLS = ["sku_code","item_name","size","category","location","child_remark","parent_remark","item_type","cost","price","catalog","mrp","up_price","available_atp","fba_stock","fbf_stock","sjit_stock","updated"];
+const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",child_remark:"Child Remark",parent_remark:"Parent Remark",item_type:"Type",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"MRP",up_price:"Up Price",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
 const AMAZON_COLS = ["master_sku","item_name","original_category","amazon_cat","remark","cost","mrp","uniware","fba","sjit","fbf","launch_date","loc","cost_into_percent","cost_after_percent","return_charge","gst_on_return","final_tp","required_selling_price","selected_price_range","selected_fixed_fee_range","commission_percent","commission_amount","fixed_closing_fee","fba_pick_pack","technology_fee","full_shipping_fee","whf_percent_on_shipping","shipping_fee_charged","total_charges","final_value_after_charges","old_daily_sp","old_deal_sp","sett_acc_panel","net_profit_on_sp","net_profit_percent_on_sp","net_profit_percent_on_tp"];
 const AMAZON_COL_LABELS = {master_sku:"Master SKU",item_name:"Style ID / Parent SKU",original_category:"Original Category",amazon_cat:"Amazon Cat",remark:"Remark",cost:"Cost",mrp:"MRP",uniware:"Uniware",fba:"FBA",sjit:"Sjit",fbf:"FBF",launch_date:"Launch Date",loc:"LOC",cost_into_percent:"Cost into %",cost_after_percent:"Cost after %",return_charge:"Return Charge",gst_on_return:"GST on Return",final_tp:"Final TP",required_selling_price:"Required Selling Price",selected_price_range:"Selected Price Range",selected_fixed_fee_range:"Selected Fixed Fee Range",commission_percent:"Commission %",commission_amount:"Commission Amount",fixed_closing_fee:"Fixed Closing Fee",fba_pick_pack:"FBA Pick Pack",technology_fee:"Technology Fee",full_shipping_fee:"Full Shipping Fee",whf_percent_on_shipping:"WHF % On Shipping",shipping_fee_charged:"Shipping Fee Charged",total_charges:"Total Charges",final_value_after_charges:"Final Value After Charges",old_daily_sp:"Old Daily SP",old_deal_sp:"Old Deal SP",sett_acc_panel:"Sett Acc Panel",net_profit_on_sp:"Net Profit On SP",net_profit_percent_on_sp:"Net Profit % On SP",net_profit_percent_on_tp:"Net Profit % On TP"};
 const PAGES = ["item_master","amazon_pricing","admin","logs","import"];

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Errors - Rajnandini ERP</title>
+<link rel="icon" type="image/png" href="/ui/Images/Icon%20WHITE%20COLOR.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root { --bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724; --gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15); --green:#2d6a4f;--text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550; --border:#222c28;--border2:#2a3530; --danger:#e05252;--danger-dim:rgba(224,82,82,0.12); --warning:#f4a261;--warning-dim:rgba(244,162,97,0.12); --info:#4db8d4;--success:#52b788;--success-dim:rgba(82,183,136,0.12); --sidebar-w:220px;--header-h:60px; }
@@ -20,7 +21,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .nav-section{padding:12px 0;flex:1;overflow-y:auto}
 .nav-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all .15s;text-decoration:none}
-.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:15px;width:20px;text-align:center;font-family:'DM Mono',monospace}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:15px;width:20px;text-align:center}
 .sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
 .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
@@ -39,9 +40,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .tabs{display:flex;align-items:center;gap:6px}
 .tab-btn{background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px 12px}
 .tab-btn:hover{border-color:var(--gold);color:var(--gold)}.tab-btn.active{border-color:var(--warning);color:var(--warning);background:var(--warning-dim)}
-.table-wrap{flex:1;overflow:auto;position:relative}table{width:100%;border-collapse:collapse;font-size:12px}thead{position:sticky;top:0;z-index:10}
-th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
-th:hover,th.sorted{color:var(--gold)}td{padding:9px 12px;border-bottom:1px solid rgba(34,44,40,.6);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:11px}
+.table-wrap{flex:1;overflow:auto;position:relative}table{width:100%;border-collapse:collapse;font-size:13px}thead{position:sticky;top:0;z-index:10}
+th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:6px 8px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+th:hover,th.sorted{color:var(--gold)}td{padding:4px 8px;border-bottom:1px solid rgba(34,44,40,.6);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;font-size:13px;line-height:1.35}
 tr:hover td{background:rgba(255,255,255,.02)}.table-loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);gap:12px}
 .spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 .pagination{background:var(--surface);border-top:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -50,27 +51,29 @@ tr:hover td{background:rgba(255,255,255,.02)}.table-loading{display:flex;align-i
 .page-size-select{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:4px 8px;color:var(--text);font-size:12px;outline:none}
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:240px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4)}.toast.error{border-color:rgba(224,82,82,.4)}.toast.info{border-color:rgba(77,184,212,.4)}
 </style>
+<link rel="stylesheet" href="/ui/app-theme.css">
+<script src="/ui/app-theme.js"></script>
 </head>
 <body>
 <aside class="sidebar">
-<div class="sidebar-logo"><div class="logo-text">Rajnandini</div><div class="logo-sub">ERP Suite - Pricing</div></div>
+<div class="sidebar-logo"><img class="sidebar-logo-img" src="/ui/Images/Icon%20COLOR.png" alt="Rajnandini"><div class="sidebar-logo-copy"><div class="logo-text">Rajnandini</div></div></div>
 <div class="sidebar-user"><div class="user-avatar" id="userAvatar">U</div><div><div class="user-name" id="userName">-</div><div class="user-role" id="userRole">-</div></div></div>
 <nav class="nav-section">
 <div class="nav-label">Menu</div>
-<a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">IM</span> Item Master</a>
-<a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">AP</span> Amazon Pricing</a>
+<a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
+<a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
 <a class="nav-item active" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
-<a class="nav-item" href="/admin" id="nav-admin"><span class="icon">AD</span> Admin Panel</a>
+<a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
 </nav>
-<div class="sidebar-footer"><a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">SO</span> Sign Out</a></div>
+<div class="sidebar-footer"><a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Sign Out</a></div>
 </aside>
 <main class="main">
 <header class="header">
-<span class="icon" style="font-size:18px">!</span>
 <span class="header-title">Errors</span>
 <span class="header-badge" id="headerBadge">Loading...</span>
 <div class="header-right">
 <span class="sync-time" id="syncTime">-</span>
+<select class="theme-select" data-theme-select title="Theme"></select>
 <button class="btn btn-gold btn-sm" onclick="loadActiveTable()" title="Refresh">Refresh</button>
 </div>
 </header>

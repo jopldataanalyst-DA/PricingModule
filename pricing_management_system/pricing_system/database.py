@@ -51,7 +51,7 @@ DEFAULT_COLUMN_PERMISSIONS = {
         "visible": [
             "sku_code", "item_name", "size", "category", "location",
             "child_remark", "parent_remark", "item_type",
-            "cost", "price", "catalog", "mrp", "up_price", "cost_into_percent",
+            "cost", "price", "catalog", "mrp", "up_price",
             "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
         ],
         "editable": []
@@ -133,6 +133,9 @@ def normalize_user(user: dict[str, Any], next_id: int | None = None) -> dict[str
         item_master = default_perms["item_master"]
     visible = _as_list(item_master.get("visible"), default_perms["item_master"]["visible"])
     editable = _as_list(item_master.get("editable"), default_perms["item_master"]["editable"])
+    item_columns = set(DEFAULT_COLUMN_PERMISSIONS["item_master"]["visible"])
+    visible = [col for col in visible if col in item_columns]
+    editable = [col for col in editable if col in item_columns]
     normalized["column_permissions"] = {"item_master": {"visible": visible, "editable": editable}}
 
     amazon_pricing = column_permissions.get("amazon_pricing") if isinstance(column_permissions, dict) else None
@@ -361,7 +364,6 @@ def init_db():
             price FLOAT,
             mrp FLOAT,
             up_price FLOAT,
-            cost_into_percent FLOAT DEFAULT 23.0,
             available_atp INT,
             fba_stock INT,
             fbf_stock INT,
@@ -371,6 +373,11 @@ def init_db():
             INDEX idx_category (category)
         )
     """)
+
+    try:
+        cursor.execute("ALTER TABLE stock_items DROP COLUMN cost_into_percent")
+    except Exception:
+        pass
     
     # Create stock_update table
     cursor.execute("""

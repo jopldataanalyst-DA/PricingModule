@@ -1,3 +1,3 @@
-## Task For 08-05-2026
+## Task For 12-05-2026
 
-1. Using AmazonRateCard.xlsx and AmazonPricingModule.xlsx make the Amazon pricing module in AmazonPricing.py
+1. Change the export for for specific users according to their allow data only

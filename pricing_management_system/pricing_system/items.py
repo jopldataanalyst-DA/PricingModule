@@ -16,6 +16,7 @@ import io
 import json
 from pathlib import Path
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from auth import get_current_user, check_page_access, verify_special_password
 import polars as pl
 import requests
@@ -75,7 +76,7 @@ def count_item_master_rows() -> int:
 SELECTED_COLUMNS = [
     "sku_code", "item_name", "size", "category", "location",
     "child_remark", "parent_remark", "item_type",
-    "cost", "price", "catalog", "mrp", "up_price", "cost_into_percent",
+    "cost", "price", "catalog", "mrp", "up_price",
     "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
 ]
 
@@ -85,7 +86,6 @@ COLUMN_LABELS = {
     "child_remark": "Child Remark", "parent_remark": "Parent Remark",
     "item_type": "Type",
     "price": "Wholesale Price", "catalog": "Catalog Name", "mrp": "MRP", "up_price": "Up Price",
-    "cost_into_percent": "Cost into %",
     "available_atp": "Uniware Stock", "fba_stock": "FBA", "fbf_stock": "FBF",
     "sjit_stock": "SJIT", "updated": "Launch Date"
 }
@@ -204,7 +204,6 @@ class ItemChangeRequest(BaseModel):
     catalog: Optional[str] = None
     mrp: Optional[float] = None
     up_price: Optional[float] = None
-    cost_into_percent: Optional[float] = None
     available_atp: Optional[int] = None
     fba_stock: Optional[int] = None
     fbf_stock: Optional[int] = None
@@ -222,6 +221,16 @@ def editable_columns_for_user(user: dict) -> list[str]:
     return [c for c in editable if c in visible and c in SELECTED_COLUMNS]
 
 
+def visible_columns_for_user(user: dict) -> list[str]:
+    """Return the item columns the current user is allowed to view/export."""
+    if user.get("role") == "admin":
+        return list(SELECTED_COLUMNS)
+    permissions = user.get("column_permissions", {}).get("item_master", {})
+    visible = permissions.get("visible") or SELECTED_COLUMNS[:5]
+    allowed = [c for c in visible if c in SELECTED_COLUMNS]
+    return allowed or SELECTED_COLUMNS[:5]
+
+
 def require_change_remark(change_remark: str):
     """Require a non-empty audit remark for item changes/imports."""
     if not change_remark or not change_remark.strip():
@@ -234,6 +243,55 @@ def display_value(value):
     if value is None:
         return ""
     return str(value)
+
+
+NUMERIC_COLUMNS = {
+    "cost", "price", "mrp", "up_price",
+    "available_atp", "fba_stock", "fbf_stock", "sjit_stock",
+}
+
+
+def _decimal_value(value):
+    """Convert numeric audit values to Decimal for stable comparisons."""
+    if value is None or value == "":
+        return None
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+
+
+def values_are_different(column: str, old_value, new_value) -> bool:
+    """Return True only when an update actually changes the stored value."""
+    if column in NUMERIC_COLUMNS:
+        old_decimal = _decimal_value(old_value)
+        new_decimal = _decimal_value(new_value)
+        if old_decimal == 0 and new_decimal is None:
+            return False
+        if old_decimal is not None and new_decimal is not None:
+            return old_decimal != new_decimal
+        return old_decimal != new_decimal
+    return display_value(old_value) != display_value(new_value)
+
+
+def audit_display_value(value) -> str:
+    """Format old/new values for compact audit remarks."""
+    if value is None or value == "":
+        return "(blank)"
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return format(value.normalize(), "f")
+    return str(value)
+
+
+def build_update_item_remark(change_remark: str, changes: dict[str, tuple[Any, Any]]) -> str:
+    """Build an UPDATE_ITEM remark with user note plus old/new values."""
+    details = [
+        f"{COLUMN_LABELS.get(column, column)}: {audit_display_value(old)} -> {audit_display_value(new)}"
+        for column, (old, new) in sorted(changes.items())
+    ]
+    return f"{change_remark} | Changes: {'; '.join(details)}"
 
 
 def parse_json_dict(value):
@@ -278,10 +336,8 @@ async def get_columns(user=Depends(get_current_user)):
         editable = SELECTED_COLUMNS
         all_columns = SELECTED_COLUMNS
     else:
-        permissions = user.get("column_permissions", {}).get("item_master", {})
-        visible = permissions.get("visible") or SELECTED_COLUMNS[:5]
-        editable = permissions.get("editable") or []
-        visible = [c for c in visible if c in SELECTED_COLUMNS]
+        visible = visible_columns_for_user(user)
+        editable = user.get("column_permissions", {}).get("item_master", {}).get("editable") or []
         editable = [c for c in editable if c in visible and c in SELECTED_COLUMNS]
         all_columns = visible
     
@@ -376,49 +432,51 @@ async def get_items(
 
 
 @router.get("/export")
-async def export_items(user=Depends(get_current_user)):
-    """Export current dashboard data as CSV with a blank Action column."""
+async def export_items(
+    search: str = Query(""),
+    sort_by: str = Query("id"),
+    sort_dir: str = Query("asc"),
+    filters: str = Query(""),
+    selected_ids: str = Query(""),
+    user=Depends(get_current_user),
+):
+    """Export selected rows, filtered rows, or the full Item Master dataset."""
     check_page_access(user, "item_master")
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT sku_code, item_name, size, category, location, child_remark, parent_remark,
-               item_type, cost, price, catalog, mrp, up_price, cost_into_percent,
-               available_atp, fba_stock, fbf_stock, sjit_stock, updated
-        FROM stock_items si
-        WHERE EXISTS (
-            SELECT 1
-            FROM item_master im
-            WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(si.sku_code))
-        )
-    """)
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    rows = [{**item, "id": i + 1} for i, item in enumerate(load_items_db())]
+    export_columns = visible_columns_for_user(user)
+    selected = {
+        int(value)
+        for value in selected_ids.split(",")
+        if value.strip().isdigit()
+    }
+    if selected:
+        rows = [row for row in rows if int(row.get("id", 0)) in selected]
+    else:
+        active_filters = {
+            col: values
+            for col, values in parse_json_dict(filters).items()
+            if col in export_columns
+        }
+        rows = apply_search_and_filters(rows, search=search, filters=active_filters)
 
-    # Create header with labels
-    header_labels = [COLUMN_LABELS.get(c, c) for c in [
-        "sku_code", "item_name", "size", "category", "location",
-        "child_remark", "parent_remark", "item_type",
-        "cost", "price", "catalog", "mrp", "up_price", "cost_into_percent",
-        "available_atp", "fba_stock", "fbf_stock", "sjit_stock", "updated"
-    ]] + ["Action"]
+    if sort_by and sort_dir:
+        reverse = sort_dir == "desc"
+        numeric_cols = ["id", "available_atp", "fba_stock", "sjit_stock", "fbf_stock", "cost", "price", "mrp"]
+        if sort_by not in export_columns and sort_by != "id":
+            sort_by = "id"
+        if sort_by in numeric_cols:
+            rows.sort(key=lambda x: float(x.get(sort_by, 0) or 0), reverse=reverse)
+        else:
+            rows.sort(key=lambda x: (str(x.get(sort_by, "")) or "").lower(), reverse=reverse)
+
+    header_labels = [COLUMN_LABELS.get(c, c) for c in export_columns] + ["Action"]
     
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(header_labels)
     
     for row in rows:
-        row_data = [
-            row.get("sku_code"), row.get("item_name"), row.get("size"), 
-            row.get("category"), row.get("location"), row.get("child_remark"),
-            row.get("parent_remark"), row.get("item_type"), row.get("cost"), 
-            row.get("price"), row.get("catalog"), row.get("mrp"), row.get("up_price"),
-            row.get("cost_into_percent"),
-            row.get("available_atp"), row.get("fba_stock"), row.get("fbf_stock"), 
-            row.get("sjit_stock"), row.get("updated"), ""
-        ]
-        writer.writerow(row_data)
+        writer.writerow([row.get(col, "") for col in export_columns] + [""])
 
     filename = "dashboard_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
     return StreamingResponse(
@@ -553,6 +611,15 @@ async def update_item(item_id: int, payload: ItemChangeRequest, user=Depends(get
     if blocked:
         raise HTTPException(status_code=403, detail=f"No edit permission for: {', '.join(blocked)}")
 
+    changes = {
+        col: (current.get(col), value)
+        for col, value in updates.items()
+        if values_are_different(col, current.get(col), value)
+    }
+    if not changes:
+        raise HTTPException(status_code=400, detail="No item fields were changed")
+    updates = {col: new_value for col, (_, new_value) in changes.items()}
+
     conn = get_db()
     cursor = conn.cursor()
     try:
@@ -593,7 +660,7 @@ async def update_item(item_id: int, payload: ItemChangeRequest, user=Depends(get
         "UPDATE_ITEM",
         table_name="stock_items",
         record_id=sku,
-        remark=f"{change_remark} | Changed fields: {', '.join(sorted(updates.keys()))}",
+        remark=build_update_item_remark(change_remark, changes),
     )
     return {"message": "Item updated", "sku_code": sku, "updated_fields": sorted(updates.keys())}
 
