@@ -32,14 +32,12 @@ ITEM_MASTER_CSV = DATA_DIR / "ItemMaster.csv"
 ITEM_MASTER_SELECTED_CSV = DATA_DIR / "ItemMaster_selected.csv"
 STOCK_UPDATE_CSV = DATA_DIR / "StockUpdate_selected.csv"
 STOCK_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTW9CQgk8R7IxKynojzBc0HOB-bMaEHafeBLsAjzc91H9ilRP14PCmdOWvkt8NHzjNeX-HOyjcOwIXh/pub?gid=1527427362&single=true&output=csv"
-from database import get_db
+from database import get_database
 
 def load_items_db() -> List[Dict[str, Any]]:
     """Load dashboard rows that have a matching SKU in item_master."""
     try:
-        conn = get_db()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
+        rows = get_database().FetchAll("""
             SELECT si.*
             FROM stock_items si
             WHERE EXISTS (
@@ -48,9 +46,6 @@ def load_items_db() -> List[Dict[str, Any]]:
                 WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(si.sku_code))
             )
         """)
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
         return list(rows)
     except Exception as e:
         print(f"Error loading items from DB: {e}")
@@ -60,12 +55,7 @@ def load_items_db() -> List[Dict[str, Any]]:
 def count_item_master_rows() -> int:
     """Return the authoritative item_master row count for dashboard stats."""
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM item_master")
-        count = cursor.fetchone()[0]
-        cursor.close()
-        conn.close()
+        count = get_database().FetchValue("SELECT COUNT(*) FROM item_master", Default=0)
         return int(count or 0)
     except Exception as e:
         print(f"Error counting item_master rows: {e}")
@@ -495,10 +485,7 @@ async def get_stock_errors(
 ):
     """Return stock_update SKUs that are missing from item_master."""
     check_page_access(user, "item_master")
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("""
+    rows = get_database().FetchAll("""
             SELECT
                 su.master_sku,
                 COALESCE(su.uniware_stock, 0) AS uniware_stock,
@@ -514,10 +501,6 @@ async def get_stock_errors(
                   WHERE UPPER(TRIM(im.`Master SKU`)) = UPPER(TRIM(su.master_sku))
               )
         """)
-        rows = cursor.fetchall()
-    finally:
-        cursor.close()
-        conn.close()
 
     error_items = []
     for i, row in enumerate(rows, 1):
@@ -620,40 +603,33 @@ async def update_item(item_id: int, payload: ItemChangeRequest, user=Depends(get
         raise HTTPException(status_code=400, detail="No item fields were changed")
     updates = {col: new_value for col, (_, new_value) in changes.items()}
 
-    conn = get_db()
-    cursor = conn.cursor()
     try:
-        stock_sets = []
-        stock_values = []
-        for col, value in updates.items():
-            stock_sets.append(f"{col}=%s")
-            stock_values.append(value)
-        if stock_sets:
-            cursor.execute(
-                f"UPDATE stock_items SET {', '.join(stock_sets)} WHERE sku_code=%s",
-                (*stock_values, sku),
-            )
+        with get_database().Cursor(Commit=True) as cursor:
+            stock_sets = []
+            stock_values = []
+            for col, value in updates.items():
+                stock_sets.append(f"{col}=%s")
+                stock_values.append(value)
+            if stock_sets:
+                cursor.execute(
+                    f"UPDATE stock_items SET {', '.join(stock_sets)} WHERE sku_code=%s",
+                    (*stock_values, sku),
+                )
 
-        item_master_updates = [(ITEM_MASTER_DB_COLUMNS[col], value) for col, value in updates.items() if col in ITEM_MASTER_DB_COLUMNS]
-        if item_master_updates:
-            cursor.execute(
-                "UPDATE item_master SET "
-                + ", ".join(f"{col}=%s" for col, _ in item_master_updates)
-                + " WHERE `Master SKU`=%s",
-                (*[value for _, value in item_master_updates], sku),
-            )
+            item_master_updates = [(ITEM_MASTER_DB_COLUMNS[col], value) for col, value in updates.items() if col in ITEM_MASTER_DB_COLUMNS]
+            if item_master_updates:
+                cursor.execute(
+                    "UPDATE item_master SET "
+                    + ", ".join(f"{col}=%s" for col, _ in item_master_updates)
+                    + " WHERE `Master SKU`=%s",
+                    (*[value for _, value in item_master_updates], sku),
+                )
 
-        catalog_updates = [(CATALOG_PRICING_DB_COLUMNS[col], value) for col, value in updates.items() if col in CATALOG_PRICING_DB_COLUMNS]
-        if catalog_updates:
-            upsert_catalog_pricing(cursor, sku, {col: value for col, value in catalog_updates})
-
-        conn.commit()
+            catalog_updates = [(CATALOG_PRICING_DB_COLUMNS[col], value) for col, value in updates.items() if col in CATALOG_PRICING_DB_COLUMNS]
+            if catalog_updates:
+                upsert_catalog_pricing(cursor, sku, {col: value for col, value in catalog_updates})
     except Exception as e:
-        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update item: {e}")
-    finally:
-        cursor.close()
-        conn.close()
 
     record_audit_log(
         user,
@@ -707,89 +683,83 @@ async def import_items(
     added = replaced = deleted = errors = 0
     error_details = []
 
-    conn = get_db()
-    cursor = conn.cursor()
+    with get_database().Cursor(Commit=True) as cursor:
+        for i, row in enumerate(rows, 1):
+            action = str(row.get("Action", "")).strip().lower()
+            if not action:
+                continue
 
-    for i, row in enumerate(rows, 1):
-        action = str(row.get("Action", "")).strip().lower()
-        if not action:
-            continue
+            # Map row values using the labels
+            def get_val(internal_key):
+                label = COLUMN_LABELS.get(internal_key)
+                return str(row.get(label, "") or "").strip()
 
-        # Map row values using the labels
-        def get_val(internal_key):
-            label = COLUMN_LABELS.get(internal_key)
-            return str(row.get(label, "") or "").strip()
-
-        sku = get_val("sku_code")
-        if not sku:
-            errors += 1
-            error_details.append(f"Row {i}: missing Master SKU, skipped.")
-            continue
-
-        def f(internal_key):
-            val = get_val(internal_key)
-            try: return float(val or 0)
-            except: return 0.0
-
-        try:
-            if action == "add":
-                cursor.execute("""
-                    INSERT INTO item_master (`Master SKU`, `Style ID / Parent SKU`, Size, Category, Loc, `Child Remark`, `Parent Remark`, `Type`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """, (
-                    sku, get_val("item_name"), get_val("size"), get_val("category"),
-                    get_val("location"), get_val("child_remark"),
-                    get_val("parent_remark"), get_val("item_type")
-                ))
-
-                upsert_catalog_pricing(cursor, sku, {
-                    "launch_date": get_val("updated"),
-                    "catalog_name": get_val("catalog"),
-                    "cost": f("cost"),
-                    "wholesale_price": f("price"),
-                    "up_price": f("up_price"),
-                    "mrp": f("mrp"),
-                })
-                added += 1
-
-            elif action == "replace":
-                cursor.execute("""
-                    UPDATE item_master
-                    SET `Style ID / Parent SKU`=%s, Size=%s, Category=%s, Loc=%s,
-                        `Child Remark`=%s, `Parent Remark`=%s, `Type`=%s
-                    WHERE `Master SKU`=%s
-                """, (
-                    get_val("item_name"), get_val("size"), get_val("category"),
-                    get_val("location"), get_val("child_remark"),
-                    get_val("parent_remark"), get_val("item_type"), sku
-                ))
-
-                upsert_catalog_pricing(cursor, sku, {
-                    "launch_date": get_val("updated"),
-                    "catalog_name": get_val("catalog"),
-                    "cost": f("cost"),
-                    "wholesale_price": f("price"),
-                    "up_price": f("up_price"),
-                    "mrp": f("mrp"),
-                })
-                replaced += 1
-
-            elif action == "delete":
-                cursor.execute("DELETE FROM item_master WHERE `Master SKU`=%s", (sku,))
-                delete_catalog_pricing(cursor, sku)
-                deleted += 1
-
-            else:
+            sku = get_val("sku_code")
+            if not sku:
                 errors += 1
-                error_details.append(f"Row {i} (SKU: {sku}): unknown action '{action}'.")
+                error_details.append(f"Row {i}: missing Master SKU, skipped.")
+                continue
 
-        except Exception as e:
-            errors += 1
-            error_details.append(f"Row {i} (SKU: {sku}): {str(e)}")
+            def f(internal_key):
+                val = get_val(internal_key)
+                try: return float(val or 0)
+                except: return 0.0
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+            try:
+                if action == "add":
+                    cursor.execute("""
+                        INSERT INTO item_master (`Master SKU`, `Style ID / Parent SKU`, Size, Category, Loc, `Child Remark`, `Parent Remark`, `Type`)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (
+                        sku, get_val("item_name"), get_val("size"), get_val("category"),
+                        get_val("location"), get_val("child_remark"),
+                        get_val("parent_remark"), get_val("item_type")
+                    ))
+
+                    upsert_catalog_pricing(cursor, sku, {
+                        "launch_date": get_val("updated"),
+                        "catalog_name": get_val("catalog"),
+                        "cost": f("cost"),
+                        "wholesale_price": f("price"),
+                        "up_price": f("up_price"),
+                        "mrp": f("mrp"),
+                    })
+                    added += 1
+
+                elif action == "replace":
+                    cursor.execute("""
+                        UPDATE item_master
+                        SET `Style ID / Parent SKU`=%s, Size=%s, Category=%s, Loc=%s,
+                            `Child Remark`=%s, `Parent Remark`=%s, `Type`=%s
+                        WHERE `Master SKU`=%s
+                    """, (
+                        get_val("item_name"), get_val("size"), get_val("category"),
+                        get_val("location"), get_val("child_remark"),
+                        get_val("parent_remark"), get_val("item_type"), sku
+                    ))
+
+                    upsert_catalog_pricing(cursor, sku, {
+                        "launch_date": get_val("updated"),
+                        "catalog_name": get_val("catalog"),
+                        "cost": f("cost"),
+                        "wholesale_price": f("price"),
+                        "up_price": f("up_price"),
+                        "mrp": f("mrp"),
+                    })
+                    replaced += 1
+
+                elif action == "delete":
+                    cursor.execute("DELETE FROM item_master WHERE `Master SKU`=%s", (sku,))
+                    delete_catalog_pricing(cursor, sku)
+                    deleted += 1
+
+                else:
+                    errors += 1
+                    error_details.append(f"Row {i} (SKU: {sku}): unknown action '{action}'.")
+
+            except Exception as e:
+                errors += 1
+                error_details.append(f"Row {i} (SKU: {sku}): {str(e)}")
 
     total = added + replaced + deleted
 

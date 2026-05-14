@@ -16,8 +16,8 @@ from typing import Any
 
 from database import (
     AMAZON_SALES_HISTORY_DIR,
+    get_database,
     get_amazon_sales_schema,
-    get_db,
     init_db,
     quote_identifier,
 )
@@ -99,45 +99,35 @@ def import_amazon_sales_history(kind: str, refresh: bool = False, batch_size: in
     schema = get_amazon_sales_schema(kind)
     table = schema["table"]
     columns = schema["columns"]
-    insert_cols = ["source_year", "source_file", "source_row"] + [col["name"] for col in columns]
+    insert_cols = [col["name"] for col in columns]
     placeholders = ", ".join(["%s"] * len(insert_cols))
     col_sql = ", ".join(quote_identifier(col) for col in insert_cols)
     insert_sql = f"INSERT IGNORE INTO {quote_identifier(table)} ({col_sql}) VALUES ({placeholders})"
 
     files = iter_sales_files(kind)
-    conn = get_db()
-    cursor = conn.cursor()
+    db = get_database()
     inserted = 0
     processed = 0
-    try:
-        if refresh:
-            cursor.execute(f"TRUNCATE TABLE {quote_identifier(table)}")
-            conn.commit()
+    if refresh:
+        db.TruncateTable(table)
 
-        for path in files:
-            relative_file = str(path.relative_to(AMAZON_SALES_HISTORY_DIR))
-            source_year = path.parent.name
-            batch = []
-            with path.open("r", encoding="utf-8-sig", newline="") as file:
-                reader = csv.DictReader(file)
-                for row_number, row in enumerate(reader, start=2):
-                    values = [source_year, relative_file, row_number]
-                    for col in columns:
-                        values.append(normalize_value(row.get(col["header"]), col["type"], col["name"]))
-                    batch.append(values)
-                    processed += 1
-                    if len(batch) >= batch_size:
-                        cursor.executemany(insert_sql, batch)
-                        inserted += cursor.rowcount
-                        conn.commit()
-                        batch.clear()
-                if batch:
-                    cursor.executemany(insert_sql, batch)
-                    inserted += cursor.rowcount
-                    conn.commit()
-    finally:
-        cursor.close()
-        conn.close()
+    for path in files:
+        relative_file = str(path.relative_to(AMAZON_SALES_HISTORY_DIR))
+        source_year = path.parent.name
+        batch = []
+        with path.open("r", encoding="utf-8-sig", newline="") as file:
+            reader = csv.DictReader(file)
+            for row_number, row in enumerate(reader, start=2):
+                values = []
+                for col in columns:
+                    values.append(normalize_value(row.get(col["header"]), col["type"], col["name"]))
+                batch.append(tuple(values))
+                processed += 1
+                if len(batch) >= batch_size:
+                    inserted += db.ExecuteMany(insert_sql, batch, BatchSize=batch_size)
+                    batch.clear()
+            if batch:
+                inserted += db.ExecuteMany(insert_sql, batch, BatchSize=batch_size)
 
     return {"files": len(files), "processed_rows": processed, "inserted_rows": inserted}
 
@@ -166,3 +156,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

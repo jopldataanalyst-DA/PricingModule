@@ -6,10 +6,10 @@ Use case:
     staging, not part of the FastAPI request path.
 """
 
-import mysql.connector
 import pandas as pd
 import os
 import re
+from AdvanceDatabase import MySqlDatabase
 
 
 DB_CONFIG = {
@@ -18,6 +18,10 @@ DB_CONFIG = {
     "password": "123456789",
     "database": "pricing_module"
 }
+
+
+def get_database() -> MySqlDatabase:
+    return MySqlDatabase(DB_CONFIG, PoolName="SqlDataUpdaterPool")
 
 
 def clean_column_name(col):
@@ -92,49 +96,38 @@ def upload_table(file_path, table_name, action="append"):
     if action not in ["append", "replace"]:
         raise ValueError("action must be 'append' or 'replace'")
 
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-
     try:
-        df = read_file(file_path)
-        df.columns = [clean_column_name(col) for col in df.columns]
+        db = get_database()
+        with db.Cursor(Commit=True) as cursor:
+            df = read_file(file_path)
+            df.columns = [clean_column_name(col) for col in df.columns]
 
-        exists = table_exists(cursor, table_name)
+            exists = table_exists(cursor, table_name)
 
-        if exists:
+            if exists:
 
-            if action == "replace":
-                cursor.execute(f"DROP TABLE `{table_name}`")
+                if action == "replace":
+                    cursor.execute(f"DROP TABLE `{table_name}`")
+                    create_table(cursor, table_name, df)
+                    insert_data(cursor, table_name, df)
+
+                elif action == "append":
+                    insert_data(cursor, table_name, df)
+
+            else:
                 create_table(cursor, table_name, df)
                 insert_data(cursor, table_name, df)
-
-            elif action == "append":
-                insert_data(cursor, table_name, df)
-
-        else:
-            create_table(cursor, table_name, df)
-            insert_data(cursor, table_name, df)
-
-        conn.commit()
 
         print(f"Upload completed successfully")
         print(f"Inserted {len(df)} rows into '{table_name}'")
 
     except Exception as e:
-        conn.rollback()
         print("Error:", e)
 
-    finally:
-        cursor.close()
-        conn.close()
 
-
-# =========================
-# Example Usage
-# =========================
-
-upload_table(
-    file_path=r"D:\VatsalFiles\PricingModule\Data\ItemMaster.csv",
-    table_name="item_master",
-    action="replace"   # append / replace
-)
+if __name__ == "__main__":
+    upload_table(
+        file_path=r"D:\VatsalFiles\PricingModule\Data\ItemMaster.csv",
+        table_name="item_master",
+        action="replace"   # append / replace
+    )

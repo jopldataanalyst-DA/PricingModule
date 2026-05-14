@@ -1,8 +1,8 @@
 """One-time source patch script for AmazonPricing.py.
 
 Use case:
-    Replaces an older DuckDB/MySQL stock-loading implementation with a direct
-    mysql.connector implementation. This is historical maintenance tooling and
+    Replaces an older DuckDB/MySQL stock-loading implementation with the shared
+    AdvanceDatabase helper. This is historical maintenance tooling and
     should not be run during normal application startup.
 """
 
@@ -48,10 +48,7 @@ old_func = '''def LoadStockData():
     return pl.from_arrow(ArrowTable)'''
 
 new_func = '''def LoadStockData():
-    import mysql.connector
-    MysqlConn = mysql.connector.connect(**DbConfig)
-    cursor = MysqlConn.cursor(dictionary=True)
-    cursor.execute(f"""
+    rows = GetDatabase().FetchAll(f"""
         SELECT
             sku_code AS Master_SKU,
             category AS Category,
@@ -67,9 +64,6 @@ new_func = '''def LoadStockData():
             updated AS Launch_Date
         FROM {TableName}
     """)
-    rows = cursor.fetchall()
-    cursor.close()
-    MysqlConn.close()
 
     if not rows:
         return pl.DataFrame(schema={

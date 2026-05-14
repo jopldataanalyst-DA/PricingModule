@@ -7,7 +7,7 @@ Use case:
 """
 
 import polars as pl
-from database import get_db
+from database import get_database
 from pathlib import Path
 
 DATA_DIR = Path(r"D:\VatsalFiles\PricingModule\Data")
@@ -31,40 +31,23 @@ def sync_catalog():
                 pl.col(col).cast(pl.Float64, strict=False).fill_null(0.0)
             )
     
-    records = df.to_dicts()
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    print(f"Updating catalog_pricing table with {len(records)} records...")
-    for row in records:
+    records = []
+    for row in df.to_dicts():
         sku = str(row.get("Master SKU", "")).strip().upper()
         if not sku:
             continue
-            
-        cursor.execute("""
-            INSERT INTO catalog_pricing (master_sku, launch_date, catalog_name, cost, wholesale_price, up_price, mrp)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                launch_date=VALUES(launch_date),
-                catalog_name=VALUES(catalog_name),
-                cost=VALUES(cost),
-                wholesale_price=VALUES(wholesale_price),
-                up_price=VALUES(up_price),
-                mrp=VALUES(mrp)
-        """, (
-            sku,
-            row.get("Launch Date"),
-            row.get("Catalog Name"),
-            row.get("Cost"),
-            row.get("Wholesale Price"),
-            row.get("Up Price"),
-            row.get("MRP")
-        ))
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
+        records.append({
+            "master_sku": sku,
+            "launch_date": row.get("Launch Date"),
+            "catalog_name": row.get("Catalog Name"),
+            "cost": row.get("Cost"),
+            "wholesale_price": row.get("Wholesale Price"),
+            "up_price": row.get("Up Price"),
+            "mrp": row.get("MRP"),
+        })
+
+    print(f"Updating catalog_pricing table with {len(records)} records...")
+    get_database().UpsertRows("catalog_pricing", records)
     print("Sync complete.")
 
 if __name__ == "__main__":

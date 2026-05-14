@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from auth import get_current_user, check_page_access
-from database import get_db
+from database import get_database
 import json
 import math
 import csv
@@ -220,9 +220,7 @@ def recalculate_pricing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
 def load_amazon_pricing_db() -> List[Dict[str, Any]]:
     """Load Amazon pricing rows and recalculate UI-facing derived fields."""
     try:
-        conn = get_db()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
+        rows = get_database().FetchAll("""
             SELECT
                 apr.*,
                 si.item_name,
@@ -240,9 +238,6 @@ def load_amazon_pricing_db() -> List[Dict[str, Any]]:
                 GROUP BY master_sku
             ) cip ON apr.master_sku = cip.master_sku
         """)
-        rows = cursor.fetchall()
-        cursor.close()
-        conn.close()
         items = []
         for i, row in enumerate(rows):
             row.update(recalculate_pricing_fields(row))
@@ -408,51 +403,43 @@ async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(ge
     if not payload.updates:
         return {"updated": 0}
 
-    conn = get_db()
-    cursor = conn.cursor()
     updated = 0
 
     try:
-        for item in payload.updates:
-            master_sku = (item.master_sku or "").strip()
-            if not master_sku:
-                continue
-            pct = safe_float(item.cost_into_percent)
-            if pct < 0 or pct >= 100:
-                raise HTTPException(status_code=400, detail="Cost into % must be between 0 and 99")
+        with get_database().Cursor(Commit=True) as cursor:
+            for item in payload.updates:
+                master_sku = (item.master_sku or "").strip()
+                if not master_sku:
+                    continue
+                pct = safe_float(item.cost_into_percent)
+                if pct < 0 or pct >= 100:
+                    raise HTTPException(status_code=400, detail="Cost into % must be between 0 and 99")
 
-            cursor.execute(
-                "SELECT COUNT(*) FROM cost_into_percent WHERE master_sku=%s AND Platform=%s",
-                (master_sku, "Amazon")
-            )
-            exists = cursor.fetchone()[0] > 0
-
-            if exists:
                 cursor.execute(
-                    "UPDATE cost_into_percent SET Cost_Into_Percent=%s WHERE master_sku=%s AND Platform=%s",
-                    (pct, master_sku, "Amazon")
+                    "SELECT COUNT(*) FROM cost_into_percent WHERE master_sku=%s AND Platform=%s",
+                    (master_sku, "Amazon")
                 )
-            else:
-                cursor.execute(
-                    """
-                    INSERT INTO cost_into_percent (master_sku, style_id, Platform, Cost_Into_Percent)
-                    VALUES (%s, %s, %s, %s)
-                    """,
-                    (master_sku, item.style_id, "Amazon", pct)
-                )
-            updated += 1
+                exists = cursor.fetchone()[0] > 0
 
-        conn.commit()
+                if exists:
+                    cursor.execute(
+                        "UPDATE cost_into_percent SET Cost_Into_Percent=%s WHERE master_sku=%s AND Platform=%s",
+                        (pct, master_sku, "Amazon")
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO cost_into_percent (master_sku, style_id, Platform, Cost_Into_Percent)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                        (master_sku, item.style_id, "Amazon", pct)
+                    )
+                updated += 1
         return {"updated": updated}
     except HTTPException:
-        conn.rollback()
         raise
     except Exception as e:
-        conn.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update cost into percent: {e}")
-    finally:
-        cursor.close()
-        conn.close()
 
 @router.post("/refresh-data")
 async def refresh_amazon_data(background_tasks: BackgroundTasks, user=Depends(get_current_user)):

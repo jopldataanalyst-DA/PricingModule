@@ -1,35 +1,29 @@
-import mysql.connector
+import sys
+from pathlib import Path
 
-DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "123456789",
-    "database": "pricing_module"
-}
+DATABASE_MODULE_DIR = Path(__file__).parent / "pricing_management_system" / "ProcessFiles" / "DatabaseModule"
+if str(DATABASE_MODULE_DIR) not in sys.path:
+    sys.path.append(str(DATABASE_MODULE_DIR))
+
+from AdvanceDatabase import MySqlDatabase
+
+DB_CONFIG = {"host": "localhost", "user": "root", "password": "123456789", "database": "pricing_module"}
 
 try:
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
+    db = MySqlDatabase(DB_CONFIG, PoolName="CheckStockItemsPool")
 
-    # Check stock_items table structure
-    cursor.execute("DESCRIBE stock_items")
-    columns = cursor.fetchall()
+    columns = db.FetchAll("DESCRIBE stock_items", Dictionary=False)
     print("=== stock_items table columns ===")
     for col in columns:
         print(f"{col[0]}: {col[1]}")
 
-    # Check if cost_into_percent column exists
     column_names = [col[0] for col in columns]
-    if 'cost_into_percent' not in column_names:
+    if "cost_into_percent" not in column_names:
         print("\nAdding cost_into_percent column to stock_items table...")
-        cursor.execute("ALTER TABLE stock_items ADD COLUMN cost_into_percent FLOAT DEFAULT 23.0")
-        conn.commit()
-        print("✅ Column added to stock_items table")
+        db.ExecuteQuery("ALTER TABLE stock_items ADD COLUMN cost_into_percent FLOAT DEFAULT 23.0")
+        print("Column added to stock_items table")
     else:
         print("\nColumn cost_into_percent already exists in stock_items")
-
-    cursor.close()
-    conn.close()
 
 except Exception as e:
     print(f"Error: {e}")

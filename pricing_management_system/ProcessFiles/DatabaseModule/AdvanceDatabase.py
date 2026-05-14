@@ -1,5 +1,5 @@
 import polars as pl
-import mysql.connector
+from contextlib import contextmanager
 from mysql.connector import pooling
 
 
@@ -22,6 +22,37 @@ class MySqlDatabase:
 
     def GetConnection(self):
         return self.Pool.get_connection()
+
+    @staticmethod
+    def QuoteIdentifier(Name: str) -> str:
+        return "`" + str(Name).replace("`", "``") + "`"
+
+    @contextmanager
+    def Connection(self):
+        Conn = self.GetConnection()
+        try:
+            yield Conn
+        finally:
+            Conn.close()
+
+    @contextmanager
+    def Cursor(self, Dictionary: bool = False, Commit: bool = False):
+        Conn = self.GetConnection()
+        Cursor = Conn.cursor(dictionary=Dictionary)
+
+        try:
+            yield Cursor
+            if Commit:
+                Conn.commit()
+
+        except Exception:
+            if Commit:
+                Conn.rollback()
+            raise
+
+        finally:
+            Cursor.close()
+            Conn.close()
 
     # ============================================================
     # READ
@@ -58,11 +89,53 @@ class MySqlDatabase:
         try:
             Cursor.execute(Query, Params or ())
             Data = Cursor.fetchall()
-            return pl.DataFrame(Data)
+            if not Data:
+                return pl.DataFrame()
+            
+            try:
+                # Use infer_schema_length=None to scan all rows for correct data types
+                # This prevents ComputeError when mixed types (like strings and numbers) appear later in the dataset
+                return pl.from_dicts(Data, infer_schema_length=None)
+            except Exception:
+                # Fallback: Convert to dict of lists which can sometimes be more robust for Polars inference
+                Columns = Data[0].keys()
+                DataDict = {col: [row[col] for row in Data] for col in Columns}
+                return pl.from_dict(DataDict)
 
         finally:
             Cursor.close()
             Conn.close()
+
+    def FetchAll(
+        self,
+        Query: str,
+        Params: tuple | None = None,
+        Dictionary: bool = True,
+    ) -> list:
+        with self.Cursor(Dictionary=Dictionary) as Cursor:
+            Cursor.execute(Query, Params or ())
+            return Cursor.fetchall()
+
+    def FetchOne(
+        self,
+        Query: str,
+        Params: tuple | None = None,
+        Dictionary: bool = False,
+    ):
+        with self.Cursor(Dictionary=Dictionary) as Cursor:
+            Cursor.execute(Query, Params or ())
+            return Cursor.fetchone()
+
+    def FetchValue(
+        self,
+        Query: str,
+        Params: tuple | None = None,
+        Default=None,
+    ):
+        Row = self.FetchOne(Query, Params, Dictionary=False)
+        if Row is None:
+            return Default
+        return Row[0]
 
     # ============================================================
     # WRITE
@@ -104,6 +177,59 @@ class MySqlDatabase:
         """
 
         self.ExecuteQuery(Query, Values)
+
+    def UpsertRows(
+        self,
+        TableName: str,
+        Rows: list[dict],
+        UpdateColumns: list[str] | None = None,
+        BatchSize: int = 5000,
+    ) -> int:
+        if not Rows:
+            return 0
+
+        Columns = list(Rows[0].keys())
+        if not Columns:
+            return 0
+
+        for Row in Rows:
+            MissingColumns = [Column for Column in Columns if Column not in Row]
+            if MissingColumns:
+                raise ValueError(f"Missing columns for upsert: {MissingColumns}")
+
+        UpdateColumns = UpdateColumns or Columns
+        ColumnString = ", ".join(self.QuoteIdentifier(Column) for Column in Columns)
+        PlaceholderString = ", ".join(["%s"] * len(Columns))
+        UpdateString = ", ".join(
+            f"{self.QuoteIdentifier(Column)}=VALUES({self.QuoteIdentifier(Column)})"
+            for Column in UpdateColumns
+        )
+
+        Query = f"""
+            INSERT INTO {self.QuoteIdentifier(TableName)}
+            ({ColumnString})
+            VALUES ({PlaceholderString})
+            ON DUPLICATE KEY UPDATE {UpdateString}
+        """
+
+        Data = [tuple(Row.get(Column) for Column in Columns) for Row in Rows]
+        return self.ExecuteMany(Query, Data, BatchSize)
+
+    def UpsertTable(
+        self,
+        DataFrame: pl.DataFrame,
+        TableName: str,
+        UpdateColumns: list[str] | None = None,
+        BatchSize: int = 5000,
+    ) -> int:
+        if DataFrame.is_empty():
+            return 0
+        return self.UpsertRows(
+            TableName=TableName,
+            Rows=DataFrame.to_dicts(),
+            UpdateColumns=UpdateColumns,
+            BatchSize=BatchSize,
+        )
 
     # ============================================================
     # REPLACE / DELETE
@@ -232,13 +358,14 @@ class MySqlDatabase:
         self,
         Query: str,
         Params: tuple | None = None,
-    ) -> None:
+    ) -> int:
         Conn = self.GetConnection()
         Cursor = Conn.cursor()
 
         try:
             Cursor.execute(Query, Params or ())
             Conn.commit()
+            return Cursor.rowcount
 
         except Exception:
             Conn.rollback()
@@ -253,19 +380,22 @@ class MySqlDatabase:
         Query: str,
         Data: list[tuple],
         BatchSize: int = 5000,
-    ) -> None:
+    ) -> int:
         if not Data:
-            return
+            return 0
 
         Conn = self.GetConnection()
         Cursor = Conn.cursor()
+        AffectedRows = 0
 
         try:
             for Start in range(0, len(Data), BatchSize):
                 Batch = Data[Start:Start + BatchSize]
                 Cursor.executemany(Query, Batch)
+                AffectedRows += Cursor.rowcount
 
             Conn.commit()
+            return AffectedRows
 
         except Exception:
             Conn.rollback()
@@ -286,7 +416,7 @@ class MySqlDatabase:
         Replace: bool = False,
         BatchSize: int = 5000,
     ) -> None:
-        DataFrame = pl.read_csv(CsvPath)
+        DataFrame = pl.read_csv(CsvPath, infer_schema_length=10000)
 
         if Replace:
             self.ReplaceTable(DataFrame, TableName, BatchSize)
@@ -301,29 +431,29 @@ class MySqlDatabase:
         DataFrame = self.ReadTable(TableName)
         DataFrame.write_csv(CsvPath)
 
-# if __name__ == "__main__":
-#     DB_CONFIG_1 = {
-#         "host": "localhost",
-#         "user": "root",
-#         "password": "123456789",
-#         "database": "pricing_module",
-#     }
+if __name__ == "__main__":
+    DB_CONFIG_1 = {
+        "host": "localhost",
+        "user": "root",
+        "password": "123456789",
+        "database": "pricing_module",
+    }
 
-#     DB_CONFIG_2 = {
-#         "host": "localhost",
-#         "user": "root",
-#         "password": "123456789",
-#         "database": "pricing_module",
-#     }
+    DB_CONFIG_2 = {
+        "host": "localhost",
+        "user": "root",
+        "password": "123456789",
+        "database": "pricing_module",
+    }
 
-#     PricingDb = MySqlDatabase(DB_CONFIG_1, PoolName="PricingPool")
-#     TestDb = MySqlDatabase(DB_CONFIG_2, PoolName="TestPool")
+    PricingDb = MySqlDatabase(DB_CONFIG_1, PoolName="PricingPool")
+    TestDb = MySqlDatabase(DB_CONFIG_2, PoolName="TestPool")
 
-#     df = PricingDb.ReadLimit("stock_update", 5)
-#     print(df)
+    df = PricingDb.ReadLimit("stock_update", 5)
+    print(df)
 
-#     df2 = TestDb.ReadLimit("stock_update", 5)
-#     print(df2)
+    df2 = TestDb.ReadLimit("stock_update", 5)
+    print(df2)
 
-#     print(PricingDb.ShowTables())
-#     print(TestDb.ShowTables())
+    print(PricingDb.ShowTables())
+    print(TestDb.ShowTables())

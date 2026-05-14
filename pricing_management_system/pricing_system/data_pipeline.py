@@ -11,7 +11,7 @@ import requests
 from io import BytesIO
 from pathlib import Path
 from datetime import datetime
-from database import init_db, get_db
+from database import init_db, get_database
 import sys
 
 # Setup Paths
@@ -114,28 +114,9 @@ def run_inventory_pipeline():
     # 2. Save stock_update to Database
     print(f"[{datetime.now()}] Saving stock_update to database...")
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        stock_records = stock_merged.to_dicts()
-        cursor.execute("DELETE FROM stock_update")
-        for row in stock_records:
-            cursor.execute("""
-                INSERT INTO stock_update (master_sku, uniware_stock, fba_stock, fbf_stock, sjit_stock)
-                VALUES (%s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    uniware_stock=VALUES(uniware_stock),
-                    fba_stock=VALUES(fba_stock),
-                    fbf_stock=VALUES(fbf_stock),
-                    sjit_stock=VALUES(sjit_stock)
-            """, (
-                row["master_sku"], row["uniware_stock"], 
-                row["fba_stock"], row["fbf_stock"], row["sjit_stock"]
-            ))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print(f"[{datetime.now()}] stock_update table updated with {len(stock_records)} records.")
+        db = get_database()
+        db.ReplaceTable(stock_merged, "stock_update")
+        print(f"[{datetime.now()}] stock_update table updated with {stock_merged.height} records.")
     except Exception as e:
         print(f"[{datetime.now()}] Error saving to stock_update: {e}")
         return
@@ -143,16 +124,12 @@ def run_inventory_pipeline():
     # 3. Fetch stock_items, stock_update, and catalog_pricing from Database for final dashboard
     print(f"[{datetime.now()}] Generating final dashboard from database tables...")
     try:
-        conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        db = get_database()
         
         # Fetch item_master as the base for the dashboard
-        cursor.execute("SELECT * FROM item_master")
-        item_master_rows = cursor.fetchall()
+        item_master_rows = db.FetchAll("SELECT * FROM item_master")
         if not item_master_rows:
             print(f"[{datetime.now()}] item_master table is empty – skipping dashboard rebuild.")
-            cursor.close()
-            conn.close()
         else:
             item_master_df = pl.from_dicts(item_master_rows)
             rename_map = {
@@ -190,8 +167,7 @@ def run_inventory_pipeline():
                 stock_items_df = stock_items_df.drop("id")
 
             # Fetch stock_update
-            cursor.execute("SELECT * FROM stock_update")
-            stock_update_rows = cursor.fetchall()
+            stock_update_rows = db.FetchAll("SELECT * FROM stock_update")
             if stock_update_rows:
                 stock_update_df = pl.from_dicts(stock_update_rows).with_columns(
                     pl.col("master_sku").cast(pl.Utf8).str.strip_chars().str.to_uppercase()
@@ -203,8 +179,7 @@ def run_inventory_pipeline():
                 })
 
             # Fetch catalog_pricing
-            cursor.execute("SELECT * FROM catalog_pricing")
-            catalog_pricing_rows = cursor.fetchall()
+            catalog_pricing_rows = db.FetchAll("SELECT * FROM catalog_pricing")
             if catalog_pricing_rows:
                 catalog_pricing_df = pl.from_dicts(catalog_pricing_rows)
                 rename_map = {
@@ -230,9 +205,6 @@ def run_inventory_pipeline():
                     "cost": pl.Float64, "wholesale_price": pl.Float64, "up_price": pl.Float64,
                     "mrp": pl.Float64
                 })
-
-            cursor.close()
-            conn.close()
 
             # Normalise the sku_code column so joins work reliably
             stock_items_df = stock_items_df.with_columns(
@@ -284,32 +256,15 @@ def run_inventory_pipeline():
             ]).drop(["_cat_cost", "_cat_mrp", "_cat_price", "_cat_up_price", "_cat_catalog", "_cat_launch"])
 
             # Persist updated values back into stock_items
-            records = stock_items_df.to_dicts()
             try:
-                conn2 = get_db()
-                cursor2 = conn2.cursor()
-                cursor2.execute("TRUNCATE TABLE stock_items")
-                for row in records:
-                    cursor2.execute("""
-                        INSERT INTO stock_items
-                        (sku_code, item_name, size, category, location, child_remark, parent_remark,
-                         item_type, catalog, cost, price, mrp, up_price,
-                         available_atp, fba_stock, fbf_stock, sjit_stock, updated)
-                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                    """, (
-                        row.get("sku_code"), row.get("item_name"), row.get("size"),
-                        row.get("category"), row.get("location"), row.get("child_remark"),
-                        row.get("parent_remark"), row.get("item_type"), row.get("catalog"),
-                        float(row.get("cost") or 0), float(row.get("price") or 0),
-                        float(row.get("mrp") or 0), float(row.get("up_price") or 0),
-                        int(row.get("available_atp") or 0),
-                        int(row.get("fba_stock") or 0), int(row.get("fbf_stock") or 0),
-                        int(row.get("sjit_stock") or 0), row.get("updated")
-                    ))
-                conn2.commit()
-                cursor2.close()
-                conn2.close()
-                print(f"[{datetime.now()}] stock_items refreshed with {len(records)} records.")
+                stock_items_df = stock_items_df.select([
+                    "sku_code", "item_name", "size", "category", "location",
+                    "child_remark", "parent_remark", "item_type", "catalog",
+                    "cost", "price", "mrp", "up_price", "available_atp",
+                    "fba_stock", "fbf_stock", "sjit_stock", "updated"
+                ])
+                db.ReplaceTable(stock_items_df, "stock_items")
+                print(f"[{datetime.now()}] stock_items refreshed with {stock_items_df.height} records.")
             except Exception as e:
                 print(f"[{datetime.now()}] Error refreshing stock_items: {e}")
                 return
@@ -325,12 +280,7 @@ def run_amazon_pipeline():
     try:
         amazon_df = run_amazon_pricing()
         amazon_records = amazon_df.to_dicts()
-        
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        cursor.execute("TRUNCATE TABLE amazon_pricing_results")
-        
+
         import math
         def safe_float(val):
             """Convert workbook values to finite floats for MySQL."""
@@ -349,23 +299,48 @@ def run_amazon_pipeline():
             except:
                 return 0
 
+        result_rows = []
         for row in amazon_records:
-            cursor.execute("""
-                INSERT INTO amazon_pricing_results 
-                (master_sku, original_category, amazon_cat, remark, cost, mrp, uniware, fba, sjit, fbf, launch_date, loc, cost_into_percent, cost_after_percent, return_charge, gst_on_return, final_tp, required_selling_price, selected_price_range, selected_fixed_fee_range, commission_percent, commission_amount, fixed_closing_fee, fba_pick_pack, technology_fee, full_shipping_fee, whf_percent_on_shipping, shipping_fee_charged, total_charges, final_value_after_charges, old_daily_sp, old_deal_sp, sett_acc_panel, net_profit_on_sp, net_profit_percent_on_sp, net_profit_percent_on_tp)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                row.get("Master_SKU"), row.get("Original_Category"), row.get("Amazon Cat"), row.get("Remark"),
-                safe_float(row.get("Cost")), safe_float(row.get("MRP")), safe_int(row.get("Uniware", row.get("Uniware Stock"))), safe_int(row.get("FBA")), safe_int(row.get("Sjit")), safe_int(row.get("FBF")),
-                row.get("Launch Date"), row.get("LOC"), safe_float(row.get("Cost into %")), safe_float(row.get("Cost after %")), safe_float(row.get("Return Charge")), safe_float(row.get("GST on Return")),
-                safe_float(row.get("Final TP")), safe_float(row.get("Required Selling Price")), row.get("Selected Price Range"), row.get("Selected Fixed Fee Range"),
-                safe_float(row.get("Commission %")), safe_float(row.get("Commission Amount")), safe_float(row.get("Fixed Closing Fee")), safe_float(row.get("FBA Pick Pack")), safe_float(row.get("Technology Fee")), safe_float(row.get("Full Shipping Fee")),
-                safe_float(row.get("WHF % On Shipping")), safe_float(row.get("Shipping Fee Charged")), safe_float(row.get("Total Charges")), safe_float(row.get("Final Value After Charges")), safe_float(row.get("Old Daily SP")),
-                safe_float(row.get("Old Deal SP")), safe_float(row.get("Sett Acc Panel")), safe_float(row.get("Net Profit On SP")), safe_float(row.get("Net Profit % On SP")), safe_float(row.get("Net Profit % On TP"))
-            ))
-        conn.commit()
-        cursor.close()
-        conn.close()
+            result_rows.append({
+                "master_sku": row.get("Master_SKU"),
+                "original_category": row.get("Original_Category"),
+                "amazon_cat": row.get("Amazon Cat"),
+                "remark": row.get("Remark"),
+                "cost": safe_float(row.get("Cost")),
+                "mrp": safe_float(row.get("MRP")),
+                "uniware": safe_int(row.get("Uniware", row.get("Uniware Stock"))),
+                "fba": safe_int(row.get("FBA")),
+                "sjit": safe_int(row.get("Sjit")),
+                "fbf": safe_int(row.get("FBF")),
+                "launch_date": row.get("Launch Date"),
+                "loc": row.get("LOC"),
+                "cost_into_percent": safe_float(row.get("Cost into %")),
+                "cost_after_percent": safe_float(row.get("Cost after %")),
+                "return_charge": safe_float(row.get("Return Charge")),
+                "gst_on_return": safe_float(row.get("GST on Return")),
+                "final_tp": safe_float(row.get("Final TP")),
+                "required_selling_price": safe_float(row.get("Required Selling Price")),
+                "selected_price_range": row.get("Selected Price Range"),
+                "selected_fixed_fee_range": row.get("Selected Fixed Fee Range"),
+                "commission_percent": safe_float(row.get("Commission %")),
+                "commission_amount": safe_float(row.get("Commission Amount")),
+                "fixed_closing_fee": safe_float(row.get("Fixed Closing Fee")),
+                "fba_pick_pack": safe_float(row.get("FBA Pick Pack")),
+                "technology_fee": safe_float(row.get("Technology Fee")),
+                "full_shipping_fee": safe_float(row.get("Full Shipping Fee")),
+                "whf_percent_on_shipping": safe_float(row.get("WHF % On Shipping")),
+                "shipping_fee_charged": safe_float(row.get("Shipping Fee Charged")),
+                "total_charges": safe_float(row.get("Total Charges")),
+                "final_value_after_charges": safe_float(row.get("Final Value After Charges")),
+                "old_daily_sp": safe_float(row.get("Old Daily SP")),
+                "old_deal_sp": safe_float(row.get("Old Deal SP")),
+                "sett_acc_panel": safe_float(row.get("Sett Acc Panel")),
+                "net_profit_on_sp": safe_float(row.get("Net Profit On SP")),
+                "net_profit_percent_on_sp": safe_float(row.get("Net Profit % On SP")),
+                "net_profit_percent_on_tp": safe_float(row.get("Net Profit % On TP")),
+            })
+
+        get_database().ReplaceTable(pl.DataFrame(result_rows), "amazon_pricing_results")
         print(f"[{datetime.now()}] Amazon pricing complete! Saved {len(amazon_records)} records.")
     except Exception as e:
         print(f"[{datetime.now()}] Error updating amazon pricing database: {e}")

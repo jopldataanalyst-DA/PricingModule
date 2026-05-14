@@ -8,6 +8,8 @@ Use case:
 
 import duckdb
 import polars as pl
+import sys
+from pathlib import Path
 
 # ============================================================
 # SETTINGS
@@ -30,6 +32,25 @@ DefaultAmazonCategory = "Apparel - Other products"
 CostIntoPercent = 23
 ReturnCharge = 59
 GstPercent = 18
+
+_LOCAL_DATABASE = None
+
+
+def GetDatabase():
+    """Use the application pool when available, otherwise create a local helper."""
+    global _LOCAL_DATABASE
+    try:
+        from database import get_database
+        return get_database()
+    except ImportError:
+        if _LOCAL_DATABASE is not None:
+            return _LOCAL_DATABASE
+        database_module_dir = Path(__file__).parent.parent / "DatabaseModule"
+        if str(database_module_dir) not in sys.path:
+            sys.path.append(str(database_module_dir))
+        from AdvanceDatabase import MySqlDatabase
+        _LOCAL_DATABASE = MySqlDatabase(DbConfig, PoolName="AmazonPricingPool")
+        return _LOCAL_DATABASE
 
 
 # ============================================================
@@ -81,10 +102,7 @@ def FixedFeeRange(Price):
 # ============================================================
 def LoadStockData():
     """Load source product/stock/pricing fields from stock_items."""
-    import mysql.connector
-    MysqlConn = mysql.connector.connect(**DbConfig)
-    cursor = MysqlConn.cursor(dictionary=True)
-    cursor.execute(f"""
+    rows = GetDatabase().FetchAll(f"""
         SELECT
             sku_code AS Master_SKU,
             category AS Category,
@@ -100,9 +118,6 @@ def LoadStockData():
             updated AS Launch_Date
         FROM {TableName}
     """)
-    rows = cursor.fetchall()
-    cursor.close()
-    MysqlConn.close()
 
     if not rows:
         return pl.DataFrame(schema={

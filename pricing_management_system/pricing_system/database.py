@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import hashlib
 import csv
+import sys
 from typing import Any
 
 DATA_DIR = Path(__file__).parent.parent.parent / "Data"
@@ -191,6 +192,12 @@ def init_users():
 
 import mysql.connector
 
+DATABASE_MODULE_DIR = Path(__file__).parent.parent / "ProcessFiles" / "DatabaseModule"
+if str(DATABASE_MODULE_DIR) not in sys.path:
+    sys.path.append(str(DATABASE_MODULE_DIR))
+
+from AdvanceDatabase import MySqlDatabase
+
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
@@ -198,10 +205,20 @@ DB_CONFIG = {
     "database": "pricing_module"
 }
 
+_DATABASE: MySqlDatabase | None = None
+
+
+def get_database() -> MySqlDatabase:
+    """Return the shared pooled MySQL helper used across the project."""
+    global _DATABASE
+    if _DATABASE is None:
+        _DATABASE = MySqlDatabase(DB_CONFIG, PoolName="PricingSystemPool")
+    return _DATABASE
+
 
 def quote_identifier(name: str) -> str:
     """Quote a MySQL identifier, preserving names with spaces or punctuation."""
-    return "`" + str(name).replace("`", "``") + "`"
+    return MySqlDatabase.QuoteIdentifier(name)
 
 
 def amazon_sales_column_name(header: str) -> str:
@@ -298,13 +315,7 @@ def create_amazon_sales_table(cursor, kind: str):
     cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS `{table}` (
             id BIGINT AUTO_INCREMENT PRIMARY KEY,
-            source_year VARCHAR(10),
-            source_file VARCHAR(255),
-            source_row INT,
-            imported_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            {data_columns_sql}
-            UNIQUE KEY uq_source_row (source_file, source_row),
-            INDEX idx_source_year (source_year)
+            {data_columns_sql[:-1] if data_columns_sql.endswith(",") else data_columns_sql}
         )
     """)
 
@@ -343,225 +354,218 @@ def init_db():
     cursor.close()
     conn.close()
 
-    # Now connect with database to create tables
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-    
-    # Create items table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stock_items (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            sku_code VARCHAR(255),
-            item_name TEXT,
-            size TEXT,
-            category VARCHAR(255),
-            location TEXT,
-            child_remark TEXT,
-            parent_remark TEXT,
-            item_type TEXT,
-            catalog TEXT,
-            cost FLOAT,
-            price FLOAT,
-            mrp FLOAT,
-            up_price FLOAT,
-            available_atp INT,
-            fba_stock INT,
-            fbf_stock INT,
-            sjit_stock INT,
-            updated TEXT,
-            INDEX idx_sku (sku_code),
-            INDEX idx_category (category)
-        )
-    """)
-
-    try:
-        cursor.execute("ALTER TABLE stock_items DROP COLUMN cost_into_percent")
-    except Exception:
-        pass
-    
-    # Create stock_update table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stock_update (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            master_sku VARCHAR(255) UNIQUE,
-            uniware_stock INT DEFAULT 0,
-            fba_stock INT DEFAULT 0,
-            fbf_stock INT DEFAULT 0,
-            sjit_stock INT DEFAULT 0,
-            INDEX idx_master_sku (master_sku)
-        )
-    """)
-
-    # Create catalog_pricing table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS catalog_pricing (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            master_sku VARCHAR(255) UNIQUE,
-            launch_date TEXT,
-            catalog_name TEXT,
-            cost FLOAT DEFAULT 0.0,
-            wholesale_price FLOAT DEFAULT 0.0,
-            up_price FLOAT DEFAULT 0.0,
-            mrp FLOAT DEFAULT 0.0,
-            INDEX idx_pricing_sku (master_sku)
-        )
-    """)
-
-    cursor.execute("SHOW COLUMNS FROM catalog_pricing")
-    catalog_cols = {row[0] for row in cursor.fetchall()}
-    catalog_renames = [
-        ("Master SKU", "master_sku", "VARCHAR(255)"),
-        ("Launch Date", "launch_date", "TEXT"),
-        ("Catalog Name", "catalog_name", "TEXT"),
-        ("Cost", "cost", "TEXT"),
-        ("Wholesale Price", "wholesale_price", "TEXT"),
-        ("Up Price", "up_price", "TEXT"),
-        ("MRP", "mrp", "TEXT"),
-    ]
-    for old_col, new_col, col_type in catalog_renames:
-        if old_col in catalog_cols and new_col not in catalog_cols:
-            try:
-                cursor.execute(
-                    f"ALTER TABLE catalog_pricing CHANGE COLUMN `{old_col}` `{new_col}` {col_type}"
-                )
-                catalog_cols.remove(old_col)
-                catalog_cols.add(new_col)
-            except Exception:
-                pass
-
-    for col_name, col_type in [
-        ("master_sku", "VARCHAR(255)"),
-        ("launch_date", "TEXT"),
-        ("catalog_name", "TEXT"),
-        ("cost", "FLOAT DEFAULT 0.0"),
-        ("wholesale_price", "FLOAT DEFAULT 0.0"),
-        ("up_price", "FLOAT DEFAULT 0.0"),
-        ("mrp", "FLOAT DEFAULT 0.0"),
-    ]:
-        if col_name not in catalog_cols:
-            try:
-                cursor.execute(f"ALTER TABLE catalog_pricing ADD COLUMN `{col_name}` {col_type}")
-                catalog_cols.add(col_name)
-            except Exception:
-                pass
-
-    try:
-        cursor.execute("CREATE INDEX idx_pricing_sku ON catalog_pricing (master_sku)")
-    except Exception:
-        pass
-
-    try:
-        cursor.execute("ALTER TABLE catalog_pricing DROP COLUMN cost_into_percent")
-    except Exception:
-        pass
-
-    # Create platform-wise cost percent table from item_master.
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cost_into_percent (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            master_sku VARCHAR(255),
-            style_id VARCHAR(255),
-            Platform VARCHAR(100) DEFAULT 'Amazon',
-            Cost_Into_Percent FLOAT DEFAULT 23.0,
-            INDEX idx_cost_percent_sku (master_sku),
-            INDEX idx_cost_percent_platform (Platform)
-        )
-    """)
-
-    cursor.execute("SHOW TABLES LIKE 'item_master'")
-    item_master_exists = cursor.fetchone() is not None
-    cursor.execute("SELECT COUNT(*) FROM cost_into_percent")
-    cost_percent_count = cursor.fetchone()[0]
-    if item_master_exists and cost_percent_count == 0:
+    # Now use the shared pooled helper for all database-scoped work.
+    with get_database().Cursor(Commit=True) as cursor:
+        # Create items table
         cursor.execute("""
-            INSERT INTO cost_into_percent
-                (master_sku, style_id, Platform, Cost_Into_Percent)
-            SELECT
-                `Master SKU`,
-                `Style ID / Parent SKU`,
-                'Amazon',
-                23
-            FROM item_master
+            CREATE TABLE IF NOT EXISTS stock_items (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sku_code VARCHAR(255),
+                item_name TEXT,
+                size TEXT,
+                category VARCHAR(255),
+                location TEXT,
+                child_remark TEXT,
+                parent_remark TEXT,
+                item_type TEXT,
+                catalog TEXT,
+                cost FLOAT,
+                price FLOAT,
+                mrp FLOAT,
+                up_price FLOAT,
+                available_atp INT,
+                fba_stock INT,
+                fbf_stock INT,
+                sjit_stock INT,
+                updated TEXT,
+                INDEX idx_sku (sku_code),
+                INDEX idx_category (category)
+            )
         """)
 
-    # Create amazon_pricing_results table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS amazon_pricing_results (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            master_sku VARCHAR(255),
-            original_category VARCHAR(255),
-            amazon_cat VARCHAR(255),
-            remark TEXT,
-            cost FLOAT DEFAULT 0.0,
-            mrp FLOAT DEFAULT 0.0,
-            uniware INT DEFAULT 0,
-            fba INT DEFAULT 0,
-            sjit INT DEFAULT 0,
-            fbf INT DEFAULT 0,
-            launch_date TEXT,
-            loc TEXT,
-            cost_into_percent FLOAT DEFAULT 0.0,
-            cost_after_percent FLOAT DEFAULT 0.0,
-            return_charge FLOAT DEFAULT 0.0,
-            gst_on_return FLOAT DEFAULT 0.0,
-            final_tp FLOAT DEFAULT 0.0,
-            required_selling_price FLOAT DEFAULT 0.0,
-            selected_price_range VARCHAR(100),
-            selected_fixed_fee_range VARCHAR(100),
-            commission_percent FLOAT DEFAULT 0.0,
-            commission_amount FLOAT DEFAULT 0.0,
-            fixed_closing_fee FLOAT DEFAULT 0.0,
-            fba_pick_pack FLOAT DEFAULT 0.0,
-            technology_fee FLOAT DEFAULT 0.0,
-            full_shipping_fee FLOAT DEFAULT 0.0,
-            whf_percent_on_shipping FLOAT DEFAULT 0.0,
-            shipping_fee_charged FLOAT DEFAULT 0.0,
-            total_charges FLOAT DEFAULT 0.0,
-            final_value_after_charges FLOAT DEFAULT 0.0,
-            old_daily_sp FLOAT DEFAULT 0.0,
-            old_deal_sp FLOAT DEFAULT 0.0,
-            sett_acc_panel FLOAT DEFAULT 0.0,
-            net_profit_on_sp FLOAT DEFAULT 0.0,
-            net_profit_percent_on_sp FLOAT DEFAULT 0.0,
-            net_profit_percent_on_tp FLOAT DEFAULT 0.0,
-            INDEX idx_amazon_sku (master_sku)
-        )
-    """)
-
-    # Amazon pricing must preserve duplicate SKU rows from item master.
-    # Older databases created master_sku as UNIQUE, which made KPIs too low.
-    try:
-        cursor.execute("ALTER TABLE amazon_pricing_results DROP INDEX master_sku")
-    except Exception:
-        pass
-
-    try:
-        cursor.execute("ALTER TABLE amazon_pricing_results ADD COLUMN old_deal_sp FLOAT DEFAULT 0.0 AFTER old_daily_sp")
-    except Exception:
-        pass
-
-    # Amazon sales history tables are populated from Data/AmazonData/AmazonSalesHistory.
-    create_amazon_sales_table(cursor, "b2b")
-    create_amazon_sales_table(cursor, "b2c")
-
-    for ddl in [
-        "ALTER TABLE stock_items ADD COLUMN child_remark TEXT AFTER location",
-        "ALTER TABLE stock_items ADD COLUMN parent_remark TEXT AFTER child_remark",
-        "ALTER TABLE stock_items ADD COLUMN item_type TEXT AFTER parent_remark",
-    ]:
         try:
-            cursor.execute(ddl)
+            cursor.execute("ALTER TABLE stock_items DROP COLUMN cost_into_percent")
+        except Exception:
+            pass
+        
+        # Create stock_update table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stock_update (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                master_sku VARCHAR(255) UNIQUE,
+                uniware_stock INT DEFAULT 0,
+                fba_stock INT DEFAULT 0,
+                fbf_stock INT DEFAULT 0,
+                sjit_stock INT DEFAULT 0,
+                INDEX idx_master_sku (master_sku)
+            )
+        """)
+
+        # Create catalog_pricing table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS catalog_pricing (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                master_sku VARCHAR(255) UNIQUE,
+                launch_date TEXT,
+                catalog_name TEXT,
+                cost FLOAT DEFAULT 0.0,
+                wholesale_price FLOAT DEFAULT 0.0,
+                up_price FLOAT DEFAULT 0.0,
+                mrp FLOAT DEFAULT 0.0,
+                INDEX idx_pricing_sku (master_sku)
+            )
+        """)
+
+        cursor.execute("SHOW COLUMNS FROM catalog_pricing")
+        catalog_cols = {row[0] for row in cursor.fetchall()}
+        catalog_renames = [
+            ("Master SKU", "master_sku", "VARCHAR(255)"),
+            ("Launch Date", "launch_date", "TEXT"),
+            ("Catalog Name", "catalog_name", "TEXT"),
+            ("Cost", "cost", "TEXT"),
+            ("Wholesale Price", "wholesale_price", "TEXT"),
+            ("Up Price", "up_price", "TEXT"),
+            ("MRP", "mrp", "TEXT"),
+        ]
+        for old_col, new_col, col_type in catalog_renames:
+            if old_col in catalog_cols and new_col not in catalog_cols:
+                try:
+                    cursor.execute(
+                        f"ALTER TABLE catalog_pricing CHANGE COLUMN `{old_col}` `{new_col}` {col_type}"
+                    )
+                    catalog_cols.remove(old_col)
+                    catalog_cols.add(new_col)
+                except Exception:
+                    pass
+
+        for col_name, col_type in [
+            ("master_sku", "VARCHAR(255)"),
+            ("launch_date", "TEXT"),
+            ("catalog_name", "TEXT"),
+            ("cost", "FLOAT DEFAULT 0.0"),
+            ("wholesale_price", "FLOAT DEFAULT 0.0"),
+            ("up_price", "FLOAT DEFAULT 0.0"),
+            ("mrp", "FLOAT DEFAULT 0.0"),
+        ]:
+            if col_name not in catalog_cols:
+                try:
+                    cursor.execute(f"ALTER TABLE catalog_pricing ADD COLUMN `{col_name}` {col_type}")
+                    catalog_cols.add(col_name)
+                except Exception:
+                    pass
+
+        try:
+            cursor.execute("CREATE INDEX idx_pricing_sku ON catalog_pricing (master_sku)")
         except Exception:
             pass
 
-    conn.commit()
-    cursor.close()
-    conn.close()
+        try:
+            cursor.execute("ALTER TABLE catalog_pricing DROP COLUMN cost_into_percent")
+        except Exception:
+            pass
+
+        # Create platform-wise cost percent table from item_master.
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cost_into_percent (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                master_sku VARCHAR(255),
+                style_id VARCHAR(255),
+                Platform VARCHAR(100) DEFAULT 'Amazon',
+                Cost_Into_Percent FLOAT DEFAULT 23.0,
+                INDEX idx_cost_percent_sku (master_sku),
+                INDEX idx_cost_percent_platform (Platform)
+            )
+        """)
+
+        cursor.execute("SHOW TABLES LIKE 'item_master'")
+        item_master_exists = cursor.fetchone() is not None
+        cursor.execute("SELECT COUNT(*) FROM cost_into_percent")
+        cost_percent_count = cursor.fetchone()[0]
+        if item_master_exists and cost_percent_count == 0:
+            cursor.execute("""
+                INSERT INTO cost_into_percent
+                    (master_sku, style_id, Platform, Cost_Into_Percent)
+                SELECT
+                    `Master SKU`,
+                    `Style ID / Parent SKU`,
+                    'Amazon',
+                    23
+                FROM item_master
+            """)
+
+        # Create amazon_pricing_results table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS amazon_pricing_results (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                master_sku VARCHAR(255),
+                original_category VARCHAR(255),
+                amazon_cat VARCHAR(255),
+                remark TEXT,
+                cost FLOAT DEFAULT 0.0,
+                mrp FLOAT DEFAULT 0.0,
+                uniware INT DEFAULT 0,
+                fba INT DEFAULT 0,
+                sjit INT DEFAULT 0,
+                fbf INT DEFAULT 0,
+                launch_date TEXT,
+                loc TEXT,
+                cost_into_percent FLOAT DEFAULT 0.0,
+                cost_after_percent FLOAT DEFAULT 0.0,
+                return_charge FLOAT DEFAULT 0.0,
+                gst_on_return FLOAT DEFAULT 0.0,
+                final_tp FLOAT DEFAULT 0.0,
+                required_selling_price FLOAT DEFAULT 0.0,
+                selected_price_range VARCHAR(100),
+                selected_fixed_fee_range VARCHAR(100),
+                commission_percent FLOAT DEFAULT 0.0,
+                commission_amount FLOAT DEFAULT 0.0,
+                fixed_closing_fee FLOAT DEFAULT 0.0,
+                fba_pick_pack FLOAT DEFAULT 0.0,
+                technology_fee FLOAT DEFAULT 0.0,
+                full_shipping_fee FLOAT DEFAULT 0.0,
+                whf_percent_on_shipping FLOAT DEFAULT 0.0,
+                shipping_fee_charged FLOAT DEFAULT 0.0,
+                total_charges FLOAT DEFAULT 0.0,
+                final_value_after_charges FLOAT DEFAULT 0.0,
+                old_daily_sp FLOAT DEFAULT 0.0,
+                old_deal_sp FLOAT DEFAULT 0.0,
+                sett_acc_panel FLOAT DEFAULT 0.0,
+                net_profit_on_sp FLOAT DEFAULT 0.0,
+                net_profit_percent_on_sp FLOAT DEFAULT 0.0,
+                net_profit_percent_on_tp FLOAT DEFAULT 0.0,
+                INDEX idx_amazon_sku (master_sku)
+            )
+        """)
+
+        # Amazon pricing must preserve duplicate SKU rows from item master.
+        # Older databases created master_sku as UNIQUE, which made KPIs too low.
+        try:
+            cursor.execute("ALTER TABLE amazon_pricing_results DROP INDEX master_sku")
+        except Exception:
+            pass
+
+        try:
+            cursor.execute("ALTER TABLE amazon_pricing_results ADD COLUMN old_deal_sp FLOAT DEFAULT 0.0 AFTER old_daily_sp")
+        except Exception:
+            pass
+
+        # Amazon sales history tables are populated from Data/AmazonData/AmazonSalesHistory.
+        create_amazon_sales_table(cursor, "b2b")
+        create_amazon_sales_table(cursor, "b2c")
+
+        for ddl in [
+            "ALTER TABLE stock_items ADD COLUMN child_remark TEXT AFTER location",
+            "ALTER TABLE stock_items ADD COLUMN parent_remark TEXT AFTER child_remark",
+            "ALTER TABLE stock_items ADD COLUMN item_type TEXT AFTER parent_remark",
+        ]:
+            try:
+                cursor.execute(ddl)
+            except Exception:
+                pass
 
 def get_db():
-    """Open a new MySQL connection using the application configuration."""
-    conn = mysql.connector.connect(**DB_CONFIG)
-    return conn
+    """Return a pooled MySQL connection from the shared database helper."""
+    return get_database().GetConnection()
 
 # For update_item_csv function referenced in items.py
 async def update_item_csv(item_id, user):
