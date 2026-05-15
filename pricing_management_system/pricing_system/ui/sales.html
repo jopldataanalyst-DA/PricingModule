@@ -51,9 +51,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .chart-box.full{grid-column:1/-1;height:300px}
 .chart-box h4{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
 .chart-canvas{position:relative;width:100%;height:calc(100% - 24px)}
-table.data{width:100%;border-collapse:collapse;font-size:12px}
+table.data{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto}
 table.data th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:6px 10px;text-align:left;white-space:nowrap;font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
-table.data td{padding:5px 10px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:12px}
+table.data th.dt-sortable{padding-right:28px}
+table.data td{padding:5px 10px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:12px;white-space:nowrap}
 table.data tr:hover td{background:rgba(255,255,255,0.02)}
 .mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
 .mini-stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
@@ -78,6 +79,21 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
 .info-tooltip-text{margin-bottom:6px;color:var(--text-muted)}
 .info-tooltip-link{color:var(--gold);font-weight:600;text-decoration:none;font-size:12px}
 .info-tooltip-link:hover{text-decoration:underline}
+.dt-sortable{cursor:pointer;user-select:none;position:relative}.dt-sortable:hover{color:var(--gold)}
+.dt-sortable .dt-sort-arrow{font-size:9px;margin-left:2px;opacity:0.4;display:inline}.dt-sortable.dt-sort-asc .dt-sort-arrow,.dt-sortable.dt-sort-desc .dt-sort-arrow{opacity:1;color:var(--gold)}
+.dt-filter-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;border:1px solid transparent;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;padding:0;line-height:1}.dt-filter-btn:hover,.dt-filter-btn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.dt-filter-menu{position:fixed;width:280px;max-height:400px;overflow:hidden;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,.5);padding:10px;display:none;z-index:2000}.dt-filter-menu.open{display:block}
+.dt-filter-menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.dt-filter-menu-header span{font-size:12px;font-weight:600;color:var(--gold)}
+.dt-filter-menu-close{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:2px 6px}.dt-filter-menu-close:hover{color:var(--danger)}
+.dt-filter-menu-search{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 9px;font-size:12px;outline:none;margin-bottom:8px;font-family:'DM Sans',sans-serif}.dt-filter-menu-search:focus{border-color:var(--gold)}
+.dt-filter-menu-actions{display:flex;gap:6px;align-items:center;padding:6px 0}.dt-filter-menu-list{max-height:220px;overflow:auto;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);padding:4px 0;margin:6px 0}
+.dt-filter-option{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:12px;color:var(--text);cursor:pointer}.dt-filter-option:hover{background:var(--surface3)}
+.dt-filter-option input{accent-color:var(--gold)}
+.dt-column-picker{position:relative}
+.dt-column-menu{position:absolute;right:0;top:calc(100% + 6px);width:260px;max-height:360px;overflow:auto;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 16px 36px rgba(0,0,0,.45);padding:8px;display:none;z-index:40}
+.dt-column-menu.open{display:block}
+.dt-column-option{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--text);cursor:pointer}.dt-column-option:hover{background:var(--surface3)}
+.dt-column-option input{accent-color:var(--gold)}
 
 @media (max-width:768px){
 :root{--sidebar-w:56px;--header-h:50px}
@@ -98,7 +114,7 @@ body{font-size:15px}
 .filter-control input,.filter-control select{height:34px;font-size:14px}
 .tab{padding:6px 10px;font-size:12px}
 .section-card{padding:14px}.section-title{font-size:15px}
-table.data th{font-size:11px;padding:5px 8px}table.data td{font-size:13px;padding:4px 8px}
+table.data th{font-size:11px;padding:5px 8px}table.data th.dt-sortable{padding-right:24px}table.data td{font-size:13px;padding:4px 8px}
 .btn{font-size:13px;padding:7px 14px}.btn-sm{font-size:12px;padding:4px 10px}
 .tabs{overflow-x:auto;flex-wrap:nowrap}
 .info-btn{width:20px;height:20px;font-size:13px}
@@ -174,6 +190,7 @@ table.data th{font-size:11px;padding:5px 8px}table.data td{font-size:13px;paddin
     <div class="tab" data-tab="quality">Data Quality</div>
     <div class="tab" data-tab="operations">Operations</div>
     <div class="tab" data-tab="executive">Executive</div>
+    <div class="tab" data-tab="datatable">Data Table</div>
   </div>
 
   <!-- OVERVIEW -->
@@ -399,6 +416,60 @@ table.data th{font-size:11px;padding:5px 8px}table.data td{font-size:13px;paddin
       </div>
     </div>
   </div>
+
+  <!-- DATA TABLE -->
+  <div class="tab-content" id="tab-datatable">
+    <div class="section-card">
+      <div class="section-title">
+        Raw Sales Data
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <select id="dtTransactionType" class="filter-control select" style="height:32px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:0 10px" onchange="dtPage=1;loadDataTable()">
+            <option value="Shipment">Shipments</option>
+            <option value="Refund">Refunds</option>
+            <option value="Cancel">Cancels</option>
+            <option value="All">All</option>
+          </select>
+          <select id="dtPageSize" class="filter-control select" style="height:32px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:0 10px" onchange="dtPage=1;loadDataTable()">
+            <option value="50">50 / page</option>
+            <option value="100">100 / page</option>
+            <option value="200">200 / page</option>
+          </select>
+          <div class="dt-column-picker">
+            <button class="btn btn-outline btn-sm" onclick="toggleDtColumnMenu(event)">Columns</button>
+            <div class="dt-column-menu" id="dtColumnMenu"></div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="exportDataTable()">⬇ Export CSV</button>
+          <button class="btn btn-outline btn-sm" id="dtClearFiltersBtn" style="display:none" onclick="clearDtFilters()">Clear Filters</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data" id="dataTable">
+          <thead id="dataTableHead"></thead>
+          <tbody id="dataTableBody"></tbody>
+        </table>
+      </div>
+      <div id="dtPagination" style="display:flex;align-items:center;gap:8px;margin-top:12px;justify-content:center"></div>
+      <div id="dtPageInfo" style="text-align:center;font-size:11px;color:var(--text-muted);margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="dt-filter-menu" id="dtFilterMenu">
+    <div class="dt-filter-menu-header">
+      <span id="dtFilterMenuTitle">Filter</span>
+      <button class="dt-filter-menu-close" onclick="closeDtFilterMenu()">✕</button>
+    </div>
+    <input class="dt-filter-menu-search" id="dtFilterMenuSearch" placeholder="Search values..." oninput="renderDtFilterMenu(this.value)">
+    <div class="dt-filter-menu-actions">
+      <button class="btn btn-outline btn-sm" onclick="checkDtFilterValues(true)">All</button>
+      <button class="btn btn-outline btn-sm" onclick="checkDtFilterValues(false)">None</button>
+      <button class="btn btn-outline btn-sm" onclick="clearDtColumnFilter()">Clear</button>
+    </div>
+    <div class="dt-filter-menu-list" id="dtFilterMenuList"></div>
+    <div class="dt-filter-menu-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeDtFilterMenu()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="applyDtColumnFilter()">Apply</button>
+    </div>
+  </div>
 </div>
 </main>
 <div class="info-tooltip" id="infoTooltip">
@@ -548,8 +619,9 @@ function renderTab(tn) {
   else if (tn==='tax') renderTax();
   else if (tn==='quality') loadDataQuality();
   else if (tn==='operations') loadOperations();
-  else if (tn==='executive') loadExecutive();
-}
+    else if (tn==='executive') loadExecutive();
+    else if (tn==='datatable') loadDataTable();
+  }
 var headerSourceSelect = document.getElementById('salesSourceSelect');
 if (headerSourceSelect) {
   headerSourceSelect.addEventListener('change', function(){
@@ -843,6 +915,381 @@ async function loadExecutive() {
   document.getElementById('execInsights').innerHTML=html;
 }
 
+// ── DATA TABLE ──
+var dtPage = 1;
+var dtTotal = 0;
+var dtTotalPages = 0;
+var dtSortBy = 'Invoice_Date';
+var dtSortDir = 'desc';
+var dtColumnFilters = {};
+var dtFilterMenuColumn = null;
+var dtFilterMenuValues = [];
+
+var DT_COLUMNS_STORAGE_KEY = 'salesDtVisibleColumns';
+var DT_ALL_COLUMNS = [
+  { key: 'Seller_Gstin', label: 'GSTIN', filter: true, style: 'font-family:\'DM Sans\',sans-serif;font-size:10px', formatter: null },
+  { key: 'Invoice_Number', label: 'Invoice #', filter: true, formatter: null },
+  { key: 'Invoice_Date', label: 'Date', filter: true, formatter: null },
+  { key: 'Transaction_Type', label: 'Type', filter: true, formatter: function(v, row) { if (!v) return '-'; var c = v === 'Shipment' ? 'var(--success)' : v === 'Refund' ? 'var(--danger)' : 'var(--warning)'; return '<span style="color:' + c + ';font-weight:600">' + esc(v) + '</span>'; } },
+  { key: 'Order_Id', label: 'Order ID', filter: true, formatter: null },
+  { key: 'Sku', label: 'SKU', filter: true, style: 'font-family:\'DM Sans\',sans-serif', formatter: null },
+  { key: 'Master_SKU', label: 'Master SKU', filter: true, style: 'font-family:\'DM Sans\',sans-serif', formatter: null },
+  { key: 'Category', label: 'Category', filter: true, style: 'font-family:\'DM Sans\',sans-serif', formatter: null },
+  { key: 'Size', label: 'Size', filter: true, formatter: null },
+  { key: 'Asin', label: 'ASIN', filter: true, formatter: null },
+  { key: 'Quantity', label: 'Qty', filter: false, formatter: function(v) { return fmtNum(v); } },
+  { key: 'Invoice_Amount', label: 'Amount', filter: false, formatter: function(v) { return fmt(v); } },
+  { key: 'Total_Tax_Amount', label: 'Tax', filter: false, formatter: function(v) { return fmt(v); } },
+  { key: 'Fulfillment_Channel', label: 'Fulfillment', filter: true, formatter: null },
+  { key: 'Warehouse_Id', label: 'Warehouse', filter: true, formatter: null },
+  { key: 'Ship_From_State', label: 'From', filter: true, formatter: null },
+  { key: 'Ship_To_State', label: 'To State', filter: true, formatter: null },
+  { key: 'Ship_To_City', label: 'To City', filter: true, formatter: null },
+];
+
+function getDtVisibleColumns() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(DT_COLUMNS_STORAGE_KEY));
+    if (saved && saved.length > 0) {
+      var validKeys = DT_ALL_COLUMNS.map(function(c) { return c.key; });
+      return saved.filter(function(k) { return validKeys.indexOf(k) >= 0; });
+    }
+  } catch(e) {}
+  return DT_ALL_COLUMNS.map(function(c) { return c.key; });
+}
+
+function setDtVisibleColumns(cols) {
+  var validKeys = DT_ALL_COLUMNS.map(function(c) { return c.key; });
+  cols = cols.filter(function(k) { return validKeys.indexOf(k) >= 0; });
+  if (cols.length === 0) cols = validKeys;
+  localStorage.setItem(DT_COLUMNS_STORAGE_KEY, JSON.stringify(cols));
+}
+
+function renderDtColumnMenu() {
+  var menu = document.getElementById('dtColumnMenu');
+  if (!menu) return;
+  var visible = getDtVisibleColumns();
+  var html = '';
+  for (var i = 0; i < DT_ALL_COLUMNS.length; i++) {
+    var col = DT_ALL_COLUMNS[i];
+    var checked = visible.indexOf(col.key) >= 0 ? ' checked' : '';
+    html += '<label class="dt-column-option"><input type="checkbox" value="' + col.key + '"' + checked + ' onchange="toggleDtColumn(this)"><span>' + col.label + '</span></label>';
+  }
+  menu.innerHTML = html;
+}
+
+function toggleDtColumn(input) {
+  var visible = getDtVisibleColumns();
+  if (input.checked && visible.indexOf(input.value) < 0) visible.push(input.value);
+  if (!input.checked) visible = visible.filter(function(k) { return k !== input.value; });
+  setDtVisibleColumns(visible);
+  renderDtColumnMenu();
+  dtPage = 1;
+  loadDataTable();
+}
+
+function toggleDtColumnMenu(event) {
+  event.stopPropagation();
+  var menu = document.getElementById('dtColumnMenu');
+  menu.classList.toggle('open');
+}
+
+function closeDtColumnMenu() {
+  var menu = document.getElementById('dtColumnMenu');
+  if (menu) menu.classList.remove('open');
+}
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('dtFilterMenu');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target) && !e.target.classList.contains('dt-filter-btn')) {
+    closeDtFilterMenu();
+  }
+  var colMenu = document.getElementById('dtColumnMenu');
+  var colPicker = document.querySelector('.dt-column-picker');
+  if (colMenu && colMenu.classList.contains('open') && colPicker && !colPicker.contains(e.target)) {
+    closeDtColumnMenu();
+  }
+});
+
+function renderDtTableHeader() {
+  var head = document.getElementById('dataTableHead');
+  var visible = getDtVisibleColumns();
+  var allLabels = {};
+  DT_ALL_COLUMNS.forEach(function(c) { allLabels[c.key] = c; });
+  var html = '<tr><th style="width:40px">#</th>';
+  for (var i = 0; i < visible.length; i++) {
+    var col = visible[i];
+    var info = allLabels[col];
+    if (!info) continue;
+    var arrow = col === dtSortBy ? (dtSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    var cls = 'dt-sortable';
+    if (col === dtSortBy) cls += ' dt-sort-' + dtSortDir;
+    var filterActive = dtColumnFilters[col] && dtColumnFilters[col].length > 0 ? ' active' : '';
+    var filterBtn = info.filter ? '<button class="dt-filter-btn' + filterActive + '" data-dt-filter="' + col + '" onclick="openDtFilter(event,\'' + col + '\')">▾</button>' : '';
+    html += '<th data-dt-col="' + col + '" class="' + cls + '">' + info.label + '<span class="dt-sort-arrow">' + arrow + '</span>' + filterBtn + '</th>';
+  }
+  html += '</tr>';
+  head.innerHTML = html;
+}
+
+document.getElementById('dataTable').addEventListener('click', function(e) {
+  var th = e.target.closest('th.dt-sortable');
+  if (!th) return;
+  if (e.target.classList.contains('dt-filter-btn')) return;
+  var col = th.getAttribute('data-dt-col');
+  if (!col) return;
+  if (dtSortBy === col) {
+    dtSortDir = dtSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    dtSortBy = col;
+    dtSortDir = 'asc';
+  }
+  dtPage = 1;
+  loadDataTable();
+});
+
+async function loadDataTable() {
+  dtPage = dtPage || 1;
+  renderDtTableHeader();
+  var tt = document.getElementById('dtTransactionType').value;
+  var ps = parseInt(document.getElementById('dtPageSize').value);
+  var body = document.getElementById('dataTableBody');
+  var visible = getDtVisibleColumns();
+  var colspan = visible.length + 1;
+  body.innerHTML = '<tr><td colspan="' + colspan + '" class="empty-state"><div class="spinner"></div> Loading data...</td></tr>';
+
+  try {
+    var params = new URLSearchParams(salesFilterParams());
+    params.set('page', dtPage);
+    params.set('page_size', ps);
+    params.set('sort_by', dtSortBy);
+    params.set('sort_dir', dtSortDir);
+    if (tt !== 'All') params.set('transaction_type', tt);
+
+    Object.keys(dtColumnFilters).forEach(function(col) {
+      var vals = dtColumnFilters[col];
+      if (vals && vals.length > 0) params.set('filter_' + col, JSON.stringify(vals));
+    });
+
+    var res = await fetch('/api/sales/data-table?' + params.toString(), {headers:{'Authorization':'Bearer '+token}});
+    if (!res.ok) { console.error('Data table failed:', res.status); body.innerHTML = '<tr><td colspan="' + colspan + '" class="empty-state">Failed to load data</td></tr>'; return; }
+    var data = await res.json();
+
+    dtTotal = data.total || 0;
+    dtTotalPages = data.total_pages || 0;
+
+    var allLabels = {};
+    DT_ALL_COLUMNS.forEach(function(c) { allLabels[c.key] = c; });
+
+    var html = '';
+    var startIdx = (dtPage - 1) * ps;
+    (data.rows || []).forEach(function(row, i) {
+      var idx = startIdx + i + 1;
+      html += '<tr><td>' + idx + '</td>';
+      for (var c = 0; c < visible.length; c++) {
+        var colKey = visible[c];
+        var info = allLabels[colKey];
+        if (!info) { html += '<td>-</td>'; continue; }
+        var val = row[colKey];
+        var cellStyle = info.style || '';
+        if (info.formatter) {
+          html += '<td style="' + cellStyle + '">' + info.formatter(val, row) + '</td>';
+        } else {
+          html += '<td style="' + cellStyle + '">' + (val != null && val !== '' ? esc(String(val)) : '-') + '</td>';
+        }
+      }
+      html += '</tr>';
+    });
+    body.innerHTML = html || '<tr><td colspan="' + colspan + '" class="empty-state">No data</td></tr>';
+
+    updateDtClearFiltersBtn();
+    renderDtPagination();
+  } catch(e) {
+    body.innerHTML = '<tr><td colspan="' + colspan + '" class="empty-state">Error loading data</td></tr>';
+  }
+}
+
+function updateDtClearFiltersBtn() {
+  var hasFilters = Object.keys(dtColumnFilters).some(function(col) {
+    return dtColumnFilters[col] && dtColumnFilters[col].length > 0;
+  });
+  document.getElementById('dtClearFiltersBtn').style.display = hasFilters ? 'inline-flex' : 'none';
+}
+
+function clearDtFilters() {
+  dtColumnFilters = {};
+  dtPage = 1;
+  loadDataTable();
+}
+
+function renderDtPagination() {
+  var pg = document.getElementById('dtPagination');
+  var info = document.getElementById('dtPageInfo');
+  if (!pg || !info) return;
+
+  var ps = parseInt(document.getElementById('dtPageSize').value);
+  var start = dtTotal ? (dtPage - 1) * ps + 1 : 0;
+  var end = Math.min(dtPage * ps, dtTotal);
+  info.textContent = 'Showing ' + start.toLocaleString() + '-' + end.toLocaleString() + ' of ' + dtTotal.toLocaleString() + ' rows';
+
+  if (dtTotalPages <= 1) { pg.innerHTML = ''; return; }
+
+  var html = '';
+  html += '<button class="btn btn-outline btn-sm" onclick="dtPage=Math.max(1,dtPage-1);loadDataTable()" ' + (dtPage <= 1 ? 'disabled' : '') + '>‹ Prev</button>';
+
+  var range = [];
+  if (dtTotalPages <= 7) { for (var i = 1; i <= dtTotalPages; i++) range.push(i); }
+  else {
+    range.push(1);
+    if (dtPage > 3) range.push('...');
+    for (var i = Math.max(2, dtPage - 1); i <= Math.min(dtTotalPages - 1, dtPage + 1); i++) range.push(i);
+    if (dtPage < dtTotalPages - 2) range.push('...');
+    range.push(dtTotalPages);
+  }
+
+  range.forEach(function(p) {
+    if (p === '...') { html += '<span style="color:var(--text-muted);padding:0 4px">...</span>'; }
+    else { html += '<button class="btn btn-sm ' + (p === dtPage ? 'btn-gold' : 'btn-outline') + '" onclick="dtPage=' + p + ';loadDataTable()">' + p + '</button>'; }
+  });
+
+  html += '<button class="btn btn-outline btn-sm" onclick="dtPage=Math.min(dtTotalPages,dtPage+1);loadDataTable()" ' + (dtPage >= dtTotalPages ? 'disabled' : '') + '>Next ›</button>';
+  pg.innerHTML = html;
+}
+
+async function openDtFilter(event, col) {
+  event.stopPropagation();
+  dtFilterMenuColumn = col;
+  var menu = document.getElementById('dtFilterMenu');
+  var title = document.getElementById('dtFilterMenuTitle');
+  title.textContent = 'Filter: ' + col;
+  var list = document.getElementById('dtFilterMenuList');
+  if (list) list.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center"><div class="spinner"></div> Loading...</div>';
+
+  var rect = event.currentTarget.getBoundingClientRect();
+  menu.style.left = Math.min(rect.left, window.innerWidth - 300) + 'px';
+  menu.style.top = Math.min(rect.bottom + 8, window.innerHeight - 420) + 'px';
+  menu.classList.add('open');
+
+  try {
+    var params = new URLSearchParams(salesFilterParams());
+    params.set('column', col);
+    params.set('transaction_type', document.getElementById('dtTransactionType').value);
+
+    Object.keys(dtColumnFilters).forEach(function(c) {
+      if (c !== col) {
+        var vals = dtColumnFilters[c];
+        if (vals && vals.length > 0) params.set('filter_' + c, JSON.stringify(vals));
+      }
+    });
+
+    var res = await fetch('/api/sales/data-table-options?' + params.toString(), {headers:{'Authorization':'Bearer '+token}});
+    if (!res.ok) { console.error('Filter options failed:', res.status); dtFilterMenuValues = []; renderDtFilterMenu(''); return; }
+    var data = await res.json();
+    dtFilterMenuValues = data.values || [];
+    renderDtFilterMenu('');
+  } catch(e) {
+    console.error('Filter options error:', e);
+    dtFilterMenuValues = [];
+    renderDtFilterMenu('');
+  }
+}
+
+function renderDtFilterMenu(query) {
+  var col = dtFilterMenuColumn;
+  var list = document.getElementById('dtFilterMenuList');
+  if (!list) return;
+  query = query || '';
+  var active = dtColumnFilters[col] || [];
+  var values = dtFilterMenuValues || [];
+  var visibleValues = values.filter(function(value) {
+    return String(value).toLowerCase().indexOf(String(query || '').toLowerCase()) >= 0;
+  });
+  var hasActive = active.length > 0;
+  var activeSet = {};
+  for (var a = 0; a < active.length; a++) activeSet[String(active[a])] = true;
+
+  var html = '';
+  for (var i = 0; i < visibleValues.length; i++) {
+    var value = visibleValues[i];
+    var checked = (!hasActive || activeSet[String(value)]) ? ' checked' : '';
+    html += '<label class="dt-filter-option"><input class="dt-filter-value-check" type="checkbox" value="' + esc(value) + '"' + checked + '><span>' + esc(value === '' ? '(Blank)' : value) + '</span></label>';
+  }
+  if (visibleValues.length === 0) html += '<div style="padding:16px;color:var(--text-muted);font-size:12px;text-align:center">No values</div>';
+  list.innerHTML = html;
+
+  setTimeout(function() {
+    var input = document.getElementById('dtFilterMenuSearch');
+    if (input) { input.focus(); input.setSelectionRange(query.length, query.length); }
+  }, 0);
+}
+
+function checkDtFilterValues(checked) {
+  var boxes = document.querySelectorAll('#dtFilterMenu .dt-filter-value-check');
+  for (var i = 0; i < boxes.length; i++) boxes[i].checked = checked;
+}
+
+function clearDtColumnFilter() {
+  delete dtColumnFilters[dtFilterMenuColumn];
+  closeDtFilterMenu();
+  dtPage = 1;
+  loadDataTable();
+}
+
+function applyDtColumnFilter() {
+  var boxes = document.querySelectorAll('#dtFilterMenu .dt-filter-value-check');
+  var selected = [];
+  for (var i = 0; i < boxes.length; i++) {
+    if (boxes[i].checked) selected.push(boxes[i].value);
+  }
+  var col = dtFilterMenuColumn;
+  if (selected.length === 0) {
+    dtColumnFilters[col] = ['__NO_MATCH__'];
+  } else if (selected.length === (dtFilterMenuValues || []).length) {
+    delete dtColumnFilters[col];
+  } else {
+    dtColumnFilters[col] = selected;
+  }
+  closeDtFilterMenu();
+  dtPage = 1;
+  loadDataTable();
+}
+
+function closeDtFilterMenu() {
+  var menu = document.getElementById('dtFilterMenu');
+  if (menu) menu.classList.remove('open');
+}
+
+async function exportDataTable() {
+  var tt = document.getElementById('dtTransactionType').value;
+  var params = new URLSearchParams(salesFilterParams());
+  params.set('export', '1');
+  params.set('sort_by', dtSortBy);
+  params.set('sort_dir', dtSortDir);
+  if (tt !== 'All') params.set('transaction_type', tt);
+
+  Object.keys(dtColumnFilters).forEach(function(col) {
+    var vals = dtColumnFilters[col];
+    if (vals && vals.length > 0) params.set('filter_' + col, JSON.stringify(vals));
+  });
+
+  try {
+    var res = await fetch('/api/sales/data-table?' + params.toString(), {headers:{'Authorization':'Bearer '+token}});
+    if (!res.ok) { showToast('Failed to export data', 'error'); return; }
+    var blob = await res.blob();
+    var url = window.URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'sales_data_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+    showToast('Data exported successfully', 'success');
+  } catch(e) {
+    showToast('Export failed', 'error');
+  }
+}
+
 // ── Info Buttons & Tooltips ──
 var vizInfo = {
   // Charts
@@ -987,6 +1434,7 @@ tooltipEl.addEventListener('mouseleave', hideInfoTooltip);
 
 // ── Init ──
 injectInfoButtons();
+renderDtColumnMenu();
 loadAll();
 loadFilterOptions();
 </script>

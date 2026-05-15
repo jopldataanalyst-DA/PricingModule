@@ -10,6 +10,7 @@ Uses the same refined logic as the upgraded AmazonSalesAnalytics.py:
 from fastapi import APIRouter, Depends, Request
 from typing import Any
 import re
+import json
 from auth import get_current_user
 from database import get_database
 
@@ -709,3 +710,215 @@ async def get_executive(filters: dict[str, str] = Depends(get_sales_filters), us
         "top_sku_revenue": _fmt(_get(top_sku, "v")),
         "top_state": top_state["state"] if top_state else None,
         "top_channel": top_ch["channel"] if top_ch else None, "pareto_count": pareto}
+
+
+# ════════════════════════════════════════════════════════════════════════════════
+# 11. DATA TABLE (RAW DATA WITH PAGINATION)
+# ════════════════════════════════════════════════════════════════════════════════
+
+from fastapi.responses import StreamingResponse
+import io
+import csv
+
+
+@router.get("/data-table")
+async def get_data_table(
+    request: Request,
+    filters: dict[str, str] = Depends(get_sales_filters),
+    user=Depends(get_current_user)
+):
+    """Raw sales data with pagination, sorting, filtering, and optional CSV export."""
+    source = filters["source"]
+    sales = _sales_table(source, filters=filters)
+
+    qp = request.query_params
+    transaction_type = _clean_filter_value(qp.get("transaction_type"))
+    page = max(1, int(qp.get("page", "1") or "1"))
+    page_size = min(200, max(1, int(qp.get("page_size", "50") or "50")))
+    export = _clean_filter_value(qp.get("export")) == "1"
+    sort_by = _clean_filter_value(qp.get("sort_by")) or "Invoice_Date"
+    sort_dir = _clean_filter_value(qp.get("sort_dir")) or "desc"
+
+    VALID_SORT_COLS = ["Seller_Gstin", "Invoice_Number", "Invoice_Date", "Transaction_Type",
+                       "Order_Id", "Sku", "Master_SKU", "Category", "Size", "Asin", "Quantity", "Invoice_Amount",
+                       "Total_Tax_Amount", "Fulfillment_Channel", "Warehouse_Id",
+                       "Ship_From_State", "Ship_To_State", "Ship_To_City"]
+    if sort_by not in VALID_SORT_COLS:
+        sort_by = "Invoice_Date"
+    if sort_dir.lower() not in ("asc", "desc"):
+        sort_dir = "desc"
+
+    conditions = []
+    if transaction_type and transaction_type.lower() != "all":
+        tt = transaction_type
+        if tt == "Refund":
+            conditions.append("Transaction_Type IN ('Refund','EInvoiceCancel')")
+        else:
+            conditions.append(f"Transaction_Type = {_sql_string(tt)}")
+
+    for key in qp.keys():
+        if key.startswith("filter_"):
+            col = key.replace("filter_", "", 1)
+            if col in VALID_SORT_COLS:
+                try:
+                    vals = json.loads(qp.get(key))
+                    if vals and isinstance(vals, list) and len(vals) > 0:
+                        if vals == ["__NO_MATCH__"]:
+                            conditions.append("1=0")
+                        else:
+                            escaped = [_sql_string(str(v)) for v in vals]
+                            conditions.append(f"`{col}` IN ({', '.join(escaped)})")
+                except Exception:
+                    pass
+
+    where_sql = " AND ".join(conditions)
+    full_where = f"WHERE {where_sql}" if where_sql else ""
+
+    dt_alias = "sales_data"
+    base_cols = ", ".join(f"{dt_alias}.`{c}`" for c in SALES_COLUMNS)
+    extra_cols = f"COALESCE(m2.Master_SKU, {dt_alias}.Sku) AS Master_SKU, COALESCE(im2.category, '') AS Category, COALESCE(im2.size, '') AS Size"
+    join_sql = f"LEFT JOIN amazon_sku_code_mapping m2 ON {dt_alias}.Sku = m2.Master_SKU LEFT JOIN stock_items im2 ON {dt_alias}.Sku = im2.sku_code"
+
+    inner_query = f"SELECT {base_cols}, {extra_cols} FROM {sales} {join_sql} {full_where}"
+
+    dt_filter_conditions = []
+    for key in qp.keys():
+        if key.startswith("filter_"):
+            col = key.replace("filter_", "", 1)
+            if col in VALID_SORT_COLS:
+                try:
+                    vals = json.loads(qp.get(key))
+                    if vals and isinstance(vals, list) and len(vals) > 0:
+                        if vals == ["__NO_MATCH__"]:
+                            dt_filter_conditions.append("1=0")
+                        else:
+                            escaped = [_sql_string(str(v)) for v in vals]
+                            dt_filter_conditions.append(f"`{col}` IN ({', '.join(escaped)})")
+                except Exception:
+                    pass
+
+    dt_where_sql = " AND ".join(dt_filter_conditions)
+    dt_full_where = f"WHERE {dt_where_sql}" if dt_where_sql else ""
+
+    count_sql = f"SELECT COUNT(*) as cnt FROM ({inner_query}) dt {dt_full_where}"
+    total = int(_fetch_val(count_sql))
+    total_pages = max(1, (total + page_size - 1) // page_size)
+
+    order_sql = f"ORDER BY `{sort_by}` {sort_dir.upper()}"
+
+    if export:
+        offset = 0
+        export_page_size = 5000
+        def generate_csv():
+            buffer = io.StringIO()
+            writer = csv.writer(buffer)
+            writer.writerow(SALES_COLUMNS + ["Master_SKU", "Category", "Size"])
+            current_offset = 0
+            while True:
+                rows = _fetch(f"""
+                    SELECT * FROM ({inner_query}) dt {dt_full_where}
+                    {order_sql} LIMIT {export_page_size} OFFSET {current_offset}
+                """)
+                if not rows:
+                    break
+                for row in rows:
+                    writer.writerow([row.get(c, "") for c in SALES_COLUMNS + ["Master_SKU", "Category", "Size"]])
+                buffer.seek(0)
+                yield buffer.read()
+                buffer.seek(0)
+                buffer.truncate(0)
+                if len(rows) < export_page_size:
+                    break
+                current_offset += export_page_size
+
+        return StreamingResponse(
+            generate_csv(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=sales_data.csv"}
+        )
+
+    offset = (page - 1) * page_size
+    rows = _fetch(f"""
+        SELECT * FROM ({inner_query}) dt {dt_full_where}
+        {order_sql} LIMIT {page_size} OFFSET {offset}
+    """)
+
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "rows": rows
+    }
+
+
+@router.get("/data-table-options")
+async def get_data_table_options(
+    request: Request,
+    filters: dict[str, str] = Depends(get_sales_filters),
+    user=Depends(get_current_user)
+):
+    """Get distinct values for a column to populate filter dropdowns."""
+    source = filters["source"]
+    sales = _sales_table(source, filters=filters)
+
+    qp = request.query_params
+    column = _clean_filter_value(qp.get("column"))
+    transaction_type = _clean_filter_value(qp.get("transaction_type"))
+
+    VALID_COLS = ["Seller_Gstin", "Invoice_Number", "Transaction_Type",
+                  "Order_Id", "Sku", "Master_SKU", "Category", "Size", "Asin",
+                  "Fulfillment_Channel", "Warehouse_Id",
+                  "Ship_From_State", "Ship_To_State", "Ship_To_City"]
+    if column not in VALID_COLS:
+        return {"values": []}
+
+    conditions = []
+    if transaction_type and transaction_type.lower() != "all":
+        tt = transaction_type
+        if tt == "Refund":
+            conditions.append("Transaction_Type IN ('Refund','EInvoiceCancel')")
+        else:
+            conditions.append(f"Transaction_Type = {_sql_string(tt)}")
+
+    for key in qp.keys():
+        if key.startswith("filter_"):
+            col = key.replace("filter_", "", 1)
+            if col in VALID_COLS:
+                try:
+                    vals = json.loads(qp.get(key))
+                    if vals and isinstance(vals, list) and len(vals) > 0:
+                        if vals == ["__NO_MATCH__"]:
+                            conditions.append("1=0")
+                        else:
+                            escaped = [_sql_string(str(v)) for v in vals]
+                            conditions.append(f"`{col}` IN ({', '.join(escaped)})")
+                except Exception:
+                    pass
+
+    where_sql = " AND ".join(conditions)
+    full_where = f"WHERE {where_sql}" if where_sql else ""
+
+    dt_alias = "sales_data"
+
+    if column in ("Master_SKU", "Category", "Size"):
+        join_sql = f"LEFT JOIN amazon_sku_code_mapping m2 ON {dt_alias}.Sku = m2.Master_SKU LEFT JOIN stock_items im2 ON {dt_alias}.Sku = im2.sku_code"
+        if column == "Master_SKU":
+            select_col = f"COALESCE(m2.Master_SKU, {dt_alias}.Sku)"
+        elif column == "Category":
+            select_col = "im2.category"
+        elif column == "Size":
+            select_col = "im2.size"
+        rows = _fetch(f"""
+            SELECT DISTINCT {select_col} AS value FROM {sales} {join_sql} {full_where}
+            AND {select_col} IS NOT NULL AND {select_col} != ''
+            ORDER BY value LIMIT 500
+        """)
+    else:
+        rows = _fetch(f"""
+            SELECT DISTINCT {dt_alias}.`{column}` AS value FROM {sales} {full_where}
+            AND {dt_alias}.`{column}` IS NOT NULL AND {dt_alias}.`{column}` != ''
+            ORDER BY value LIMIT 500
+        """)
+
+    return {"values": [r["value"] for r in rows if r.get("value") not in (None, "")][:500]}
