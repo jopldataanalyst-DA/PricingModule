@@ -92,5 +92,10 @@ async def sales_page():
     """Serve the Amazon Sales Analytics dashboard page."""
     return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\sales.html")
 
+@app.get("/info")
+async def info_page():
+    """Serve the visualization guide / documentation page."""
+    return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\info.html")
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

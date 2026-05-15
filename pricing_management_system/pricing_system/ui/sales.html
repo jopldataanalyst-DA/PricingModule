@@ -8,69 +8,103 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724;--gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15);--green:#2d6a4f;--green-dim:rgba(64,145,108,0.15);--text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550;--border:#222c28;--border2:#2a3530;--danger:#e05252;--danger-dim:rgba(224,82,82,0.12);--warning:#f4a261;--warning-dim:rgba(244,162,97,0.12);--info:#4db8d4;--info-dim:rgba(77,184,212,0.12);--success:#52b788;--success-dim:rgba(82,183,136,0.12);--purple:#b48ef5;--purple-dim:rgba(180,142,245,0.12);--sidebar-w:220px;--header-h:60px;--radius:10px}
+:root{--bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724;--gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15);--green:#2d6a4f;--green-dim:rgba(64,145,108,0.15);--text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550;--border:#222c28;--border2:#2a3530;--danger:#e05252;--danger-dim:rgba(224,82,82,0.12);--warning:#f4a261;--warning-dim:rgba(244,162,97,0.12);--info:#4db8d4;--info-dim:rgba(77,184,212,0.12);--success:#52b788;--success-dim:rgba(82,183,136,0.12);--purple:#b48ef5;--purple-dim:rgba(180,142,245,0.12);--sidebar-w:220px;--header-h:60px;--radius:10px;--fs-xs:11px;--fs-sm:12px;--fs-md:14px;--fs-lg:16px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden}
 .sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100}
-.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}.sidebar-logo-img{height:28px;width:auto;display:none}.sidebar-logo-copy{display:inline}.logo-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold2);line-height:1.2}.logo-sub{font-size:9px;color:var(--text-muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}.sidebar-logo-img{height:28px;width:auto;display:none}.sidebar-logo-copy{display:inline}.logo-text{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold2);line-height:1.2}.logo-sub{font-size:10px;color:var(--text-muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
 .sidebar-user{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
-.user-name{font-size:13px;font-weight:600;color:var(--text)}.user-role{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:14px;font-weight:600;color:var(--text)}.user-role{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
 .nav-section{padding:12px 0;flex:1;overflow-y:auto}
-.nav-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all .15s;text-decoration:none}
-.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:15px;width:20px;text-align:center}
+.nav-label{font-size:10px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:14px;color:var(--text-muted);transition:all .15s;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:17px;width:22px;text-align:center}
 .sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
 .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
-.header-title{font-size:15px;font-weight:600}.header-badge{background:var(--gold-dim);color:var(--gold);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.header-title{font-size:17px;font-weight:600}.header-badge{background:var(--gold-dim);color:var(--gold);font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.source-select{height:30px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:11px;font-family:'DM Sans',sans-serif;padding:0 10px;outline:none}
+.source-select{height:32px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:0 10px;outline:none}
 .source-select:focus{border-color:var(--gold)}
 .content{flex:1;overflow-y:auto;padding:24px}
 .filter-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:14px}
 .filter-control{display:flex;flex-direction:column;gap:5px}
-.filter-control label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
-.filter-control input,.filter-control select{height:32px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:0 9px;outline:none;min-width:0}
+.filter-control label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.filter-control input,.filter-control select{height:36px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;padding:0 10px;outline:none;min-width:0}
 .filter-control input:focus,.filter-control select:focus{border-color:var(--gold)}
 .filter-actions{display:flex;align-items:end;gap:8px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color .2s}
-.stat-card:hover{border-color:var(--gold-dim)}.stat-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.stat-value{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.2}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--gold-dim)}.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.stat-value{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.2}
 .stat-value.gold{color:var(--gold2)}.stat-value.green{color:var(--success)}.stat-value.blue{color:var(--info)}.stat-value.orange{color:var(--warning)}.stat-value.purple{color:var(--purple)}.stat-value.red{color:var(--danger)}
-.stat-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
-.tabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:18px}
-.tab{padding:7px 14px;font-size:11px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;white-space:nowrap;border-radius:5px 5px 0 0}
+.stat-sub{font-size:11px;color:var(--text-muted);margin-top:3px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;white-space:nowrap;border-radius:5px 5px 0 0}
 .tab:hover{color:var(--text);background:var(--surface2)}.tab.active{color:var(--gold2);border-bottom-color:var(--gold);background:var(--gold-dim)}
 .tab-content{display:none}.tab-content.active{display:block}
-.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
-.section-title{font-size:12px;font-weight:600;color:var(--gold2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.section-title{font-size:14px;font-weight:600;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 .chart-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;position:relative;height:280px}
 .chart-box.full{grid-column:1/-1;height:300px}
-.chart-box h4{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+.chart-box h4{font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
 .chart-canvas{position:relative;width:100%;height:calc(100% - 24px)}
-table.data{width:100%;border-collapse:collapse;font-size:11px}
-table.data th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:5px 8px;text-align:left;white-space:nowrap;font-size:9px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
-table.data td{padding:4px 8px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:11px}
+table.data{width:100%;border-collapse:collapse;font-size:12px}
+table.data th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:6px 10px;text-align:left;white-space:nowrap;font-size:10px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+table.data td{padding:5px 10px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:12px}
 table.data tr:hover td{background:rgba(255,255,255,0.02)}
 .mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
 .mini-stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
-.mini-stat .ms-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
-.mini-stat .ms-value{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;margin-top:3px}
+.mini-stat .ms-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.mini-stat .ms-value{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;margin-top:4px}
 .mini-stat .ms-value.gold{color:var(--gold2)}.mini-stat .ms-value.green{color:var(--success)}.mini-stat .ms-value.blue{color:var(--info)}.mini-stat .ms-value.orange{color:var(--warning)}.mini-stat .ms-value.red{color:var(--danger)}.mini-stat .ms-value.purple{color:var(--purple)}
 .flex-row{display:flex;gap:14px;flex-wrap:wrap}.flex-col{flex:1;min-width:260px}
-.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
 .btn-gold{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208}.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,.3)}
-.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}.btn-sm{padding:4px 9px;font-size:10px}
-.empty-state{padding:30px;text-align:center;color:var(--text-muted);font-size:12px}
-.loading{display:flex;align-items:center;justify-content:center;height:100px;color:var(--text-muted);gap:8px;font-size:12px}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}.btn-sm{padding:5px 11px;font-size:11px}
+.empty-state{padding:30px;text-align:center;color:var(--text-muted);font-size:13px}
+.loading{display:flex;align-items:center;justify-content:center;height:100px;color:var(--text-muted);gap:8px;font-size:13px}
 .spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
-.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:12px;min-width:200px;display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:220px;display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.4)}
 @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:12px;font-weight:700;cursor:pointer;color:var(--gold);background:var(--gold-dim);border:1px solid transparent;transition:all .15s;margin-left:6px;vertical-align:middle;line-height:1;position:relative;user-select:none}
+.info-btn:hover,.info-btn:focus{background:var(--gold);color:var(--bg);border-color:var(--gold);outline:none}
+.info-tooltip{position:fixed;z-index:9998;background:var(--surface3);border:1px solid var(--gold);border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--text);max-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);pointer-events:auto;display:none}
+.info-tooltip::after{content:'';position:absolute;top:-6px;left:20px;width:10px;height:10px;background:var(--surface3);border-left:1px solid var(--gold);border-top:1px solid var(--gold);transform:rotate(45deg)}
+.info-tooltip-text{margin-bottom:6px;color:var(--text-muted)}
+.info-tooltip-link{color:var(--gold);font-weight:600;text-decoration:none;font-size:12px}
+.info-tooltip-link:hover{text-decoration:underline}
+
+@media (max-width:768px){
+:root{--sidebar-w:56px;--header-h:50px}
+body{font-size:15px}
+.sidebar-logo{padding:12px 10px}.logo-text{font-size:0}.logo-text::after{content:'R';font-size:18px;font-weight:700;color:var(--gold2)}.logo-sub{display:none}
+.sidebar-user{padding:10px 8px;justify-content:center}.user-info{display:none}
+.nav-item{padding:10px 8px;margin:1px 4px;font-size:0;justify-content:center}.nav-item .icon{font-size:20px;width:auto}.nav-label{font-size:0;padding:4px 8px}.sidebar-footer{padding:8px 4px}
+.main{margin-left:56px}
+.content{padding:14px}
+.header{padding:0 12px;gap:8px}.header-title{font-size:14px}.header-badge{font-size:10px;padding:2px 8px}
+.stats-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat-card{padding:12px 14px}.stat-label{font-size:12px}.stat-value{font-size:20px}
+.chart-row{grid-template-columns:1fr}.chart-box{height:240px}.chart-box.full{height:260px}
+.chart-box h4{font-size:13px}
+.mini-stats{grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.mini-stat{padding:8px 10px}.mini-stat .ms-label{font-size:12px}.mini-stat .ms-value{font-size:15px}
+.filter-panel{grid-template-columns:1fr 1fr;padding:10px}.filter-control label{font-size:12px}
+.filter-control input,.filter-control select{height:34px;font-size:14px}
+.tab{padding:6px 10px;font-size:12px}
+.section-card{padding:14px}.section-title{font-size:15px}
+table.data th{font-size:11px;padding:5px 8px}table.data td{font-size:13px;padding:4px 8px}
+.btn{font-size:13px;padding:7px 14px}.btn-sm{font-size:12px;padding:4px 10px}
+.tabs{overflow-x:auto;flex-wrap:nowrap}
+.info-btn{width:20px;height:20px;font-size:13px}
+.info-tooltip{max-width:260px;font-size:13px;padding:10px 12px}
+.info-tooltip-link{font-size:13px}
+}
 </style>
 <link rel="stylesheet" href="/ui/app-theme.css">
 <script src="/ui/app-theme.js"></script>
@@ -84,6 +118,7 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
 <a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
 <a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
 <a class="nav-item active" href="/sales" id="nav-sales"><span class="icon">📊</span> Sales</a>
+<a class="nav-item" href="/info"><span class="icon">ℹ️</span> Visualization Guide</a>
 <a class="nav-item" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
 <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
 </nav>
@@ -117,14 +152,14 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     </div>
   </div>
   <div class="stats-grid" id="kpiGrid">
-    <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value gold" id="kpi-gross-rev">—</div></div>
-    <div class="stat-card"><div class="stat-label">Net Revenue</div><div class="stat-value green" id="kpi-net-rev">—</div></div>
-    <div class="stat-card"><div class="stat-label">Refund Loss</div><div class="stat-value red" id="kpi-refund">—</div></div>
-    <div class="stat-card"><div class="stat-label">Shipped Orders</div><div class="stat-value blue" id="kpi-orders">—</div></div>
-    <div class="stat-card"><div class="stat-label">Total Units</div><div class="stat-value purple" id="kpi-units">—</div></div>
-    <div class="stat-card"><div class="stat-label">AOV</div><div class="stat-value orange" id="kpi-aov">—</div></div>
-    <div class="stat-card"><div class="stat-label">Refund Rate</div><div class="stat-value red" id="kpi-refund-rate">—</div></div>
-    <div class="stat-card"><div class="stat-label">Total Tax</div><div class="stat-value" id="kpi-tax" style="color:var(--info)">—</div></div>
+    <div class="stat-card" data-info="kpi-gross-rev"><div class="stat-label">Gross Revenue</div><div class="stat-value gold" id="kpi-gross-rev">—</div></div>
+    <div class="stat-card" data-info="kpi-net-rev"><div class="stat-label">Net Revenue</div><div class="stat-value green" id="kpi-net-rev">—</div></div>
+    <div class="stat-card" data-info="kpi-refund"><div class="stat-label">Refund Loss</div><div class="stat-value red" id="kpi-refund">—</div></div>
+    <div class="stat-card" data-info="kpi-orders"><div class="stat-label">Shipped Orders</div><div class="stat-value blue" id="kpi-orders">—</div></div>
+    <div class="stat-card" data-info="kpi-units"><div class="stat-label">Total Units</div><div class="stat-value purple" id="kpi-units">—</div></div>
+    <div class="stat-card" data-info="kpi-aov"><div class="stat-label">AOV</div><div class="stat-value orange" id="kpi-aov">—</div></div>
+    <div class="stat-card" data-info="kpi-refund-rate"><div class="stat-label">Refund Rate</div><div class="stat-value red" id="kpi-refund-rate">—</div></div>
+    <div class="stat-card" data-info="kpi-tax"><div class="stat-label">Total Tax</div><div class="stat-value" id="kpi-tax" style="color:var(--info)">—</div></div>
   </div>
 
   <div class="tabs" id="subTabs">
@@ -146,11 +181,11 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Revenue Overview</div>
       <div class="chart-row">
-        <div class="chart-box full"><h4>Monthly Revenue</h4><div class="chart-canvas"><canvas id="ovMonthlyChart"></canvas></div></div>
+        <div class="chart-box full"><h4>Monthly Revenue <span class="info-btn" data-info="ov-mon" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="ovMonthlyChart"></canvas></div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Fulfillment Channel Revenue</h4><div class="chart-canvas"><canvas id="ovChannelChart"></canvas></div></div>
-        <div class="chart-box"><h4>Top States by Orders</h4><div class="chart-canvas"><canvas id="ovStateChart"></canvas></div></div>
+        <div class="chart-box"><h4>Fulfillment Channel Revenue <span class="info-btn" data-info="ov-ch" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="ovChannelChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top States by Orders <span class="info-btn" data-info="ov-st" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="ovStateChart"></canvas></div></div>
       </div>
     </div>
   </div>
@@ -160,14 +195,14 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Sales Performance</div>
       <div class="chart-row">
-        <div class="chart-box full"><h4>Monthly Revenue Trend</h4><div class="chart-canvas"><canvas id="salesMonthlyChart"></canvas></div></div>
+        <div class="chart-box full"><h4>Monthly Revenue Trend <span class="info-btn" data-info="sal-m" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="salesMonthlyChart"></canvas></div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box"><h4>MoM Growth</h4><div class="chart-canvas"><canvas id="salesGrowthChart"></canvas></div></div>
-        <div class="chart-box"><h4>Channel Revenue</h4><div class="chart-canvas"><canvas id="salesChannelChart"></canvas></div></div>
+        <div class="chart-box"><h4>MoM Growth <span class="info-btn" data-info="sal-g" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="salesGrowthChart"></canvas></div></div>
+        <div class="chart-box"><h4>Channel Revenue <span class="info-btn" data-info="sal-ch" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="salesChannelChart"></canvas></div></div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-gstin">
       <div class="section-title">GSTIN Revenue</div>
       <div style="overflow-x:auto"><table class="data" id="salesGstinTable"><thead><tr><th>GSTIN</th><th>Revenue</th><th>Orders</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -178,24 +213,24 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Transaction Quality & Health</div>
       <div class="mini-stats" id="txMiniStats">
-        <div class="mini-stat"><div class="ms-label">Total Orders</div><div class="ms-value blue" id="tx-total-ords">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Shipped</div><div class="ms-value green" id="tx-shipped">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Refunded</div><div class="ms-value red" id="tx-refunded">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Cancelled</div><div class="ms-value orange" id="tx-cancelled">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="tx-net-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="tx-ref-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Cancel Rate</div><div class="ms-value orange" id="tx-can-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Same-Day Refunds</div><div class="ms-value orange" id="tx-same-day">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Return Loops</div><div class="ms-value gold" id="tx-return-loops">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Multi-Refund Orders</div><div class="ms-value orange" id="tx-multi-refund">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Dup Invoices</div><div class="ms-value red" id="tx-dup-inv">—</div></div>
+        <div class="mini-stat" data-info="tx-total-ords"><div class="ms-label">Total Orders</div><div class="ms-value blue" id="tx-total-ords">—</div></div>
+        <div class="mini-stat" data-info="tx-shipped"><div class="ms-label">Shipped</div><div class="ms-value green" id="tx-shipped">—</div></div>
+        <div class="mini-stat" data-info="tx-refunded"><div class="ms-label">Refunded</div><div class="ms-value red" id="tx-refunded">—</div></div>
+        <div class="mini-stat" data-info="tx-cancelled"><div class="ms-label">Cancelled</div><div class="ms-value orange" id="tx-cancelled">—</div></div>
+        <div class="mini-stat" data-info="tx-net-rate"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="tx-net-rate">—</div></div>
+        <div class="mini-stat" data-info="tx-ref-rate"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="tx-ref-rate">—</div></div>
+        <div class="mini-stat" data-info="tx-can-rate"><div class="ms-label">Cancel Rate</div><div class="ms-value orange" id="tx-can-rate">—</div></div>
+        <div class="mini-stat" data-info="tx-same-day"><div class="ms-label">Same-Day Refunds</div><div class="ms-value orange" id="tx-same-day">—</div></div>
+        <div class="mini-stat" data-info="tx-return-loops"><div class="ms-label">Return Loops</div><div class="ms-value gold" id="tx-return-loops">—</div></div>
+        <div class="mini-stat" data-info="tx-multi-refund"><div class="ms-label">Multi-Refund Orders</div><div class="ms-value orange" id="tx-multi-refund">—</div></div>
+        <div class="mini-stat" data-info="tx-dup-inv"><div class="ms-label">Dup Invoices</div><div class="ms-value red" id="tx-dup-inv">—</div></div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-dup-inv">
       <div class="section-title">Duplicate Invoices</div>
       <div style="overflow-x:auto"><table class="data" id="txDupTable"><thead><tr><th>Invoice Number</th><th>Count</th></tr></thead><tbody></tbody></table></div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-cancel-ship">
       <div class="section-title">Cancel-to-Ship Ratio by GSTIN</div>
       <div style="overflow-x:auto"><table class="data" id="txGstinTable"><thead><tr><th>GSTIN</th><th>Cancels</th><th>Ships</th><th>Cancel Rate</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -206,19 +241,19 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Product & SKU Intelligence</div>
       <div class="mini-stats" id="prodMiniStats">
-        <div class="mini-stat"><div class="ms-label">Pareto SKUs (80% Net Rev)</div><div class="ms-value gold" id="prod-pareto">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Total Net Revenue</div><div class="ms-value green" id="prod-total-net">—</div></div>
+        <div class="mini-stat" data-info="prod-pareto"><div class="ms-label">Pareto SKUs (80% Net Rev)</div><div class="ms-value gold" id="prod-pareto">—</div></div>
+        <div class="mini-stat" data-info="prod-total-net"><div class="ms-label">Total Net Revenue</div><div class="ms-value green" id="prod-total-net">—</div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Top SKUs by Net Revenue</h4><div class="chart-canvas"><canvas id="prodSkuChart"></canvas></div></div>
-        <div class="chart-box"><h4>Top ASINs by Revenue</h4><div class="chart-canvas"><canvas id="prodAsinChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top SKUs by Net Revenue <span class="info-btn" data-info="p-sku" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="prodSkuChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top ASINs by Revenue <span class="info-btn" data-info="p-asin" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="prodAsinChart"></canvas></div></div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-sku-perf">
       <div class="section-title">SKU Performance</div>
       <div style="overflow-x:auto"><table class="data" id="prodSkuTable"><thead><tr><th>SKU</th><th>Gross Rev</th><th>Refund</th><th>Net Rev</th><th>Units</th><th>Refund Rate</th><th>Tax Rate</th></tr></thead><tbody></tbody></table></div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-refund-risk">
       <div class="section-title">Zero-Refund SKUs & High-Refund Risk</div>
       <div class="flex-row">
         <div class="flex-col">
@@ -229,7 +264,7 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
         </div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-hsn">
       <div class="section-title">Top HSN Codes by Taxable Revenue</div>
       <div style="overflow-x:auto"><table class="data" id="prodHsnTable"><thead><tr><th>HSN</th><th>Taxable Revenue</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -240,18 +275,18 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Customer Geography</div>
       <div class="mini-stats" id="geoMiniStats">
-        <div class="mini-stat"><div class="ms-label">Interstate %</div><div class="ms-value blue" id="geo-inter-pct">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Intrastate %</div><div class="ms-value green" id="geo-intra-pct">—</div></div>
+        <div class="mini-stat" data-info="geo-inter-pct"><div class="ms-label">Interstate %</div><div class="ms-value blue" id="geo-inter-pct">—</div></div>
+        <div class="mini-stat" data-info="geo-intra-pct"><div class="ms-label">Intrastate %</div><div class="ms-value green" id="geo-intra-pct">—</div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box full"><h4>Top 10 States by Net Revenue</h4><div class="chart-canvas"><canvas id="geoStateNetChart"></canvas></div></div>
+        <div class="chart-box full"><h4>Top 10 States by Net Revenue <span class="info-btn" data-info="geo-net" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="geoStateNetChart"></canvas></div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Top Cities by Orders</h4><div class="chart-canvas"><canvas id="geoCityChart"></canvas></div></div>
-        <div class="chart-box"><h4>Top Postal Codes by Revenue</h4><div class="chart-canvas"><canvas id="geoPostalChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top Cities by Orders <span class="info-btn" data-info="geo-city" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="geoCityChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top Postal Codes by Revenue <span class="info-btn" data-info="geo-post" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="geoPostalChart"></canvas></div></div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-state-perf">
       <div class="section-title">State-wise Performance (Net Revenue)</div>
       <div style="overflow-x:auto"><table class="data" id="geoStateTable"><thead><tr><th>State</th><th>Orders</th><th>Revenue</th><th>Refund</th><th>Net Revenue</th><th>Refund Rate</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -262,11 +297,11 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Shipping & Route Analysis</div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Origin States by Shipments</h4><div class="chart-canvas"><canvas id="shipOriginChart"></canvas></div></div>
-        <div class="chart-box"><h4>Top Routes by Volume</h4><div class="chart-canvas"><canvas id="shipRouteChart"></canvas></div></div>
+        <div class="chart-box"><h4>Origin States by Shipments <span class="info-btn" data-info="shp-orig" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="shipOriginChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top Routes by Volume <span class="info-btn" data-info="shp-rt" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="shipRouteChart"></canvas></div></div>
       </div>
     </div>
-    <div class="section-card">
+    <div class="section-card" data-info="tab-routes">
       <div class="section-title">Routes & High-Refund Routes</div>
       <div class="flex-row">
         <div class="flex-col">
@@ -281,15 +316,15 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
 
   <!-- WAREHOUSE -->
   <div class="tab-content" id="tab-warehouse">
-    <div class="section-card">
+    <div class="section-card" data-info="tab-warehouse">
       <div class="section-title">Warehouse & Fulfillment</div>
       <div class="chart-row">
-        <div class="chart-box full"><h4>Warehouse Performance</h4><div class="chart-canvas"><canvas id="whChart"></canvas></div></div>
+        <div class="chart-box full"><h4>Warehouse Performance <span class="info-btn" data-info="wh-bar" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="whChart"></canvas></div></div>
       </div>
       <div style="overflow-x:auto;margin-bottom:14px"><table class="data" id="whTable"><thead><tr><th>Warehouse</th><th>Orders</th><th>Revenue</th><th>Refund Orders</th><th>Refund Rate</th><th>Rev/Order</th></tr></thead><tbody></tbody></table></div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Fulfillment Channel Net Revenue</h4><div class="chart-canvas"><canvas id="fulfillNetChart"></canvas></div></div>
-        <div class="chart-box"><h4>Fulfillment Orders</h4><div class="chart-canvas"><canvas id="fulfillOrdersChart"></canvas></div></div>
+        <div class="chart-box"><h4>Fulfillment Channel Net Revenue <span class="info-btn" data-info="fc-net" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="fulfillNetChart"></canvas></div></div>
+        <div class="chart-box"><h4>Fulfillment Orders <span class="info-btn" data-info="fc-ord" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="fulfillOrdersChart"></canvas></div></div>
       </div>
       <div style="overflow-x:auto"><table class="data" id="fulfillTable"><thead><tr><th>Channel</th><th>Orders</th><th>Gross Rev</th><th>Net Rev</th><th>Units</th><th>Refund Rate</th><th>AOV</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -300,15 +335,15 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Tax & Compliance</div>
       <div class="mini-stats" id="taxMiniStats">
-        <div class="mini-stat"><div class="ms-label">Total Tax</div><div class="ms-value gold" id="tax-total">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Effective Tax Rate</div><div class="ms-value blue" id="tax-eff-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">IGST (Interstate)</div><div class="ms-value orange" id="tax-igst">—</div></div>
-        <div class="mini-stat"><div class="ms-label">CGST+SGST (Intra)</div><div class="ms-value green" id="tax-cgst">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Missing HSN Rows</div><div class="ms-value red" id="tax-missing-hsn">—</div></div>
+        <div class="mini-stat" data-info="tax-total"><div class="ms-label">Total Tax</div><div class="ms-value gold" id="tax-total">—</div></div>
+        <div class="mini-stat" data-info="tax-eff-rate"><div class="ms-label">Effective Tax Rate</div><div class="ms-value blue" id="tax-eff-rate">—</div></div>
+        <div class="mini-stat" data-info="tax-igst"><div class="ms-label">IGST (Interstate)</div><div class="ms-value orange" id="tax-igst">—</div></div>
+        <div class="mini-stat" data-info="tax-cgst"><div class="ms-label">CGST+SGST (Intra)</div><div class="ms-value green" id="tax-cgst">—</div></div>
+        <div class="mini-stat" data-info="tax-missing-hsn"><div class="ms-label">Missing HSN Rows</div><div class="ms-value red" id="tax-missing-hsn">—</div></div>
       </div>
       <div class="chart-row">
-        <div class="chart-box"><h4>Tax by State</h4><div class="chart-canvas"><canvas id="taxStateChart"></canvas></div></div>
-        <div class="chart-box"><h4>Tax by HSN</h4><div class="chart-canvas"><canvas id="taxHsnChart"></canvas></div></div>
+        <div class="chart-box"><h4>Tax by State <span class="info-btn" data-info="tax-st" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="taxStateChart"></canvas></div></div>
+        <div class="chart-box"><h4>Tax by HSN <span class="info-btn" data-info="tax-hsn" tabindex="0">ⓘ</span></h4><div class="chart-canvas"><canvas id="taxHsnChart"></canvas></div></div>
       </div>
     </div>
   </div>
@@ -318,26 +353,26 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Order Quality & Data Integrity</div>
       <div class="mini-stats" id="qualityMiniStats">
-        <div class="mini-stat"><div class="ms-label">Avg Qty/Order</div><div class="ms-value gold" id="dq-avg-qty">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Missing Invoice#</div><div class="ms-value red" id="dq-missing-inv">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Missing Warehouse ID</div><div class="ms-value red" id="dq-missing-wh">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Zero-Amt Shipments</div><div class="ms-value orange" id="dq-zero-amt">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Neg Amt (Non-Refund)</div><div class="ms-value red" id="dq-neg-amt">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Orphan Refunds</div><div class="ms-value orange" id="dq-orphan">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Dup Invoice Groups</div><div class="ms-value orange" id="dq-dup-inv">—</div></div>
+        <div class="mini-stat" data-info="dq-avg-qty"><div class="ms-label">Avg Qty/Order</div><div class="ms-value gold" id="dq-avg-qty">—</div></div>
+        <div class="mini-stat" data-info="dq-missing-inv"><div class="ms-label">Missing Invoice#</div><div class="ms-value red" id="dq-missing-inv">—</div></div>
+        <div class="mini-stat" data-info="dq-missing-wh"><div class="ms-label">Missing Warehouse ID</div><div class="ms-value red" id="dq-missing-wh">—</div></div>
+        <div class="mini-stat" data-info="dq-zero-amt"><div class="ms-label">Zero-Amt Shipments</div><div class="ms-value orange" id="dq-zero-amt">—</div></div>
+        <div class="mini-stat" data-info="dq-neg-amt"><div class="ms-label">Neg Amt (Non-Refund)</div><div class="ms-value red" id="dq-neg-amt">—</div></div>
+        <div class="mini-stat" data-info="dq-orphan"><div class="ms-label">Orphan Refunds</div><div class="ms-value orange" id="dq-orphan">—</div></div>
+        <div class="mini-stat" data-info="dq-dup-inv"><div class="ms-label">Dup Invoice Groups</div><div class="ms-value orange" id="dq-dup-inv">—</div></div>
       </div>
     </div>
   </div>
 
   <!-- OPERATIONS -->
   <div class="tab-content" id="tab-operations">
-    <div class="section-card">
+    <div class="section-card" data-info="tab-operations">
       <div class="section-title">Operational Intelligence</div>
-      <div class="section-card" style="margin-bottom:10px">
+      <div class="section-card" style="margin-bottom:10px" data-info="tab-restock">
         <div class="section-title" style="color:var(--success)">Restock Candidates (High Velocity + Low Refund)</div>
         <div style="overflow-x:auto"><table class="data" id="opsRestockTable"><thead><tr><th>SKU</th><th>Units</th><th>Net Revenue</th><th>Refund Rate</th></tr></thead><tbody></tbody></table></div>
       </div>
-      <div class="section-card">
+      <div class="section-card" data-info="tab-stockout">
         <div class="section-title" style="color:var(--warning)">Possible Stockout Signals</div>
         <div style="overflow-x:auto"><table class="data" id="opsStockoutTable"><thead><tr><th>SKU</th><th>Units</th><th>Net Revenue</th></tr></thead><tbody></tbody></table></div>
       </div>
@@ -349,16 +384,16 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="section-card">
       <div class="section-title">Business Health Snapshot</div>
       <div class="mini-stats" id="execMiniStats">
-        <div class="mini-stat"><div class="ms-label">Gross Revenue</div><div class="ms-value gold" id="exec-gross">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Net Revenue</div><div class="ms-value green" id="exec-net">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Revenue Leakage</div><div class="ms-value red" id="exec-leakage">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="exec-ref-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="exec-net-ship-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Eff. Tax Rate</div><div class="ms-value blue" id="exec-tax-rate">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Top SKU</div><div class="ms-value gold" id="exec-top-sku" style="font-size:11px">—</div></div>
-        <div class="mini-stat"><div class="ms-label">Top State</div><div class="ms-value gold" id="exec-top-state" style="font-size:11px">—</div></div>
+        <div class="mini-stat" data-info="exec-gross"><div class="ms-label">Gross Revenue</div><div class="ms-value gold" id="exec-gross">—</div></div>
+        <div class="mini-stat" data-info="exec-net"><div class="ms-label">Net Revenue</div><div class="ms-value green" id="exec-net">—</div></div>
+        <div class="mini-stat" data-info="exec-leakage"><div class="ms-label">Revenue Leakage</div><div class="ms-value red" id="exec-leakage">—</div></div>
+        <div class="mini-stat" data-info="exec-ref-rate"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="exec-ref-rate">—</div></div>
+        <div class="mini-stat" data-info="exec-net-ship-rate"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="exec-net-ship-rate">—</div></div>
+        <div class="mini-stat" data-info="exec-tax-rate"><div class="ms-label">Eff. Tax Rate</div><div class="ms-value blue" id="exec-tax-rate">—</div></div>
+        <div class="mini-stat" data-info="exec-top-sku"><div class="ms-label">Top SKU</div><div class="ms-value gold" id="exec-top-sku" style="font-size:11px">—</div></div>
+        <div class="mini-stat" data-info="exec-top-state"><div class="ms-label">Top State</div><div class="ms-value gold" id="exec-top-state" style="font-size:11px">—</div></div>
       </div>
-      <div class="section-card" style="margin-top:8px">
+      <div class="section-card" style="margin-top:8px" data-info="tab-insights">
         <div class="section-title">Key Insights</div>
         <div style="font-size:12px;color:var(--text);line-height:1.8" id="execInsights"></div>
       </div>
@@ -366,6 +401,10 @@ table.data tr:hover td{background:rgba(255,255,255,0.02)}
   </div>
 </div>
 </main>
+<div class="info-tooltip" id="infoTooltip">
+  <div class="info-tooltip-text" id="infoTooltipText"></div>
+  <a class="info-tooltip-link" id="infoTooltipLink" href="/info" target="_blank">Read more →</a>
+</div>
 <div class="toast-container" id="toastContainer"></div>
 <script>
 var token = localStorage.getItem('token');
@@ -804,7 +843,150 @@ async function loadExecutive() {
   document.getElementById('execInsights').innerHTML=html;
 }
 
+// ── Info Buttons & Tooltips ──
+var vizInfo = {
+  // Charts
+  'ov-mon':{name:'Monthly Revenue',desc:'Bar chart showing total gross revenue per month. Each bar represents sum of all invoice amounts for that calendar month.'},
+  'ov-ch':{name:'Fulfillment Channel Revenue',desc:'Doughnut chart showing revenue share by fulfillment mode (FBA, FBM, Easy Ship, etc.). Each slice is a channel\'s % of total.'},
+  'ov-st':{name:'Top States by Orders',desc:'Bar chart ranking states by shipped order count. Top 10 states shown for geographic demand comparison.'},
+  'sal-m':{name:'Monthly Revenue Trend',desc:'Filled line chart tracking gross revenue month-over-month. Smoothed line with translucent fill emphasizes trend direction.'},
+  'sal-g':{name:'Month-over-Month Growth',desc:'Colored bar chart showing revenue % change month-to-month. Green = growth, red = decline. First month excluded as baseline.'},
+  'sal-ch':{name:'Channel Revenue',desc:'Bar chart comparing gross revenue across fulfillment channels. Shows which channels perform best revenue-wise.'},
+  'p-sku':{name:'Top SKUs by Net Revenue',desc:'Horizontal bar chart ranking top 10 SKUs by net revenue (gross minus refunds). Helps identify best-selling profitable products.'},
+  'p-asin':{name:'Top ASINs by Revenue',desc:'Horizontal bar chart showing top ASINs by gross revenue. Useful for Amazon listing performance analysis.'},
+  'geo-net':{name:'Top 10 States by Net Revenue',desc:'Bar chart ranking states by net revenue after refunds. Reveals most profitable geographic regions.'},
+  'geo-city':{name:'Top Cities by Orders',desc:'Bar chart showing cities with highest shipped order counts. Includes state labels for disambiguation.'},
+  'geo-post':{name:'Top Postal Codes by Revenue',desc:'Bar chart of highest-revenue postal/pincode areas. Pinpoints high-value micro-markets.'},
+  'shp-orig':{name:'Origin States by Shipments',desc:'Bar chart showing which origin warehouse states ship the most orders. Identifies primary shipping hubs.'},
+  'shp-rt':{name:'Top Routes by Volume',desc:'Bar chart of most-used origin→destination shipping routes by shipment count. Highlights high-traffic corridors.'},
+  'wh-bar':{name:'Warehouse Performance',desc:'Dual-axis bar chart plotting order count (left axis) and revenue in ₹K (right axis) per warehouse. Compares volume vs value.'},
+  'fc-net':{name:'Fulfillment Channel Net Revenue',desc:'Bar chart showing net revenue (after refunds) per fulfillment channel. Highlights most profitable channels.'},
+  'fc-ord':{name:'Fulfillment Orders',desc:'Bar chart showing order count per fulfillment channel. Shows volume distribution across channels.'},
+  'tax-st':{name:'Tax by State',desc:'Bar chart of total tax (IGST+CGST+SGST) collected per state. Helps understand tax liability distribution.'},
+  'tax-hsn':{name:'Tax by HSN',desc:'Bar chart of tax amounts grouped by HSN code. Shows which product categories drive tax liability.'},
+  // KPI Cards
+  'kpi-gross-rev':{name:'Gross Revenue',desc:'Total invoice amount before any deductions. Includes all sales revenue before refunds, discounts, or taxes.'},
+  'kpi-net-rev':{name:'Net Revenue',desc:'Revenue retained after refunds. Gross Revenue minus total refund amount.'},
+  'kpi-refund':{name:'Refund Loss',desc:'Total amount refunded to customers. Represents revenue that was returned or cancelled after fulfillment.'},
+  'kpi-orders':{name:'Shipped Orders',desc:'Total count of orders that were successfully shipped to customers.'},
+  'kpi-units':{name:'Total Units',desc:'Total quantity of individual units sold across all shipped orders.'},
+  'kpi-aov':{name:'AOV (Average Order Value)',desc:'Average revenue per order. Calculated as Total Revenue ÷ Number of Orders.'},
+  'kpi-refund-rate':{name:'Refund Rate',desc:'Percentage of orders that were refunded. Calculated as (Refunded Orders ÷ Total Shipped Orders) × 100.'},
+  'kpi-tax':{name:'Total Tax',desc:'Total tax amount collected across all transactions including IGST, CGST, and SGST.'},
+  // Transaction Mini-stats
+  'tx-total-ords':{name:'Total Orders',desc:'Total count of all orders placed (including shipped, refunded, and cancelled).'},
+  'tx-shipped':{name:'Shipped Orders',desc:'Orders that were successfully fulfilled and shipped to customers.'},
+  'tx-refunded':{name:'Refunded Orders',desc:'Orders where a refund was issued to the customer after shipment.'},
+  'tx-cancelled':{name:'Cancelled Orders',desc:'Orders that were cancelled before shipment.'},
+  'tx-net-rate':{name:'Net Shipment Rate',desc:'Percentage of orders that resulted in successful shipment. (Shipped ÷ Total Orders) × 100.'},
+  'tx-ref-rate':{name:'Refund Rate',desc:'Percentage of shipped orders that were refunded. (Refunded ÷ Shipped) × 100.'},
+  'tx-can-rate':{name:'Cancel Rate',desc:'Percentage of total orders that were cancelled. (Cancelled ÷ Total Orders) × 100.'},
+  'tx-same-day':{name:'Same-Day Refunds',desc:'Orders where refund was issued on the same day as the order date. May indicate suspicious activity.'},
+  'tx-return-loops':{name:'Return Loops',desc:'Orders that went through multiple return/refund cycles. Indicates potential abuse or quality issues.'},
+  'tx-multi-refund':{name:'Multi-Refund Orders',desc:'Orders that received more than one refund transaction. Could indicate processing errors.'},
+  'tx-dup-inv':{name:'Duplicate Invoices',desc:'Count of invoice numbers that appear more than once in the system. Indicates data entry or system issues.'},
+  // Product Mini-stats
+  'prod-pareto':{name:'Pareto SKUs',desc:'Number of SKUs that contribute to 80% of the total net revenue. Lower is better (fewer SKUs driving most revenue).'},
+  'prod-total-net':{name:'Total Net Revenue',desc:'Sum of net revenue across all SKUs. Gross revenue minus refunds.'},
+  // Geography Mini-stats
+  'geo-inter-pct':{name:'Interstate %',desc:'Percentage of shipments going to different states (outside the origin state). Subject to IGST.'},
+  'geo-intra-pct':{name:'Intrastate %',desc:'Percentage of shipments within the same state. Subject to CGST + SGST.'},
+  // Tax Mini-stats
+  'tax-total':{name:'Total Tax',desc:'Sum of all tax amounts (IGST + CGST + SGST) collected across all transactions.'},
+  'tax-eff-rate':{name:'Effective Tax Rate',desc:'Overall tax rate across all revenue. (Total Tax ÷ Gross Revenue) × 100.'},
+  'tax-igst':{name:'IGST (Interstate)',desc:'Total Integrated GST collected on interstate (cross-state) transactions.'},
+  'tax-cgst':{name:'CGST+SGST (Intrastate)',desc:'Total Central GST + State GST collected on intrastate (same-state) transactions.'},
+  'tax-missing-hsn':{name:'Missing HSN Rows',desc:'Number of transaction rows where HSN code is missing. Data quality issue for compliance.'},
+  // Data Quality Mini-stats
+  'dq-avg-qty':{name:'Avg Qty/Order',desc:'Average number of units per order. Total Units ÷ Total Orders.'},
+  'dq-missing-inv':{name:'Missing Invoice #',desc:'Orders where the invoice number field is blank or missing. Data quality issue.'},
+  'dq-missing-wh':{name:'Missing Warehouse ID',desc:'Orders where the warehouse identifier is not populated. Data quality issue.'},
+  'dq-zero-amt':{name:'Zero-Amt Shipments',desc:'Shipments recorded with zero invoice amount. May indicate data entry errors.'},
+  'dq-neg-amt':{name:'Neg Amt (Non-Refund)',desc:'Transactions with negative amounts that are not refunds. Potential data anomalies.'},
+  'dq-orphan':{name:'Orphan Refunds',desc:'Refund records that cannot be matched to any original order. May indicate data integrity issues.'},
+  'dq-dup-inv':{name:'Duplicate Invoice Groups',desc:'Groups of transactions sharing the same invoice number. Indicates potential data duplication.'},
+  // Executive Mini-stats
+  'exec-gross':{name:'Gross Revenue',desc:'Total revenue before refunds. Top-line sales figure.'},
+  'exec-net':{name:'Net Revenue',desc:'Revenue retained after accounting for all refunds and returns.'},
+  'exec-leakage':{name:'Revenue Leakage',desc:'Total amount lost to refunds. The gap between gross and net revenue.'},
+  'exec-ref-rate':{name:'Refund Rate',desc:'Percentage of revenue lost to refunds.'},
+  'exec-net-ship-rate':{name:'Net Shipment Rate',desc:'Percentage of orders successfully shipped without refund.'},
+  'exec-tax-rate':{name:'Effective Tax Rate',desc:'Average tax rate applied across all revenue.'},
+  'exec-top-sku':{name:'Top SKU',desc:'The single SKU generating the highest net revenue.'},
+  'exec-top-state':{name:'Top State',desc:'The state generating the highest revenue.'},
+  // Table Sections
+  'tab-gstin':{name:'GSTIN Revenue',desc:'Table showing revenue and orders broken down by GSTIN (GST Identification Number). Helps track B2B vs B2C performance.'},
+  'tab-dup-inv':{name:'Duplicate Invoices',desc:'Table listing invoice numbers that appear multiple times, with their occurrence count. Helps identify data entry issues.'},
+  'tab-cancel-ship':{name:'Cancel-to-Ship Ratio by GSTIN',desc:'Table comparing cancelled vs shipped orders per GSTIN. High cancel rates may indicate issues with certain tax registrations.'},
+  'tab-sku-perf':{name:'SKU Performance',desc:'Detailed table showing gross revenue, refunds, net revenue, units, refund rate, and tax rate for each SKU.'},
+  'tab-refund-risk':{name:'Zero-Refund SKUs & High-Refund Risk',desc:'Two tables: SKUs with zero refunds (ideal restock candidates) and SKUs with high refund rates (quality concerns).'},
+  'tab-hsn':{name:'Top HSN Codes by Taxable Revenue',desc:'Table ranking HSN codes by taxable revenue. Useful for tax compliance and product category analysis.'},
+  'tab-state-perf':{name:'State-wise Performance',desc:'Table showing orders, revenue, refunds, net revenue, and refund rate for each state.'},
+  'tab-routes':{name:'Routes & High-Refund Routes',desc:'Two tables: shipping routes by volume/revenue, and routes with high refund counts. Helps identify logistics issues.'},
+  'tab-warehouse':{name:'Warehouse & Fulfillment',desc:'Tables showing warehouse performance (orders, revenue, refund rate) and fulfillment channel breakdown.'},
+  'tab-operations':{name:'Operational Intelligence',desc:'Operational insights including restock candidates and stockout signals based on sales velocity and refund patterns.'},
+  'tab-restock':{name:'Restock Candidates',desc:'SKUs with high sales velocity and low refund rates. Prioritise these for inventory restocking.'},
+  'tab-stockout':{name:'Stockout Signals',desc:'SKUs that may be going out of stock soon based on sales velocity. Proactive reordering recommended.'},
+  'tab-insights':{name:'Key Insights',desc:'Executive summary of top SKU, top state, top channel, pareto analysis, revenue leakage, and net shipment rate.'}
+};
+var tooltipEl = document.getElementById('infoTooltip');
+var tooltipText = document.getElementById('infoTooltipText');
+var tooltipLink = document.getElementById('infoTooltipLink');
+var tooltipTimer = null;
+
+function showInfoTooltip(e, key) {
+  var info = vizInfo[key];
+  if (!info) return;
+  tooltipText.textContent = info.desc;
+  tooltipLink.href = '/info#' + key;
+  tooltipEl.style.display = 'block';
+  var rect = e.currentTarget.getBoundingClientRect();
+  var top = rect.bottom + 8;
+  var left = Math.max(5, rect.left - 10);
+  tooltipEl.style.top = top + 'px';
+  tooltipEl.style.left = left + 'px';
+  clearTimeout(tooltipTimer);
+}
+function hideInfoTooltip() {
+  tooltipTimer = setTimeout(function(){ tooltipEl.style.display = 'none'; }, 300);
+}
+
+function attachTooltip(el, key) {
+  el.addEventListener('mouseenter', function(e){ showInfoTooltip(e, key); });
+  el.addEventListener('mouseleave', hideInfoTooltip);
+  el.addEventListener('focus', function(e){ showInfoTooltip(e, key); });
+  el.addEventListener('blur', function(){ hideInfoTooltip(); });
+}
+
+// Inject info buttons into all [data-info] elements
+function injectInfoButtons() {
+  document.querySelectorAll('[data-info]').forEach(function(container){
+    var key = container.getAttribute('data-info');
+    if (!key || !vizInfo[key]) return;
+    var label = container.querySelector('.stat-label, .ms-label, .section-title');
+    if (!label) return;
+    // Skip if button already injected
+    if (label.querySelector('.info-btn')) return;
+    var btn = document.createElement('span');
+    btn.className = 'info-btn';
+    btn.setAttribute('tabindex', '0');
+    btn.setAttribute('data-info', key);
+    btn.textContent = 'ⓘ';
+    label.appendChild(btn);
+    attachTooltip(btn, key);
+  });
+  // Also attach tooltips to any orphan info-btn elements (e.g. hardcoded chart buttons)
+  document.querySelectorAll('.info-btn').forEach(function(btn){
+    var key = btn.getAttribute('data-info');
+    if (key && vizInfo[key]) attachTooltip(btn, key);
+  });
+}
+
+tooltipEl.addEventListener('mouseenter', function(){ clearTimeout(tooltipTimer); });
+tooltipEl.addEventListener('mouseleave', hideInfoTooltip);
+
 // ── Init ──
+injectInfoButtons();
 loadAll();
 loadFilterOptions();
 </script>

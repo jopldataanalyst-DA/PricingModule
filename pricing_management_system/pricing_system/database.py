@@ -604,3 +604,6 @@ def get_db():
 async def update_item_csv(item_id, user):
     """Legacy compatibility placeholder; item updates now flow through MySQL."""
     raise NotImplementedError("Direct item update not fully implemented in pipeline mode yet.")
+
+
+
