@@ -28,24 +28,76 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .theme-select{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;height:32px;min-width:160px;padding:0 30px 0 12px;outline:none;cursor:pointer}
 .theme-select:hover,.theme-select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
 
-.doc-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
-.doc-section:target{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-dim)}
-.doc-title{font-size:15px;font-weight:600;color:var(--gold2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.doc-title .chart-type{background:var(--surface3);color:var(--text-muted);font-size:10px;padding:3px 10px;border-radius:4px;font-weight:500;letter-spacing:0.5px}
-.doc-sub{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.7}
-.doc-block{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:16px;margin-bottom:12px}
-.doc-block-label{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600}
-.doc-block-content{font-size:14px;color:var(--text);line-height:1.8}
-.doc-block-content code{background:var(--surface3);color:var(--gold2);padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px}
-.doc-block-content ul{list-style:none;padding-left:0}
-.doc-block-content ul li{padding:4px 0;padding-left:16px;position:relative}
-.doc-block-content ul li::before{content:'›';position:absolute;left:0;color:var(--gold)}
+/* Enhanced Guide Styles */
+.guide-intro{background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:18px}
+.guide-intro h2{font-size:16px;color:var(--gold2);margin-bottom:8px}
+.guide-intro p{font-size:13px;color:var(--text-muted);line-height:1.7;max-width:800px}
+.search-bar{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;margin-bottom:14px;transition:all .2s}
+.search-bar:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-dim)}
+.search-bar::placeholder{color:var(--text-dim)}
+.filter-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
+.pill{font-size:11px;padding:5px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text-muted);transition:all .2s;font-family:'DM Sans',sans-serif;font-weight:500}
+.pill:hover{border-color:var(--gold);color:var(--text)}
+.pill.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold2)}
+.pill.pill-chart{border-color:rgba(77,184,212,0.3)}.pill.pill-chart.active{background:var(--info-dim);border-color:var(--info);color:var(--info)}
+.pill.pill-kpi{border-color:rgba(82,183,136,0.3)}.pill.pill-kpi.active{background:var(--success-dim);border-color:var(--success);color:var(--success)}
+.pill.pill-table{border-color:rgba(180,142,245,0.3)}.pill.pill-table.active{background:var(--purple-dim);border-color:var(--purple);color:var(--purple)}
+.pill.pill-metric{border-color:rgba(244,162,97,0.3)}.pill.pill-metric.active{background:var(--warning-dim);border-color:var(--warning);color:var(--warning)}
+.pill.pill-anomaly{border-color:rgba(224,82,82,0.3)}.pill.pill-anomaly.active{background:var(--danger-dim);border-color:var(--danger);color:var(--danger)}
+.pill.pill-quality{border-color:rgba(201,169,110,0.3)}.pill.pill-quality.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold2)}
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin-bottom:14px;overflow:hidden;transition:all .3s;opacity:1}
+.sec.hidden{display:none}
+.sec:target{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-dim)}
+.sec-head{display:flex;align-items:center;gap:10px;padding:16px 20px;cursor:pointer;user-select:none;transition:background .15s}
+.sec-head:hover{background:var(--surface2)}
+.sec-head .sec-num{font-size:11px;color:var(--text-dim);font-weight:600;min-width:24px}
+.sec-head .sec-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.sec-head .sec-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:600;letter-spacing:0.3px}
+.badge-chart{background:var(--info-dim);color:var(--info)}
+.badge-kpi{background:var(--success-dim);color:var(--success)}
+.badge-table{background:var(--purple-dim);color:var(--purple)}
+.badge-metric{background:var(--warning-dim);color:var(--warning)}
+.badge-anomaly{background:var(--danger-dim);color:var(--danger)}
+.badge-quality{background:var(--gold-dim);color:var(--gold2)}
+.badge-section{background:var(--surface3);color:var(--text-dim)}
+.sec-head .sec-toggle{font-size:12px;color:var(--text-dim);transition:transform .2s}
+.sec-head .sec-toggle.open{transform:rotate(180deg)}
+.sec-body{padding:0 20px 20px;display:none}
+.sec-body.open{display:block}
+.sec-desc{font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.7}
+.sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.sec-card{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:14px}
+.sec-card.full{grid-column:1/-1}
+.sec-card-label{font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:6px}
+.sec-card-label .sec-card-icon{margin-right:4px}
+.sec-card-body{font-size:13px;color:var(--text);line-height:1.7}
+.sec-card-body code{background:var(--surface3);color:var(--gold2);padding:1px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px}
+.sec-card-body ul{list-style:none;padding-left:0}
+.sec-card-body ul li{padding:3px 0;padding-left:14px;position:relative}
+.sec-card-body ul li::before{content:'';position:absolute;left:0;color:var(--gold);font-weight:700}
+.copy-btn{float:right;font-size:10px;background:var(--surface3);border:1px solid var(--border2);color:var(--text-muted);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.copy-btn:hover{background:var(--gold-dim);color:var(--gold2);border-color:var(--gold)}
+.copy-btn.copied{background:var(--success-dim);color:var(--success);border-color:var(--success)}
+.insight-box{border-left:3px solid var(--gold);background:var(--gold-dim);padding:12px 14px;border-radius:0 8px 8px 0;margin-top:8px}
+.insight-box.warning{border-left-color:var(--warning);background:var(--warning-dim)}
+.insight-box.danger{border-left-color:var(--danger);background:var(--danger-dim)}
+.insight-box.success{border-left-color:var(--success);background:var(--success-dim)}
+.insight-box.info{border-left-color:var(--info);background:var(--info-dim)}
+.insight-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;color:var(--gold)}
+.insight-box.warning .insight-label{color:var(--warning)}
+.insight-box.danger .insight-label{color:var(--danger)}
+.insight-box.success .insight-label{color:var(--success)}
+.insight-box.info .insight-label{color:var(--info)}
+.insight-text{font-size:13px;color:var(--text);line-height:1.6}
+.related-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.related-link{font-size:11px;color:var(--info);padding:3px 10px;background:var(--surface3);border-radius:6px;text-decoration:none;transition:all .15s}
+.related-link:hover{background:var(--info-dim);color:var(--info)}
+.progress-bar{position:sticky;top:0;z-index:10;height:3px;background:var(--surface3);border-radius:0;margin-bottom:0}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:0;width:0;transition:width .3s}
+.count-info{font-size:11px;color:var(--text-dim);margin-bottom:10px;text-align:right}
 .doc-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
 .breadcrumb{font-size:12px;color:var(--text-muted);margin-bottom:14px;display:flex;gap:6px;align-items:center}
 .breadcrumb a{color:var(--gold);text-decoration:none}.breadcrumb a:hover{text-decoration:underline}
-.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--gold);text-decoration:none;margin-bottom:14px}
-.back-link:hover{text-decoration:underline}
-
 @media (max-width:768px){
 :root{--sidebar-w:56px;--header-h:50px}
 body{font-size:15px}
@@ -55,10 +107,9 @@ body{font-size:15px}
 .main{margin-left:56px}
 .content{padding:14px}
 .header{padding:0 12px;gap:8px}.header-title{font-size:15px}.header-badge{font-size:10px;padding:2px 8px}
-.doc-section{padding:16px}.doc-title{font-size:16px}.doc-title .chart-type{font-size:11px}
-.doc-sub{font-size:14px}.doc-block{padding:14px}.doc-block-label{font-size:11px}
-.doc-block-content{font-size:15px}.doc-block-content code{font-size:13px}
-.breadcrumb{font-size:13px}
+.sec-head{padding:12px 14px}.sec-head .sec-title{font-size:14px}.sec-body{padding:0 14px 14px}
+.sec-grid{grid-template-columns:1fr}.sec-card{padding:12px}.sec-card-body{font-size:14px}
+.breadcrumb{font-size:13px}.filter-pills{padding:8px}.pill{font-size:11px;padding:4px 10px}
 }
 </style>
 <link rel="stylesheet" href="/ui/app-theme.css">
@@ -93,688 +144,1113 @@ body{font-size:15px}
 <div class="content" id="mainContent">
 <div class="breadcrumb"><a href="/sales">Sales Dashboard</a> <span>›</span> <span>Visualization Guide</span></div>
 
-<div style="margin-bottom:18px">
-<p style="font-size:13px;color:var(--text-muted);line-height:1.8">This guide explains every chart and visualization in the Sales Analytics dashboard — how it works, what data it uses, and what insights it provides.</p>
+<div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+
+<div class="guide-intro">
+<h2>Understanding Your Sales Dashboard</h2>
+<p>This guide explains every chart, KPI, table, and metric in the Sales Analytics dashboard. Each section explains <strong>how it works</strong>, <strong>what data it uses</strong>, <strong>what insight it provides</strong>, and — most importantly — <strong>what action you should take</strong> based on what you see. Use the search bar below to quickly find specific metrics, or filter by category.</p>
 </div>
 
-<!-- NAV -->
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
-<span style="font-size:10px;color:var(--gold);font-weight:600;padding:3px 6px;letter-spacing:1px">CHARTS</span>
-<a href="#ov-mon" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Monthly Revenue</a>
-<a href="#ov-ch" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Channel Rev</a>
-<a href="#ov-st" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Top States</a>
-<a href="#sal-m" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Rev Trend</a>
-<a href="#sal-g" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">MoM Growth</a>
-<a href="#p-sku" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Top SKUs</a>
-<a href="#p-asin" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Top ASINs</a>
-<a href="#geo-net" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">States Net Rev</a>
-<a href="#geo-city" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Cities</a>
-<a href="#shp-orig" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Origins</a>
-<a href="#shp-rt" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Routes</a>
-<a href="#wh-bar" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Warehouse</a>
-<a href="#tax-st" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Tax/State</a>
-<a href="#tax-hsn" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Tax/HSN</a>
-<span style="font-size:10px;color:var(--gold);font-weight:600;padding:3px 6px;letter-spacing:1px;margin-left:4px">KPIs</span>
-<a href="#kpi-gross-rev" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Gross Rev</a>
-<a href="#kpi-net-rev" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Net Rev</a>
-<a href="#kpi-aov" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">AOV</a>
-<a href="#kpi-refund-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Refund Rate</a>
-<span style="font-size:10px;color:var(--gold);font-weight:600;padding:3px 6px;letter-spacing:1px;margin-left:4px">TABLES</span>
-<a href="#tab-gstin" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">GSTIN Rev</a>
-<a href="#tab-sku-perf" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">SKU Perf</a>
-<a href="#tab-state-perf" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">State Perf</a>
-<a href="#tab-warehouse" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Warehouse</a>
-<a href="#tab-insights" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Insights</a>
+<input class="search-bar" id="searchBar" type="text" placeholder="Search charts, KPIs, metrics, or tables..." autocomplete="off">
+
+<div class="filter-pills">
+<button class="pill active" data-filter="all">All</button>
+<button class="pill pill-chart" data-filter="chart">Charts</button>
+<button class="pill pill-kpi" data-filter="kpi">KPIs</button>
+<button class="pill pill-table" data-filter="table">Tables</button>
+<button class="pill pill-metric" data-filter="metric">Metrics</button>
+<button class="pill pill-anomaly" data-filter="anomaly">Anomalies</button>
+<button class="pill pill-quality" data-filter="quality">Data Quality</button>
 </div>
 
-<div class="chart-nav" style="margin-bottom:18px">
-<details style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px">
-<summary style="font-size:11px;font-weight:600;color:var(--gold2);cursor:pointer">All KPIs &amp; Mini-Stats (click to expand)</summary>
-<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
-<a href="#kpi-gross-rev" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Gross Revenue</a>
-<a href="#kpi-net-rev" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Net Revenue</a>
-<a href="#kpi-refund" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Refund Loss</a>
-<a href="#kpi-orders" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Shipped Orders</a>
-<a href="#kpi-units" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Total Units</a>
-<a href="#kpi-aov" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">AOV</a>
-<a href="#kpi-refund-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Refund Rate</a>
-<a href="#kpi-tax" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Total Tax</a>
-<a href="#tx-total-ords" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Total Orders</a>
-<a href="#tx-shipped" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Shipped</a>
-<a href="#tx-refunded" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Refunded</a>
-<a href="#tx-cancelled" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Cancelled</a>
-<a href="#tx-net-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Net Ship Rate</a>
-<a href="#tx-ref-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Refund Rate</a>
-<a href="#tx-can-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Cancel Rate</a>
-<a href="#tx-same-day" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Same-Day Refunds</a>
-<a href="#tx-return-loops" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Return Loops</a>
-<a href="#tx-multi-refund" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Multi-Refund</a>
-<a href="#tx-dup-inv" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Dup Invoices</a>
-<a href="#prod-pareto" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Pareto SKUs</a>
-<a href="#prod-total-net" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Total Net Rev</a>
-<a href="#geo-inter-pct" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Interstate %</a>
-<a href="#tax-total" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Total Tax</a>
-<a href="#tax-eff-rate" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Eff Tax Rate</a>
-<a href="#tax-igst" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">IGST</a>
-<a href="#tax-cgst" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">CGST+SGST</a>
-<a href="#dq-avg-qty" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Avg Qty</a>
-<a href="#dq-missing-inv" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Missing Inv</a>
-<a href="#dq-missing-wh" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Missing WH</a>
-<a href="#exec-gross" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Exec Gross</a>
-<a href="#exec-net" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Exec Net</a>
-<a href="#exec-leakage" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Rev Leakage</a>
-<a href="#tab-gstin" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">GSTIN Table</a>
-<a href="#tab-dup-inv" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Dup Inv Table</a>
-<a href="#tab-sku-perf" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">SKU Perf Table</a>
-<a href="#tab-hsn" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">HSN Table</a>
-<a href="#tab-state-perf" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">State Table</a>
-<a href="#tab-routes" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Routes Table</a>
-<a href="#tab-warehouse" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">WH Table</a>
-<a href="#tab-restock" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Restock</a>
-<a href="#tab-stockout" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Stockout</a>
-<a href="#tab-insights" style="font-size:11px;color:var(--text-muted);padding:3px 10px;background:var(--surface2);border-radius:6px;text-decoration:none">Insights</a>
+<div class="count-info" id="countInfo">Showing all sections</div>
+
+<!-- ═══════════════════════ CHARTS ═══════════════════════ -->
+
+<div class="sec" data-category="chart" id="ov-mon">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">01</span>
+<span class="sec-title">Monthly Revenue</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
 </div>
-</details>
+<div class="sec-body">
+<p class="sec-desc">Displays the total gross revenue generated each month over the selected date range. Each bar represents one month of sales.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">The chart aggregates transaction data by calendar month. Each bar represents the sum of all invoice amounts (gross revenue) for that month. Data is sourced from sales transactions after applying filters (portal, account, fulfillment mode, etc.). The taller the bar, the more revenue generated that month.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'SUM(invoice_amount) GROUP BY MONTH(transaction_date)')">Copy</button></div><div class="sec-card-body"><code>Monthly Revenue = SUM(invoice_amount) GROUP BY MONTH(transaction_date)</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>transaction_date</code> — Date of the sale</li><li><code>invoice_amount</code> — Gross amount of the invoice</li><li><code>portal</code> — B2B / B2C (filtered)</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>Growing trend</strong> = Business expanding. <strong>Sudden drop</strong> = Check for seasonality, stockouts, or competitive pressure. <strong>Flat plateau</strong> = Market saturation or need for new growth initiatives.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">If revenue is <strong>declining</strong>: Investigate stock availability, pricing changes, and competitor activity. If <strong>growing</strong>: Identify what changed and replicate it across other channels.</div></div>
+<div class="related-links"><a class="related-link" href="#sal-m">Revenue Trend</a><a class="related-link" href="#kpi-gross-rev">Gross Revenue KPI</a><a class="related-link" href="#sal-g">MoM Growth</a></div>
+</div>
 </div>
 
-<!-- ── Overview Tab ── -->
-
-<div class="doc-section" id="ov-mon">
-<div class="doc-title"><span>1. Monthly Revenue <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Displays the total gross revenue generated each month over the selected date range.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">The chart aggregates transaction data by calendar month. Each bar represents the sum of all invoice amounts (gross revenue) for that month. Data is sourced from sales transactions after applying filters (portal, account, fulfillment mode, etc.).</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Monthly Revenue = SUM(invoice_amount) GROUP BY MONTH(transaction_date)</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>transaction_date</code> — Date of the sale</li><li><code>invoice_amount</code> — Gross amount of the invoice</li><li><code>portal</code> — B2B / B2C (filtered)</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Shows revenue trends over time — whether sales are growing, declining, or seasonal. Helps identify peak months and unexpected dips.</div></div>
+<div class="sec" data-category="chart" id="ov-ch">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">02</span>
+<span class="sec-title">Fulfillment Channel Revenue</span>
+<span class="sec-badge badge-chart">Doughnut Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shows the proportion of total revenue contributed by each fulfillment channel (FBA, FBM, Easy Ship, etc.).</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Revenue is grouped by the fulfillment mode. Each slice represents the percentage share of total revenue for that channel. The doughnut chart makes it easy to compare relative contributions at a glance.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Channel Share = (SUM(revenue) per channel / SUM(revenue) all) * 100')">Copy</button></div><div class="sec-card-body"><code>Channel Share = (SUM(revenue) per channel / SUM(revenue) all) &times; 100</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>fulfillment_channel</code> — FBA / FBM / Easy Ship</li><li><code>invoice_amount</code> — Revenue per transaction</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">If <strong>one channel dominates (&gt;70%)</strong>, you have high concentration risk. If a channel with <strong>higher fees has growing share</strong>, check if the value justifies the cost.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Diversify across channels to reduce risk. If FBA is dominant, consider FBM for high-margin items. If a channel has low share but high refund rate, investigate whether to continue using it.</div></div>
+<div class="related-links"><a class="related-link" href="#fc-net">Fulfillment Net Rev</a><a class="related-link" href="#fc-ord">Fulfillment Orders</a><a class="related-link" href="#sal-ch">Channel Revenue</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="ov-ch">
-<div class="doc-title"><span>2. Fulfillment Channel Revenue <span class="chart-type">Doughnut Chart</span></span></div>
-<p class="doc-sub">Shows the proportion of total revenue contributed by each fulfillment channel.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Revenue is grouped by the fulfillment mode (e.g., FBA, FBM, Easy Ship). Each slice represents the percentage share of total revenue for that channel. The doughnut chart makes it easy to compare relative contributions.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Channel Revenue Share = (SUM(revenue) for channel / SUM(revenue) all channels) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>fulfillment_channel</code> — FBA / FBM / Easy Ship / etc.</li><li><code>invoice_amount</code> — Revenue per transaction</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies which fulfillment channels drive the most revenue. Helps decide where to focus operational improvements.</div></div>
+<div class="sec" data-category="chart" id="ov-st">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">03</span>
+<span class="sec-title">Top States by Orders</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Ranks states by the number of shipped orders placed from them. The top 10 states are shown.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Orders are counted per billing/shipping state and sorted descending. Only the top 10 states appear to keep the chart readable.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Orders by State = COUNT(order_id) GROUP BY billing_state')">Copy</button></div><div class="sec-card-body"><code>Orders by State = COUNT(order_id) GROUP BY billing_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>billing_state</code> — Customer state</li><li><code>order_id</code> — Unique order identifier</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>High concentration in 1-2 states</strong> = Geographic risk. If those states face logistics issues, it impacts your entire business. <strong>Even distribution</strong> = Healthy geographic diversification.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Consider <strong>regional warehousing</strong> in top states to reduce delivery times. Target <strong>underpenetrated states</strong> with marketing campaigns. Evaluate <strong>carrier partnerships</strong> for high-volume states.</div></div>
+<div class="related-links"><a class="related-link" href="#geo-net">States Net Rev</a><a class="related-link" href="#geo-city">Top Cities</a><a class="related-link" href="#tab-state-perf">State Perf Table</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="ov-st">
-<div class="doc-title"><span>3. Top States by Orders <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Ranks states by the number of shipped orders placed from them.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Orders are counted per billing/shipping state and sorted descending. The top 10 states are shown as bars for quick comparison.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Orders by State = COUNT(order_id) GROUP BY billing_state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>billing_state</code> — Customer state</li><li><code>order_id</code> — Unique order identifier</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Highlights geographic demand concentration. Useful for targeting marketing, warehousing, and logistics planning.</div></div>
+<div class="sec" data-category="chart" id="sal-m">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">04</span>
+<span class="sec-title">Monthly Revenue Trend</span>
+<span class="sec-badge badge-chart">Area Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">A filled line chart tracking gross revenue month-over-month across the entire period. The area fill emphasizes trend direction.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Each point is the total gross revenue for a month. Points are connected by a smoothed line with a translucent fill below it, emphasizing both direction and magnitude of change.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Monthly Rev = SUM(invoice_amount) GROUP BY DATE_TRUNC(month, transaction_date)')">Copy</button></div><div class="sec-card-body"><code>Monthly Rev = SUM(invoice_amount) GROUP BY DATE_TRUNC('month', transaction_date)</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>transaction_date</code> — Date of transaction</li><li><code>invoice_amount</code> — Gross invoice amount</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>Upward slope</strong> = Healthy growth. <strong>Downward slope</strong> = Declining sales, investigate immediately. <strong>Sharp spikes/dips</strong> = One-time events (promotions, stockouts, holidays). <strong>Seasonal pattern</strong> = Recurring cycles to plan for.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Compare trend against <strong>same period last year</strong> for true growth. If trend is declining, check <strong>marketing ROI</strong>, <strong>competitor pricing</strong>, and <strong>inventory levels</strong>.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-mon">Monthly Revenue</a><a class="related-link" href="#sal-g">MoM Growth</a><a class="related-link" href="#kpi-gross-rev">Gross Revenue</a></div>
+</div>
 </div>
 
-<!-- ── Sales Tab ── -->
-
-<div class="doc-section" id="sal-m">
-<div class="doc-title"><span>4. Monthly Revenue Trend <span class="chart-type">Line Chart (Area)</span></span></div>
-<p class="doc-sub">A filled line chart tracking gross revenue month-over-month across the entire period.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Each point is the total gross revenue for a month. Points are connected by a smoothed line with a translucent fill below it, emphasizing the trend direction and magnitude.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Monthly Revenue = SUM(invoice_amount) GROUP BY DATE_TRUNC('month', transaction_date)</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>transaction_date</code> — Date of transaction</li><li><code>invoice_amount</code> — Gross invoice amount</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Provides a clear visual of revenue trajectory — upward trends indicate growth, plateaus suggest stagnation, and declines signal issues needing attention.</div></div>
+<div class="sec" data-category="chart" id="sal-g">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">05</span>
+<span class="sec-title">Month-over-Month Growth</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage change in revenue from one month to the next. Green = growth, red = decline.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">For each month after the first, the percentage difference from the previous month is calculated. Green bars indicate positive growth; red bars indicate negative growth.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'MoM Growth % = ((Rev_current - Rev_prev) / Rev_prev) * 100')">Copy</button></div><div class="sec-card-body"><code>MoM Growth % = ((Revenue(current) - Revenue(previous)) / Revenue(previous)) &times; 100</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>month</code> — Month label</li><li><code>revenue</code> — Aggregated monthly revenue</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Aim for <strong>consistent positive growth</strong> (green bars). Two or more consecutive <strong>red bars</strong> signal a worrying trend. <strong>0% or near-zero</strong> = stagnation. <strong>Extreme swings</strong> (&gt;&plusmn;50%) = unusual one-time events.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">After a <strong>decline month</strong>: Check stockouts, pricing changes, competitor promotions. After <strong>growth month</strong>: Identify what worked (campaign, channel, product) and scale it. Target <strong>&gt;5-10% MoM</strong> for healthy growth.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-mon">Monthly Revenue</a><a class="related-link" href="#sal-m">Rev Trend</a><a class="related-link" href="#kpi-gross-rev">Gross Rev KPI</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="sal-g">
-<div class="doc-title"><span>5. Month-over-Month Growth <span class="chart-type">Bar Chart (Colored)</span></span></div>
-<p class="doc-sub">Shows the percentage change in revenue from one month to the next, colored green for growth and red for decline.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">For each month after the first, the percentage difference from the previous month is calculated. Green bars indicate positive growth; red bars indicate negative growth (decline). The visual instantly signals good and bad months.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>MoM Growth % = ((Revenue(current_month) - Revenue(previous_month)) / Revenue(previous_month)) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>month</code> — Month label</li><li><code>revenue</code> — Aggregated monthly revenue</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Reveals the momentum of the business. Consistent green bars indicate healthy growth; red bars require investigation into the cause of decline.</div></div>
+<div class="sec" data-category="chart" id="sal-ch">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">06</span>
+<span class="sec-title">Channel Revenue</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Compares gross revenue across different fulfillment/sales channels side by side.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Revenue is aggregated by channel. Each bar represents a channel's total revenue, making it easy to compare which channels perform best.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Channel Revenue = SUM(invoice_amount) GROUP BY fulfillment_channel')">Copy</button></div><div class="sec-card-body"><code>Channel Revenue = SUM(invoice_amount) GROUP BY fulfillment_channel</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>fulfillment_channel</code> — Channel name</li><li><code>invoice_amount</code> — Revenue amount</li></ul></div></div>
+</div>
+<div class="insight-box warning"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">If a <strong>low-margin channel</strong> is growing faster than high-margin ones, profitability may suffer. Consider shifting marketing spend toward more profitable channels.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-ch">Channel Doughnut</a><a class="related-link" href="#fc-net">FC Net Rev</a><a class="related-link" href="#fc-ord">FC Orders</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="sal-ch">
-<div class="doc-title"><span>6. Channel Revenue <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Compares gross revenue across different fulfillment/sales channels.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Revenue is aggregated by channel. Each bar represents a channel's total revenue, making it easy to compare which channels perform best.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Channel Revenue = SUM(invoice_amount) GROUP BY fulfillment_channel</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>fulfillment_channel</code> — Channel name</li><li><code>invoice_amount</code> — Revenue amount</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies the highest and lowest performing channels for strategic decision-making.</div></div>
+<div class="sec" data-category="chart" id="p-sku">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">07</span>
+<span class="sec-title">Top SKUs by Net Revenue</span>
+<span class="sec-badge badge-chart">Horizontal Bar</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Ranks the top 10 SKUs by net revenue (gross revenue minus refunds). Horizontal bars make SKU names readable.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Each SKU's net revenue is calculated and sorted in descending order. Top 10 displayed as horizontal bars to quickly identify best-selling products.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Net Rev = SUM(gross_revenue) - SUM(refund_amount) GROUP BY master_sku')">Copy</button></div><div class="sec-card-body"><code>Net Rev = SUM(gross_revenue) - SUM(refund_amount) GROUP BY master_sku</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>master_sku</code> — SKU identifier</li><li><code>gross_revenue</code> — Revenue before refunds</li><li><code>refund_amount</code> — Amount refunded</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>Top SKU much higher than rest</strong> = High dependency risk. If that SKU has issues, significant revenue is at stake. Look at the <strong>Pareto count</strong> to understand concentration.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Ensure <strong>top SKUs are always in stock</strong>. Consider <strong>bundle deals</strong> pairing top SKUs with slower movers. If top SKU has high refund rate, investigate <strong>quality issues</strong> urgently.</div></div>
+<div class="related-links"><a class="related-link" href="#p-asin">Top ASINs</a><a class="related-link" href="#prod-pareto">Pareto SKUs</a><a class="related-link" href="#tab-sku-perf">SKU Perf Table</a></div>
+</div>
 </div>
 
-<!-- ── Products Tab ── -->
-
-<div class="doc-section" id="p-sku">
-<div class="doc-title"><span>7. Top SKUs by Net Revenue <span class="chart-type">Horizontal Bar Chart</span></span></div>
-<p class="doc-sub">Ranks the top 10 SKUs by net revenue (gross revenue minus refunds).</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Each SKU's net revenue is calculated and sorted in descending order. The top 10 are displayed as horizontal bars so SKU names are readable. Helps quickly identify best-selling products.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Net Revenue = SUM(gross_revenue) - SUM(refund_amount) GROUP BY master_sku</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>master_sku</code> — SKU identifier</li><li><code>gross_revenue</code> — Total revenue before refunds</li><li><code>refund_amount</code> — Amount refunded</li><li><code>net_revenue</code> — Revenue after refunds</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Focuses inventory and marketing efforts on the most profitable products. Also indicates which SKUs contribute most to the bottom line.</div></div>
+<div class="sec" data-category="chart" id="p-asin">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">08</span>
+<span class="sec-title">Top ASINs by Revenue</span>
+<span class="sec-badge badge-chart">Horizontal Bar</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shows the top ASINs by gross revenue for Amazon-specific sales analysis.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">ASINs are grouped and their revenue summed. The highest revenue ASINs are shown as horizontal bars for easy scanning.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'ASIN Revenue = SUM(revenue) GROUP BY Asin')">Copy</button></div><div class="sec-card-body"><code>ASIN Revenue = SUM(revenue) GROUP BY Asin</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>Asin</code> — Amazon Standard ID Number</li><li><code>revenue</code> — Revenue per ASIN</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Cross-reference with <strong>ad spend per ASIN</strong> to check ROAS. If a top ASIN has <strong>declining revenue</strong>, check for Buy Box loss or increased competition.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Optimize <strong>listings and keywords</strong> for top ASINs. Protect <strong>Buy Box position</strong> on high-revenue ASINs. Consider <strong>Amazon DSP ads</strong> for retargeting top ASIN visitors.</div></div>
+<div class="related-links"><a class="related-link" href="#p-sku">Top SKUs</a><a class="related-link" href="#tab-sku-perf">SKU Perf Table</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="p-asin">
-<div class="doc-title"><span>8. Top ASINs by Revenue <span class="chart-type">Horizontal Bar Chart</span></span></div>
-<p class="doc-sub">Shows the top ASINs by gross revenue.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">ASINs are grouped and their revenue summed. The highest revenue ASINs are shown as horizontal bars for easy scanning.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>ASIN Revenue = SUM(revenue) GROUP BY Asin</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>Asin</code> — Amazon Standard Identification Number</li><li><code>revenue</code> — Revenue attributed to the ASIN</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Helps understand which Amazon listings generate the most revenue, useful for ad spend allocation and listing optimization.</div></div>
+<div class="sec" data-category="chart" id="geo-net">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">09</span>
+<span class="sec-title">Top 10 States by Net Revenue</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Ranks the top 10 states by net revenue (after subtracting refunds). Shows true profitability by region.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">State-wise net revenue is calculated by subtracting refunds from gross revenue. States are sorted and the top 10 displayed as bars.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Net Rev by State = SUM(gross_revenue - refund_amount) GROUP BY billing_state')">Copy</button></div><div class="sec-card-body"><code>Net Rev by State = SUM(gross_revenue - refund_amount) GROUP BY billing_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>billing_state</code> — Customer state</li><li><code>gross_revenue</code> — Revenue before refunds</li><li><code>refund_amount</code> — Refunds issued</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Compare with <strong>orders by state</strong> (chart 3). A state with many orders but low net revenue may have a <strong>high refund rate</strong>. States with <strong>high net revenue but few orders</strong> indicate high-value customers.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Focus <strong>regional marketing</strong> on top net-revenue states. If a state has <strong>high refunds</strong>, investigate logistics or product issues specific to that region.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-st">Top States by Orders</a><a class="related-link" href="#geo-city">Top Cities</a><a class="related-link" href="#tab-state-perf">State Perf Table</a></div>
+</div>
 </div>
 
-<!-- ── Geography Tab ── -->
-
-<div class="doc-section" id="geo-net">
-<div class="doc-title"><span>9. Top 10 States by Net Revenue <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Ranks the top 10 states by net revenue (after refunds).</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">State-wise net revenue is calculated by subtracting refunds from gross revenue. States are sorted and the top 10 displayed as bars.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Net Revenue by State = SUM(gross_revenue - refund_amount) GROUP BY state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>billing_state</code> — Customer state</li><li><code>gross_revenue</code> — Revenue before refunds</li><li><code>refund_amount</code> — Refunds issued</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Reveals the most profitable states after accounting for refunds, guiding regional strategy.</div></div>
+<div class="sec" data-category="chart" id="geo-city">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">10</span>
+<span class="sec-title">Top Cities by Orders</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shows the cities with the highest number of shipped orders, with state disambiguation.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Orders are counted per city (with state label) and sorted descending. The top 10 cities are displayed.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Orders by City = COUNT(order_id) GROUP BY billing_city, billing_state')">Copy</button></div><div class="sec-card-body"><code>Orders by City = COUNT(order_id) GROUP BY billing_city, billing_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>billing_city</code> — City name</li><li><code>billing_state</code> — State for disambiguation</li><li><code>order_id</code> — Unique order</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>Tier-1 cities dominating</strong> = Expected. If a <strong>tier-2/3 city</strong> appears in top 10, there may be untapped growth potential in smaller markets.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Run <strong>geo-targeted ad campaigns</strong> for top cities. Consider <strong>city-specific promotions</strong> or free shipping thresholds. Check <strong>delivery times</strong> to top cities for customer satisfaction.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-st">Top States</a><a class="related-link" href="#geo-post">Postal Codes</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="geo-city">
-<div class="doc-title"><span>10. Top Cities by Orders <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Shows the cities with the highest number of shipped orders.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Orders are counted per city (with state label) and sorted descending. The top 10 cities are displayed.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Orders by City = COUNT(order_id) GROUP BY billing_city, billing_state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>billing_city</code> — City name</li><li><code>billing_state</code> — State for disambiguation</li><li><code>order_id</code> — Unique order</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Highlights micro-level demand hubs for localized promotions and logistics planning.</div></div>
+<div class="sec" data-category="chart" id="geo-post">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">11</span>
+<span class="sec-title">Top Postal Codes by Revenue</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Displays the postal codes (pincodes) that generate the highest revenue.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Revenue is aggregated by pincode/postal code and sorted descending. High-value pincodes are highlighted.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Revenue by Pincode = SUM(revenue) GROUP BY pincode')">Copy</button></div><div class="sec-card-body"><code>Revenue by Pincode = SUM(revenue) GROUP BY pincode</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>pincode</code> — Postal code</li><li><code>revenue</code> — Total revenue</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">High-value pincodes can inform <strong>hyperlocal logistics</strong> strategy. If delivery times to top pincodes are slow, consider <strong>local fulfillment centers</strong>.</div></div>
+<div class="related-links"><a class="related-link" href="#geo-city">Top Cities</a><a class="related-link" href="#shp-rt">Top Routes</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="geo-post">
-<div class="doc-title"><span>11. Top Postal Codes by Revenue <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Displays the postal codes that generate the highest revenue.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Revenue is aggregated by pincode/postal code and sorted descending.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Revenue by Pincode = SUM(revenue) GROUP BY pincode</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>pincode</code> — Postal code</li><li><code>revenue</code> — Total revenue</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Pinpoints high-value postal codes for targeted logistics and marketing.</div></div>
+<div class="sec" data-category="chart" id="shp-orig">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">12</span>
+<span class="sec-title">Origin States by Shipments</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shows which origin (warehouse) states ship the most orders.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Shipment counts are aggregated by the origin warehouse state and sorted descending. Reveals primary shipping hubs.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Shipments by Origin = COUNT(shipment_id) GROUP BY origin_state')">Copy</button></div><div class="sec-card-body"><code>Shipments by Origin = COUNT(shipment_id) GROUP BY origin_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>origin_state</code> — Warehouse/fulfillment state</li><li><code>shipment_id</code> — Shipment identifier</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>Single state handling most shipments</strong> = Capacity and risk concentration. If that warehouse goes down, majority of orders are affected.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">If one origin is overburdened, consider <strong>redistributing inventory</strong> to other warehouses. For balanced distribution, aim for <strong>regional fulfillment</strong> near top customer states.</div></div>
+<div class="related-links"><a class="related-link" href="#shp-rt">Top Routes</a><a class="related-link" href="#wh-bar">Warehouse Perf</a></div>
+</div>
 </div>
 
-<!-- ── Shipping Tab ── -->
-
-<div class="doc-section" id="shp-orig">
-<div class="doc-title"><span>12. Origin States by Shipments <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Shows which origin states ship the most orders.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Shipment counts are aggregated by the origin warehouse state and sorted descending.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Shipments by Origin = COUNT(shipment_id) GROUP BY origin_state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>origin_state</code> — Warehouse/fulfillment state</li><li><code>shipment_id</code> — Shipment identifier</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies primary shipping hubs and potential warehouse capacity issues.</div></div>
+<div class="sec" data-category="chart" id="shp-rt">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">13</span>
+<span class="sec-title">Top Routes by Volume</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shows the most frequently used origin-to-destination shipping routes.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Each unique route (from_state to to_state) is counted by shipment volume. The top routes are displayed.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Route Volume = COUNT(shipment_id) GROUP BY origin_state, destination_state')">Copy</button></div><div class="sec-card-body"><code>Route Volume = COUNT(shipment_id) GROUP BY origin_state, destination_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>origin_state</code> — Shipping origin</li><li><code>destination_state</code> — Shipping destination</li><li><code>route_volume</code> — Number of shipments</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Top routes show your <strong>key logistics corridors</strong>. If a top route also has <strong>high refunds</strong>, investigate delivery issues on that route.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Negotiate <strong>better carrier rates</strong> on high-volume routes. If a route has delivery delays, consider <strong>alternate carriers</strong> or <strong>redirecting inventory</strong> closer to the destination.</div></div>
+<div class="related-links"><a class="related-link" href="#shp-orig">Origin States</a><a class="related-link" href="#tab-routes">Routes Table</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="shp-rt">
-<div class="doc-title"><span>13. Top Routes by Volume <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Shows the most frequently used origin→destination shipping routes.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Each unique route (from_state → to_state) is counted by shipment volume. The top routes are displayed.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Route Volume = COUNT(shipment_id) GROUP BY origin_state, destination_state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>origin_state</code> — Shipping origin</li><li><code>destination_state</code> — Shipping destination</li><li><code>route_volume</code> — Number of shipments on route</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Highlights high-traffic shipping corridors for carrier contract negotiation and route optimization.</div></div>
+<div class="sec" data-category="chart" id="wh-bar">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">14</span>
+<span class="sec-title">Warehouse Performance</span>
+<span class="sec-badge badge-chart">Dual-Axis Bar</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Plots both order count and revenue per warehouse on a single chart with two Y-axes.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">For each warehouse, two metrics are plotted simultaneously: order count (left axis) and revenue in thousands (right axis). This reveals which warehouses drive volume vs. value.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Orders = COUNT(order_id) GROUP BY warehouse; Revenue = SUM(gross_revenue) GROUP BY warehouse')">Copy</button></div><div class="sec-card-body"><code>Orders = COUNT(order_id) GROUP BY warehouse<br>Revenue = SUM(gross_revenue) GROUP BY warehouse</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>warehouse</code> — Warehouse name</li><li><code>orders</code> — Order count</li><li><code>revenue</code> — Total revenue</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text"><strong>High orders + low revenue</strong> = High volume of low-value items (possible strain on ops). <strong>Low orders + high revenue</strong> = Premium/large items with high per-unit value.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">If a warehouse has <strong>high volume but high refund rate</strong>, investigate picking/packing quality. Consider <strong>automation investments</strong> for warehouses with consistently high throughput.</div></div>
+<div class="related-links"><a class="related-link" href="#shp-orig">Origin States</a><a class="related-link" href="#tab-warehouse">WH Table</a></div>
+</div>
 </div>
 
-<!-- ── Warehouse Tab ── -->
-
-<div class="doc-section" id="wh-bar">
-<div class="doc-title"><span>14. Warehouse Performance <span class="chart-type">Dual-Axis Bar Chart</span></span></div>
-<p class="doc-sub">Plots both order count and revenue per warehouse on a single chart with two Y-axes.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">For each warehouse, two metrics are plotted: order count (left axis) and revenue in ₹K (right axis). This allows comparing both volume and value simultaneously.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Orders = COUNT(order_id) GROUP BY warehouse_id<br>Revenue = SUM(gross_revenue) GROUP BY warehouse_id</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>warehouse</code> — Warehouse name</li><li><code>orders</code> — Order count</li><li><code>revenue</code> — Total revenue</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies top-performing warehouses by both throughput and revenue, and highlights underperformers.</div></div>
+<div class="sec" data-category="chart" id="fc-net">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">15</span>
+<span class="sec-title">Fulfillment Channel Net Revenue</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Net revenue (gross minus refunds) broken down by fulfillment channel.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">For each fulfillment channel, net revenue is calculated after subtracting refunds. Shows true profitability per channel.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Net Rev = SUM(gross_revenue - refund_amount) GROUP BY fulfillment_channel')">Copy</button></div><div class="sec-card-body"><code>Net Rev = SUM(gross_revenue - refund_amount) GROUP BY fulfillment_channel</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>channel</code> — Fulfillment channel name</li><li><code>net_revenue</code> — Revenue after refunds</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">A channel with <strong>high gross revenue but low net revenue</strong> has a significant refund problem. Compare against channel costs to find <strong>true profitability</strong>.</div></div>
+<div class="related-links"><a class="related-link" href="#ov-ch">Channel Doughnut</a><a class="related-link" href="#fc-ord">FC Orders</a><a class="related-link" href="#sal-ch">Channel Rev</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="fc-net">
-<div class="doc-title"><span>15. Fulfillment Channel Net Revenue <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Net revenue (gross minus refunds) broken down by fulfillment channel.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">For each fulfillment channel, net revenue is calculated and displayed as a bar. Shows which channels contribute most profitably.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Net Revenue by Channel = SUM(gross_revenue - refund_amount) GROUP BY fulfillment_channel</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>channel</code> — Fulfillment channel name</li><li><code>net_revenue</code> — Revenue after refunds</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Highlights the most profitable channels when returns are factored in.</div></div>
+<div class="sec" data-category="chart" id="fc-ord">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">16</span>
+<span class="sec-title">Fulfillment Orders</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Number of orders processed per fulfillment channel.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Orders are counted per fulfillment channel and displayed as bars for volume comparison.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Orders by Channel = COUNT(order_id) GROUP BY fulfillment_channel')">Copy</button></div><div class="sec-card-body"><code>Orders by Channel = COUNT(order_id) GROUP BY fulfillment_channel</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>channel</code> — Fulfillment channel name</li><li><code>orders</code> — Order count</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Compare against <strong>Channel Revenue</strong> chart to see if high-volume channels also generate proportionally high revenue. Discrepancy = low AOV channel.</div></div>
+<div class="related-links"><a class="related-link" href="#fc-net">FC Net Rev</a><a class="related-link" href="#ov-ch">Channel Doughnut</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="fc-ord">
-<div class="doc-title"><span>16. Fulfillment Orders <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Number of orders per fulfillment channel.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Orders are counted per fulfillment channel and displayed as bars.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Orders by Channel = COUNT(order_id) GROUP BY fulfillment_channel</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>channel</code> — Fulfillment channel name</li><li><code>orders</code> — Order count</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Reveals order volume distribution across channels — which channels handle the most orders.</div></div>
+<div class="sec" data-category="chart" id="tax-st">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">17</span>
+<span class="sec-title">Tax by State</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total tax collected broken down by state.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Tax amounts (IGST + CGST + SGST) are aggregated per state and shown as bars. Higher bars = more tax collected in that state.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Tax by State = SUM(igst + cgst + sgst) GROUP BY billing_state')">Copy</button></div><div class="sec-card-body"><code>Tax by State = SUM(igst + cgst + sgst) GROUP BY billing_state</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>state</code> — State name</li><li><code>tax</code> — Total tax amount collected</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Matches <strong>state revenue distribution</strong> (chart 9). Large differences between revenue share and tax share may indicate <strong>different product mixes</strong> with varying tax rates.</div></div>
+<div class="insight-box warning"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Ensure <strong>GST compliance</strong> in states with high tax collection. If a state has anomalously low tax vs. revenue, check for <strong>misclassified HSN codes or tax exemptions</strong>.</div></div>
+<div class="related-links"><a class="related-link" href="#tax-hsn">Tax/HSN</a><a class="related-link" href="#tax-total">Total Tax</a><a class="related-link" href="#tax-eff-rate">Eff Tax Rate</a></div>
+</div>
 </div>
 
-<!-- ── Tax Tab ── -->
-
-<div class="doc-section" id="tax-st">
-<div class="doc-title"><span>17. Tax by State <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Total tax collected broken down by state.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Tax amounts (IGST + CGST + SGST) are aggregated per state and shown as bars.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Tax by State = SUM(igst + cgst + sgst) GROUP BY state</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>state</code> — State name</li><li><code>tax</code> — Total tax amount collected</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Helps understand tax liability distribution across states for compliance and reporting.</div></div>
+<div class="sec" data-category="chart" id="tax-hsn">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">18</span>
+<span class="sec-title">Tax by HSN Code</span>
+<span class="sec-badge badge-chart">Bar Chart</span>
+<span class="sec-toggle">&#9660;</span>
 </div>
-
-<div class="doc-section" id="tax-hsn">
-<div class="doc-title"><span>18. Tax by HSN Code <span class="chart-type">Bar Chart</span></span></div>
-<p class="doc-sub">Tax amounts grouped by HSN (Harmonized System of Nomenclature) code.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Tax is aggregated per HSN code and displayed as bars. Shows which product categories contribute the most tax.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Tax by HSN = SUM(tax_amount) GROUP BY hsn_code</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>hsn</code> — HSN code</li><li><code>tax</code> — Total tax amount</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Useful for tax planning and understanding which product categories drive tax liability.</div></div>
+<div class="sec-body">
+<p class="sec-desc">Tax amounts grouped by HSN code. Shows which product categories contribute the most tax.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label"><span class="sec-card-icon">&#9881;</span> How It Works</div><div class="sec-card-body">Tax is aggregated per HSN code and displayed as bars.</div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#119808;</span> Formula <button class="copy-btn" onclick="copyFormula(this, 'Tax by HSN = SUM(tax_amount) GROUP BY hsn_code')">Copy</button></div><div class="sec-card-body"><code>Tax by HSN = SUM(tax_amount) GROUP BY hsn_code</code></div></div>
+<div class="sec-card"><div class="sec-card-label"><span class="sec-card-icon">&#128202;</span> Data Used</div><div class="sec-card-body"><ul><li><code>hsn</code> — HSN code</li><li><code>tax</code> — Total tax amount</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What to Look For</div><div class="insight-text">Check if HSN codes align with <strong>actual product categories</strong>. Mismatches can lead to <strong>tax notice risks</strong>. If an HSN appears with 0% tax, verify it's correctly classified.</div></div>
+<div class="insight-box warning"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Regularly audit HSN codes for <strong>correct classification</strong>. Incorrect HSN assignment can result in <strong>penalties during GST audits</strong>. Fix missing HSN codes urgently.</div></div>
+<div class="related-links"><a class="related-link" href="#tax-st">Tax/State</a><a class="related-link" href="#tax-missing-hsn">Missing HSN</a><a class="related-link" href="#tab-hsn">HSN Table</a></div>
+</div>
 </div>
 
 <hr class="doc-divider">
 
-<!-- ── KPI CARDS ── -->
+<!-- ═══════════════════════ KPIs ═══════════════════════ -->
+
 <div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Key Performance Indicators (KPIs)</h3>
-<p style="font-size:11px;color:var(--text-muted);margin-top:4px">The top-level stat cards on the Sales Analytics dashboard showing high-level business metrics.</p></div>
+<p style="font-size:11px;color:var(--text-muted);margin-top:4px">Top-level stat cards on the Sales Analytics dashboard. These are your most important business health metrics.</p></div>
 
-<div class="doc-section" id="kpi-gross-rev">
-<div class="doc-title"><span>Gross Revenue <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Total invoice amount before any deductions — the top-line sales figure.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Aggregates the sum of all invoice amounts in the selected date range, before subtracting refunds, discounts, or taxes.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Gross Revenue = SUM(invoice_amount) WHERE status = 'Shipped'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>invoice_amount</code> — Total amount on the invoice</li><li><code>order_status</code> — Must be shipped</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Measures the overall sales volume. A key input for net revenue and refund rate calculations.</div></div>
+<div class="sec" data-category="kpi" id="kpi-gross-rev">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K1</span>
+<span class="sec-title">Gross Revenue</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total invoice amount before any deductions — the top-line sales figure.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Aggregates the sum of all invoice amounts in the selected date range, before subtracting refunds, discounts, or taxes.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Gross Revenue = SUM(invoice_amount) WHERE status = Shipped')">Copy</button></div><div class="sec-card-body"><code>Gross Revenue = SUM(invoice_amount) WHERE status = 'Shipped'</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>invoice_amount</code> — Total amount</li><li><code>order_status</code> — Must be shipped</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Compare against <strong>previous period</strong> and <strong>same period last year</strong>. A healthy business shows consistent growth.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">Use this as your <strong>north star metric</strong>. If declining, check: order volume drop (demand issue), AOV drop (pricing/mix issue), or refund spike (quality issue).</div></div>
+<div class="related-links"><a class="related-link" href="#ov-mon">Monthly Revenue Chart</a><a class="related-link" href="#kpi-net-rev">Net Revenue</a><a class="related-link" href="#kpi-aov">AOV</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-net-rev">
-<div class="doc-title"><span>Net Revenue <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Revenue retained after deducting refunds from gross revenue.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Refund amounts are subtracted from gross revenue to show the actual money retained from sales.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Net Revenue = Gross Revenue - Total Refund Amount</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>gross_revenue</code> — Total invoiced amount</li><li><code>refund_amount</code> — Amount refunded</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">The true revenue figure after returns. Used for profitability analysis.</div></div>
+<div class="sec" data-category="kpi" id="kpi-net-rev">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K2</span>
+<span class="sec-title">Net Revenue</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Revenue retained after deducting refunds from gross revenue. The true revenue figure.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Refund amounts are subtracted from gross revenue to show actual money retained from sales.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Net Revenue = Gross Revenue - Total Refund Amount')">Copy</button></div><div class="sec-card-body"><code>Net Revenue = Gross Revenue - Total Refund Amount</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>gross_revenue</code> — Total invoiced amount</li><li><code>refund_amount</code> — Amount refunded</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Should be <strong>85-95% of gross revenue</strong> depending on industry. If Net/Gross ratio drops below 80%, investigate refund causes urgently.</div></div>
+<div class="related-links"><a class="related-link" href="#kpi-gross-rev">Gross Revenue</a><a class="related-link" href="#kpi-refund">Refund Loss</a><a class="related-link" href="#exec-leakage">Rev Leakage</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-refund">
-<div class="doc-title"><span>Refund Loss <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Total amount refunded to customers in the selected period.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Aggregates all refund transaction amounts. Represents the total revenue that was returned to customers.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Refund Loss = SUM(refund_amount) WHERE transaction_type = 'Refund'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>refund_amount</code> — Amount refunded per transaction</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Quantifies revenue leakage. High refund loss indicates product quality, fulfillment, or customer satisfaction issues.</div></div>
+<div class="sec" data-category="kpi" id="kpi-refund">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K3</span>
+<span class="sec-title">Refund Loss</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total amount refunded to customers in the selected period.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Aggregates all refund transaction amounts. Represents total revenue returned to customers.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Refund Loss = SUM(refund_amount) WHERE type = Refund')">Copy</button></div><div class="sec-card-body"><code>Refund Loss = SUM(refund_amount) WHERE transaction_type = 'Refund'</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>refund_amount</code> — Amount refunded</li></ul></div></div>
+</div>
+<div class="insight-box danger"><div class="insight-label">&#9888; Red Flag</div><div class="insight-text">Any <strong>sudden increase</strong> in refund loss is a red flag. Investigate immediately: check for product defects, delivery damage, listing accuracy, or fraudulent returns.</div></div>
+<div class="related-links"><a class="related-link" href="#kpi-gross-rev">Gross Revenue</a><a class="related-link" href="#kpi-refund-rate">Refund Rate</a><a class="related-link" href="#kpi-net-rev">Net Revenue</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-orders">
-<div class="doc-title"><span>Shipped Orders <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Number of orders successfully shipped to customers.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Counts distinct orders where the status is marked as shipped within the selected period.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Shipped Orders = COUNT(DISTINCT order_id) WHERE status = 'Shipped'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>order_id</code> — Unique order identifier</li><li><code>status</code> — Order status</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Indicates sales volume in terms of fulfilled orders. Used to compute AOV and shipment rate.</div></div>
+<div class="sec" data-category="kpi" id="kpi-orders">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K4</span>
+<span class="sec-title">Shipped Orders</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Number of orders successfully shipped to customers.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Counts distinct orders where the status is marked as shipped within the selected period.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Shipped Orders = COUNT(DISTINCT order_id) WHERE status = Shipped')">Copy</button></div><div class="sec-card-body"><code>Shipped Orders = COUNT(DISTINCT order_id) WHERE status = 'Shipped'</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>order_id</code> — Unique order identifier</li><li><code>status</code> — Order status</li></ul></div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#kpi-units">Total Units</a><a class="related-link" href="#kpi-aov">AOV</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-units">
-<div class="doc-title"><span>Total Units <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Total quantity of individual units sold across all shipped orders.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Sums up the quantity field for all shipped order lines.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Total Units = SUM(quantity) WHERE order_status = 'Shipped'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>quantity</code> — Units per line item</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Measures true product volume independent of order count. Helps compute average units per order.</div></div>
+<div class="sec" data-category="kpi" id="kpi-units">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K5</span>
+<span class="sec-title">Total Units</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total quantity of individual units sold across all shipped orders.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Sums up the quantity field for all shipped order lines.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Total Units = SUM(quantity) WHERE status = Shipped')">Copy</button></div><div class="sec-card-body"><code>Total Units = SUM(quantity) WHERE order_status = 'Shipped'</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>quantity</code> — Units per line item</li></ul></div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#kpi-orders">Shipped Orders</a><a class="related-link" href="#kpi-aov">AOV</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-aov">
-<div class="doc-title"><span>Average Order Value (AOV) <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Average revenue generated per shipped order.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Gross revenue is divided by the number of shipped orders.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>AOV = Gross Revenue / Shipped Orders</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>gross_revenue</code> — Total invoiced amount</li><li><code>shipped_orders</code> — Count of shipped orders</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Higher AOV indicates customers are buying more per order. Useful for pricing and bundling strategies.</div></div>
+<div class="sec" data-category="kpi" id="kpi-aov">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K6</span>
+<span class="sec-title">Average Order Value (AOV)</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Average revenue generated per shipped order.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Gross revenue is divided by the number of shipped orders.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'AOV = Gross Revenue / Shipped Orders')">Copy</button></div><div class="sec-card-body"><code>AOV = Gross Revenue / Shipped Orders</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>gross_revenue</code> — Total invoiced amount</li><li><code>shipped_orders</code> — Count of shipped orders</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Higher AOV indicates customers are buying more per order. Track AOV trends alongside Gross Revenue to understand if growth comes from more orders or bigger orders.</div></div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text">To increase AOV: introduce <strong>product bundles</strong>, <strong>volume discounts</strong>, <strong>free shipping thresholds</strong>, or <strong>upsells</strong> at checkout.</div></div>
+<div class="related-links"><a class="related-link" href="#kpi-gross-rev">Gross Revenue</a><a class="related-link" href="#kpi-orders">Shipped Orders</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-refund-rate">
-<div class="doc-title"><span>Refund Rate <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Percentage of shipped orders that resulted in a refund.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Refunded orders are divided by total shipped orders and converted to a percentage.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Refund Rate = (Refunded Orders / Shipped Orders) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>refunded_orders</code> — Orders with refunds</li><li><code>shipped_orders</code> — Orders shipped</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">A critical quality metric. High refund rates indicate product, delivery, or customer satisfaction issues requiring attention.</div></div>
+<div class="sec" data-category="kpi" id="kpi-refund-rate">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K7</span>
+<span class="sec-title">Refund Rate</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of shipped orders that resulted in a refund.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Refunded orders are divided by total shipped orders and converted to a percentage.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Refund Rate = (Refunded Orders / Shipped Orders) * 100')">Copy</button></div><div class="sec-card-body"><code>Refund Rate = (Refunded Orders / Shipped Orders) &times; 100</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>refunded_orders</code> — Orders with refunds</li><li><code>shipped_orders</code> — Orders shipped</li></ul></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Target <strong>&lt;5%</strong> refund rate. Above 10% requires urgent attention. Above 20% indicates critical product or logistics issues.</div></div>
+<div class="insight-box danger"><div class="insight-label">&#9888; Red Flag</div><div class="insight-text">If refund rate <strong>doubles</strong> compared to previous period, investigate: product quality, packaging damage, listing accuracy, or delivery partner issues.</div></div>
+<div class="related-links"><a class="related-link" href="#kpi-refund">Refund Loss</a><a class="related-link" href="#kpi-net-rev">Net Revenue</a><a class="related-link" href="#tab-refund-risk">Refund Risk Tables</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="kpi-tax">
-<div class="doc-title"><span>Total Tax <span class="chart-type">KPI</span></span></div>
-<p class="doc-sub">Total tax amount collected across all transactions.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Aggregates all tax components (IGST + CGST + SGST) from all shipped transactions.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Total Tax = SUM(igst_amount + cgst_amount + sgst_amount)</code></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns / Data Used</div><div class="doc-block-content"><ul><li><code>igst_amount</code> — Integrated GST</li><li><code>cgst_amount</code> — Central GST</li><li><code>sgst_amount</code> — State GST</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Shows the total tax liability. Useful for GST compliance and cash flow planning.</div></div>
+<div class="sec" data-category="kpi" id="kpi-tax">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">K8</span>
+<span class="sec-title">Total Tax</span>
+<span class="sec-badge badge-kpi">KPI</span>
+<span class="sec-toggle">&#9660;</span>
 </div>
-
-<hr class="doc-divider">
-
-<!-- ── TRANSACTION MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Transaction Quality &amp; Health Metrics</h3>
-<p style="font-size:11px;color:var(--text-muted);margin-top:4px">Mini-stats in the Transactions tab showing order health and data quality indicators.</p></div>
-
-<div class="doc-section" id="tx-total-ords">
-<div class="doc-title"><span>Total Orders <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Total count of all orders placed including shipped, refunded, and cancelled.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Counts every unique order ID in the system for the selected filters.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Total Orders = COUNT(DISTINCT order_id)</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Baseline metric that all other transaction rates are calculated from.</div></div>
+<div class="sec-body">
+<p class="sec-desc">Total tax amount collected across all transactions.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Aggregates all tax components (IGST + CGST + SGST) from all shipped transactions.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Total Tax = SUM(igst_amount + cgst_amount + sgst_amount)')">Copy</button></div><div class="sec-card-body"><code>Total Tax = SUM(igst_amount + cgst_amount + sgst_amount)</code></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Data Used</div><div class="sec-card-body"><ul><li><code>igst_amount</code> — Integrated GST</li><li><code>cgst_amount</code> — Central GST</li><li><code>sgst_amount</code> — State GST</li></ul></div></div>
 </div>
-
-<div class="doc-section" id="tx-shipped">
-<div class="doc-title"><span>Shipped <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Orders successfully fulfilled and shipped.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Shipped = COUNT(DISTINCT order_id) WHERE status = 'Shipped'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Reflects fulfillment efficiency. Combined with Total Orders gives the shipment rate.</div></div>
+<div class="related-links"><a class="related-link" href="#tax-eff-rate">Eff Tax Rate</a><a class="related-link" href="#tax-igst">IGST</a><a class="related-link" href="#tax-cgst">CGST+SGST</a></div>
 </div>
-
-<div class="doc-section" id="tx-refunded">
-<div class="doc-title"><span>Refunded <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Orders where a refund was issued after shipment.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Refunded = COUNT(DISTINCT order_id) WHERE refund_amount > 0</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Direct measure of returns. High value suggests product or delivery issues.</div></div>
-</div>
-
-<div class="doc-section" id="tx-cancelled">
-<div class="doc-title"><span>Cancelled <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Orders cancelled before shipment.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Cancelled = COUNT(DISTINCT order_id) WHERE status = 'Cancelled'</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">High cancellation rates may indicate pricing issues, stock unavailability, or customer hesitation.</div></div>
-</div>
-
-<div class="doc-section" id="tx-net-rate">
-<div class="doc-title"><span>Net Shipment Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of orders successfully shipped.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Net Shipment Rate = (Shipped / Total Orders) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Overall fulfillment effectiveness. A low rate indicates many orders are being cancelled or lost.</div></div>
-</div>
-
-<div class="doc-section" id="tx-ref-rate">
-<div class="doc-title"><span>Refund Rate (Transactions) <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of shipped orders refunded.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Refund Rate = (Refunded / Shipped) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Same as the KPI refund rate but from the transaction perspective. Helps isolate transaction-level issues.</div></div>
-</div>
-
-<div class="doc-section" id="tx-can-rate">
-<div class="doc-title"><span>Cancel Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of total orders cancelled.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Cancel Rate = (Cancelled / Total Orders) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Helps measure the effectiveness of the order-to-fulfillment process.</div></div>
-</div>
-
-<div class="doc-section" id="tx-same-day">
-<div class="doc-title"><span>Same-Day Refunds <span class="chart-type">Anomaly</span></span></div>
-<p class="doc-sub">Orders refunded on the same day they were placed.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Compares order date with refund date. Any refund occurring on the same date as the order is flagged.</div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">May indicate fraudulent activity, system errors, or abuse of return policies. Worth investigating.</div></div>
-</div>
-
-<div class="doc-section" id="tx-return-loops">
-<div class="doc-title"><span>Return Loops <span class="chart-type">Anomaly</span></span></div>
-<p class="doc-sub">Orders that went through multiple return/refund cycles.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Identifies orders with more than one refund transaction associated with them.</div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Could indicate customer abuse, product quality issues, or systemic processing errors.</div></div>
-</div>
-
-<div class="doc-section" id="tx-multi-refund">
-<div class="doc-title"><span>Multi-Refund Orders <span class="chart-type">Anomaly</span></span></div>
-<p class="doc-sub">Orders where the refund was processed more than once.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Potential double-refund scenario that needs investigation to prevent revenue leakage.</div></div>
-</div>
-
-<div class="doc-section" id="tx-dup-inv">
-<div class="doc-title"><span>Duplicate Invoices <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Count of invoice numbers that appear multiple times.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">Groups rows by invoice number and counts those with more than one occurrence.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Duplicate Invoices = COUNT(invoice_number) HAVING COUNT > 1</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Data integrity issue. Duplicate invoice numbers can cause accounting and tax filing problems.</div></div>
 </div>
 
 <hr class="doc-divider">
 
-<!-- ── PRODUCT MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Product &amp; SKU Metrics</h3></div>
+<!-- ═══════════════════════ TABLES ═══════════════════════ -->
 
-<div class="doc-section" id="prod-pareto">
-<div class="doc-title"><span>Pareto SKUs <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Number of SKUs that contribute to 80% of total net revenue.</p>
-<div class="doc-block"><div class="doc-block-label">How It Works</div><div class="doc-block-content">SKUs are sorted by net revenue descending. The smallest set of SKUs whose cumulative revenue reaches 80% of total is counted.</div></div>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Pareto Count = MIN(n) WHERE SUM(top_n_SKUs_revenue) >= 0.8 × Total_Net_Revenue</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">A low Pareto count means a few SKUs drive most revenue (80/20 rule). Helps focus inventory and marketing on top performers.</div></div>
-</div>
-
-<div class="doc-section" id="prod-total-net">
-<div class="doc-title"><span>Total Net Revenue <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Sum of net revenue across all SKUs.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Total Net Revenue = SUM(gross_revenue - refund_amount) GROUP BY SKU</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Same as the KPI net revenue but shown within the Products tab for context.</div></div>
-</div>
-
-<hr class="doc-divider">
-
-<!-- ── GEOGRAPHY MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Geography Metrics</h3></div>
-
-<div class="doc-section" id="geo-inter-pct">
-<div class="doc-title"><span>Interstate % <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of shipments going to different states (cross-border).</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Interstate % = (Interstate Shipments / Total Shipments) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">High interstate % means most sales cross state lines. Subject to IGST and longer shipping times.</div></div>
-</div>
-
-<div class="doc-section" id="geo-intra-pct">
-<div class="doc-title"><span>Intrastate % <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of shipments within the same state.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Intrastate % = (Intrastate Shipments / Total Shipments) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Higher intrastate % indicates strong local demand. Subject to CGST + SGST.</div></div>
-</div>
-
-<hr class="doc-divider">
-
-<!-- ── TAX MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Tax &amp; Compliance Metrics</h3></div>
-
-<div class="doc-section" id="tax-total">
-<div class="doc-title"><span>Total Tax <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Sum of all tax collected across transactions.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Total Tax = SUM(igst + cgst + sgst)</code></div></div>
-</div>
-
-<div class="doc-section" id="tax-eff-rate">
-<div class="doc-title"><span>Effective Tax Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Overall tax rate as a percentage of gross revenue.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Effective Tax Rate = (Total Tax / Gross Revenue) × 100</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Should align with expected GST rates. Deviations may indicate tax filing or classification issues.</div></div>
-</div>
-
-<div class="doc-section" id="tax-igst">
-<div class="doc-title"><span>IGST (Interstate) <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Integrated GST collected on cross-state transactions.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Tax component for interstate sales. Higher IGST relative to CGST+SGST indicates more cross-state business.</div></div>
-</div>
-
-<div class="doc-section" id="tax-cgst">
-<div class="doc-title"><span>CGST + SGST (Intrastate) <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Central GST + State GST collected on same-state transactions.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Tax component for intrastate sales. Higher values indicate strong local market presence.</div></div>
-</div>
-
-<div class="doc-section" id="tax-missing-hsn">
-<div class="doc-title"><span>Missing HSN Rows <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Transaction rows where HSN code is missing.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Data quality issue for GST compliance. HSN codes are mandatory for tax filing. Should be resolved promptly.</div></div>
-</div>
-
-<hr class="doc-divider">
-
-<!-- ── DATA QUALITY MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Data Quality Metrics</h3></div>
-
-<div class="doc-section" id="dq-avg-qty">
-<div class="doc-title"><span>Avg Qty/Order <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Average number of units per order.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Avg Qty/Order = Total Units / Total Orders</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Indicates bulk buying behavior. Higher values may suggest wholesale or B2B purchases.</div></div>
-</div>
-
-<div class="doc-section" id="dq-missing-inv">
-<div class="doc-title"><span>Missing Invoice # <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Orders where the invoice number field is blank.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Critical data quality issue. Missing invoice numbers can block GST filing and reconciliation.</div></div>
-</div>
-
-<div class="doc-section" id="dq-missing-wh">
-<div class="doc-title"><span>Missing Warehouse ID <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Orders without a warehouse identifier.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Operational data quality issue. Hinders warehouse performance tracking and logistics analysis.</div></div>
-</div>
-
-<div class="doc-section" id="dq-zero-amt">
-<div class="doc-title"><span>Zero-Amt Shipments <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Shipments recorded with zero invoice amount.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Likely data entry errors. These should be reviewed and corrected to ensure accurate revenue reporting.</div></div>
-</div>
-
-<div class="doc-section" id="dq-neg-amt">
-<div class="doc-title"><span>Negative Amt (Non-Refund) <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Transactions with negative amounts that are not refunds.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Data anomalies. Negative non-refund amounts may indicate system errors or data corruption.</div></div>
-</div>
-
-<div class="doc-section" id="dq-orphan">
-<div class="doc-title"><span>Orphan Refunds <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Refund records that cannot be matched to any original order.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Data integrity issue. Orphan refunds mean money was refunded without a corresponding sale, which is a compliance risk.</div></div>
-</div>
-
-<div class="doc-section" id="dq-dup-inv">
-<div class="doc-title"><span>Duplicate Invoice Groups <span class="chart-type">Data Quality</span></span></div>
-<p class="doc-sub">Groups of transactions sharing the same invoice number.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Duplicate invoices can cause incorrect revenue aggregation and GST filing errors. Should be investigated.</div></div>
-</div>
-
-<hr class="doc-divider">
-
-<!-- ── EXECUTIVE MINI-STATS ── -->
-<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Executive Summary Metrics</h3></div>
-
-<div class="doc-section" id="exec-gross">
-<div class="doc-title"><span>Executive Gross Revenue <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Same as top-level Gross Revenue KPI, shown in Executive tab for quick reference.</p>
-</div>
-
-<div class="doc-section" id="exec-net">
-<div class="doc-title"><span>Executive Net Revenue <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Same as top-level Net Revenue KPI, shown in Executive tab.</p>
-</div>
-
-<div class="doc-section" id="exec-leakage">
-<div class="doc-title"><span>Revenue Leakage <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Total amount lost to refunds and returns.</p>
-<div class="doc-block"><div class="doc-block-label">Formula</div><div class="doc-block-content"><code>Revenue Leakage = Gross Revenue - Net Revenue</code></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Executive-level view of money lost to refunds. Critical for profitability assessment.</div></div>
-</div>
-
-<div class="doc-section" id="exec-ref-rate">
-<div class="doc-title"><span>Executive Refund Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Same as refund rate KPI, shown in Executive tab for quick reference.</p>
-</div>
-
-<div class="doc-section" id="exec-net-ship-rate">
-<div class="doc-title"><span>Net Shipment Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Percentage of orders successfully shipped without refund. Key operational health metric.</p>
-</div>
-
-<div class="doc-section" id="exec-tax-rate">
-<div class="doc-title"><span>Effective Tax Rate <span class="chart-type">Metric</span></span></div>
-<p class="doc-sub">Overall effective tax rate shown in Executive tab.</p>
-</div>
-
-<div class="doc-section" id="exec-top-sku">
-<div class="doc-title"><span>Top SKU <span class="chart-type">Insight</span></span></div>
-<p class="doc-sub">The single highest revenue-generating SKU.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies the most important product in the portfolio. Helps prioritize inventory and marketing.</div></div>
-</div>
-
-<div class="doc-section" id="exec-top-state">
-<div class="doc-title"><span>Top State <span class="chart-type">Insight</span></span></div>
-<p class="doc-sub">The state generating the highest revenue.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Identifies the most valuable geographic market. Useful for regional strategy and warehousing decisions.</div></div>
-</div>
-
-<hr class="doc-divider">
-
-<!-- ── TABLE SECTIONS ── -->
 <div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Tables &amp; Data Grids</h3>
-<p style="font-size:11px;color:var(--text-muted);margin-top:4px">Detailed tabular views across all dashboard tabs.</p></div>
+<p style="font-size:11px;color:var(--text-muted);margin-top:4px">Detailed tabular views across all dashboard tabs. These provide granular data behind the charts.</p></div>
 
-<div class="doc-section" id="tab-gstin">
-<div class="doc-title"><span>GSTIN Revenue Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Revenue and orders broken down by GSTIN (GST Identification Number).</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>GSTIN</code> — GST Identification Number of the customer</li><li><code>Revenue</code> — Total revenue from that GSTIN</li><li><code>Orders</code> — Number of orders from that GSTIN</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Helps track B2B vs B2C performance. B2B customers typically have a GSTIN and higher order values.</div></div>
+<div class="sec" data-category="table" id="tab-gstin">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T1</span>
+<span class="sec-title">GSTIN Revenue Table</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Revenue and orders broken down by GSTIN (GST Identification Number).</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>GSTIN</code> — GST Identification Number</li><li><code>Revenue</code> — Total revenue</li><li><code>Orders</code> — Order count</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128161; What It Tells You</div><div class="sec-card-body">Helps track <strong>B2B vs B2C</strong> performance. B2B customers typically have a GSTIN and higher order values. Filterable by portal.</div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#tab-cancel-ship">Cancel-to-Ship Table</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-dup-inv">
-<div class="doc-title"><span>Duplicate Invoices Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Invoice numbers that appear more than once and their occurrence count.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>Invoice Number</code> — The duplicated invoice</li><li><code>Count</code> — How many times it appears</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Helps identify and fix data entry or system issues causing invoice duplication.</div></div>
+<div class="sec" data-category="table" id="tab-cancel-ship">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T2</span>
+<span class="sec-title">Cancel-to-Ship Ratio Table</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Comparison of cancelled vs shipped orders per GSTIN with cancel rate.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>GSTIN</code> — GST Identification Number</li><li><code>Cancels</code> — Cancelled order count</li><li><code>Ships</code> — Shipped order count</li><li><code>Cancel Rate</code> — Cancel / (Cancel + Ship) &times; 100</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128161; What It Tells You</div><div class="sec-card-body">High cancel rates for specific GSTINs may indicate <strong>customer segments with low commitment</strong> or <strong>systematic issues</strong> with certain buyer types.</div></div>
+</div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-cancel-ship">
-<div class="doc-title"><span>Cancel-to-Ship Ratio Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Comparison of cancelled vs shipped orders per GSTIN with cancel rate.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>GSTIN</code> — GST Identification Number</li><li><code>Cancels</code> — Cancelled order count</li><li><code>Ships</code> — Shipped order count</li><li><code>Cancel Rate</code> — Cancel / (Cancel + Ship) × 100</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-sku-perf">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T3</span>
+<span class="sec-title">SKU Performance Table</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Detailed performance metrics for each SKU: revenue, refunds, units, and rates.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Gross Rev</code> — Revenue before refunds</li><li><code>Refund</code> — Refund amount</li><li><code>Net Rev</code> — Revenue after refunds</li><li><code>Units</code> — Quantity sold</li><li><code>Refund Rate</code> — Refund / Gross &times; 100</li><li><code>Tax Rate</code> — Tax / Gross &times; 100</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128161; What It Tells You</div><div class="sec-card-body">Sort by refund rate to find <strong>problem products</strong>. Sort by net revenue to find <strong>top performers</strong>. Use for <strong>inventory and pricing decisions</strong>.</div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#p-sku">Top SKUs Chart</a><a class="related-link" href="#tab-refund-risk">Refund Risk Tables</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-sku-perf">
-<div class="doc-title"><span>SKU Performance Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Detailed performance metrics for each SKU.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Gross Rev</code> — Gross revenue before refunds</li><li><code>Refund</code> — Refund amount</li><li><code>Net Rev</code> — Revenue after refunds</li><li><code>Units</code> — Quantity sold</li><li><code>Refund Rate</code> — Refund / Gross × 100</li><li><code>Tax Rate</code> — Tax / Gross × 100</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-refund-risk">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T4</span>
+<span class="sec-title">Zero-Refund &amp; High-Refund Risk</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Two tables: SKUs with no refunds (restock candidates) and SKUs with high refund rates (quality concerns).</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (Zero-Refund)</div><div class="sec-card-body"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Net Rev</code> — Net revenue</li><li><code>Units</code> — Quantity sold</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (High-Refund)</div><div class="sec-card-body"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Refund Rate</code> — Percentage refunded</li><li><code>Units</code> — Quantity sold</li></ul></div></div>
+</div>
+<div class="insight-box success"><div class="insight-label">&#9889; Actionable Insights</div><div class="insight-text"><strong>Zero-refund SKUs</strong> = Restock confidently. <strong>High-refund SKUs</strong> = Investigate quality, listing accuracy, or packaging issues. Consider delisting if refund rate exceeds 20%.</div></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-refund-risk">
-<div class="doc-title"><span>Zero-Refund &amp; High-Refund Risk <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Two tables: SKUs with no refunds (restock candidates) and SKUs with high refund rates (quality concerns).</p>
-<div class="doc-block"><div class="doc-block-label">Columns (Zero-Refund)</div><div class="doc-block-content"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Net Rev</code> — Net revenue</li><li><code>Units</code> — Quantity sold</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns (High-Refund)</div><div class="doc-block-content"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Refund Rate</code> — Percentage refunded</li><li><code>Units</code> — Quantity sold</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-hsn">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T5</span>
+<span class="sec-title">Top HSN Codes Table</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">HSN codes ranked by taxable revenue.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>HSN</code> — Harmonized System Nomenclature code</li><li><code>Taxable Revenue</code> — Revenue subject to tax</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128161; What It Tells You</div><div class="sec-card-body">Use to <strong>audit HSN classification</strong>. Ensure products are mapped to correct HSN codes for GST compliance.</div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#tax-hsn">Tax/HSN Chart</a><a class="related-link" href="#tax-missing-hsn">Missing HSN</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-hsn">
-<div class="doc-title"><span>Top HSN Codes Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">HSN codes ranked by taxable revenue.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>HSN</code> — Harmonized System Nomenclature code</li><li><code>Taxable Revenue</code> — Revenue subject to tax</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-state-perf">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T6</span>
+<span class="sec-title">State-wise Performance Table</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders, revenue, refunds, and net revenue broken down by state.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>State</code> — State name</li><li><code>Orders</code> — Order count</li><li><code>Revenue</code> — Gross revenue</li><li><code>Refund</code> — Refund amount</li><li><code>Net Revenue</code> — Revenue after refunds</li><li><code>Refund Rate</code> — Refund / Revenue &times; 100</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128161; What It Tells You</div><div class="sec-card-body">Identify states with <strong>high refund rates</strong> despite high revenue. Those need logistics or product attention.</div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#ov-st">Top States Chart</a><a class="related-link" href="#geo-net">States Net Rev</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-state-perf">
-<div class="doc-title"><span>State-wise Performance Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Orders, revenue, refunds, and net revenue broken down by state.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>State</code> — State name</li><li><code>Orders</code> — Order count</li><li><code>Revenue</code> — Gross revenue</li><li><code>Refund</code> — Refund amount</li><li><code>Net Revenue</code> — Revenue after refunds</li><li><code>Refund Rate</code> — Refund / Revenue × 100</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-routes">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T7</span>
+<span class="sec-title">Routes &amp; High-Refund Routes</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shipping routes by volume/revenue and routes with high refund counts.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (Routes)</div><div class="sec-card-body"><ul><li><code>From</code> — Origin state</li><li><code>To</code> — Destination state</li><li><code>Volume</code> — Number of shipments</li><li><code>Revenue</code> — Total revenue</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (Refund Routes)</div><div class="sec-card-body"><ul><li><code>From</code> — Origin state</li><li><code>To</code> — Destination state</li><li><code>Refunds</code> — Refund count</li></ul></div></div>
+</div>
+<div class="insight-box warning"><div class="insight-label">&#9888; Investigate</div><div class="insight-text">Routes with high refund counts indicate <strong>logistics issues</strong> on that specific corridor. Check delivery times, carrier performance, and packaging for those routes.</div></div>
+<div class="related-links"><a class="related-link" href="#shp-rt">Top Routes Chart</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-routes">
-<div class="doc-title"><span>Routes &amp; High-Refund Routes Tables <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Shipping routes by volume/revenue and routes with high refund counts.</p>
-<div class="doc-block"><div class="doc-block-label">Columns (Routes)</div><div class="doc-block-content"><ul><li><code>From</code> — Origin state</li><li><code>To</code> — Destination state</li><li><code>Volume</code> — Number of shipments</li><li><code>Revenue</code> — Total revenue</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns (Refund Routes)</div><div class="doc-block-content"><ul><li><code>From</code> — Origin state</li><li><code>To</code> — Destination state</li><li><code>Refunds</code> — Refund count</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-warehouse">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T8</span>
+<span class="sec-title">Warehouse &amp; Fulfillment Tables</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Warehouse performance metrics and fulfillment channel breakdown.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (Warehouse)</div><div class="sec-card-body"><ul><li><code>Warehouse</code> — Name</li><li><code>Orders</code> — Order count</li><li><code>Revenue</code> — Total revenue</li><li><code>Refund Orders</code> — Refunded count</li><li><code>Refund Rate</code> — Refund / Orders &times; 100</li><li><code>Rev/Order</code> — Revenue per order</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns (Fulfillment)</div><div class="sec-card-body"><ul><li><code>Channel</code> — Fulfillment channel</li><li><code>Orders</code> — Order count</li><li><code>Gross Rev</code> — Gross revenue</li><li><code>Net Rev</code> — Net revenue</li><li><code>Units</code> — Quantity</li><li><code>Refund Rate</code> — Refund percentage</li><li><code>AOV</code> — Average order value</li></ul></div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#wh-bar">Warehouse Chart</a><a class="related-link" href="#fc-net">FC Net Rev</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-warehouse">
-<div class="doc-title"><span>Warehouse &amp; Fulfillment Tables <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">Warehouse performance metrics and fulfillment channel breakdown.</p>
-<div class="doc-block"><div class="doc-block-label">Columns (Warehouse)</div><div class="doc-block-content"><ul><li><code>Warehouse</code> — Warehouse name</li><li><code>Orders</code> — Order count</li><li><code>Revenue</code> — Total revenue</li><li><code>Refund Orders</code> — Refunded order count</li><li><code>Refund Rate</code> — Refund / Orders × 100</li><li><code>Rev/Order</code> — Revenue per order</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">Columns (Fulfillment)</div><div class="doc-block-content"><ul><li><code>Channel</code> — Fulfillment channel</li><li><code>Orders</code> — Order count</li><li><code>Gross Rev</code> — Gross revenue</li><li><code>Net Rev</code> — Net revenue</li><li><code>Units</code> — Quantity</li><li><code>Refund Rate</code> — Refund percentage</li><li><code>AOV</code> — Average order value</li></ul></div></div>
+<div class="sec" data-category="table" id="tab-restock">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T9</span>
+<span class="sec-title">Restock Candidates</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">SKUs with high sales velocity and low refund rates — ideal for restocking.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Units</code> — Quantity sold</li><li><code>Net Revenue</code> — After refunds</li><li><code>Refund Rate</code> — Low refund %</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#9889; Action</div><div class="sec-card-body">Prioritize these SKUs for <strong>inventory replenishment</strong>. They sell well and have minimal returns — lowest risk restocking candidates.</div></div>
+</div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-operations">
-<div class="doc-title"><span>Operational Intelligence <span class="chart-type">Section</span></span></div>
-<p class="doc-sub">High-level operational insights including restock candidates and stockout signals.</p>
+<div class="sec" data-category="table" id="tab-stockout">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T10</span>
+<span class="sec-title">Stockout Signals</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">SKUs that may go out of stock soon based on current sales velocity.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Units</code> — Quantity sold</li><li><code>Net Revenue</code> — After refunds</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#9889; Action</div><div class="sec-card-body">Proactive warning to <strong>reorder before stock runs out</strong>. Delayed restocking of these SKUs leads to lost revenue.</div></div>
+</div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-restock">
-<div class="doc-title"><span>Restock Candidates Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">SKUs with high sales velocity and low refund rates — ideal for restocking.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Units</code> — Quantity sold</li><li><code>Net Revenue</code> — Revenue after refunds</li><li><code>Refund Rate</code> — Low refund percentage</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Prioritise these SKUs for inventory replenishment. They sell well and have minimal returns.</div></div>
+<div class="sec" data-category="table" id="tab-operations">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">T11</span>
+<span class="sec-title">Operational Intelligence</span>
+<span class="sec-badge badge-table">Table</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">High-level operational insights combining restock candidates and stockout signals in one section.</p>
+</div>
 </div>
 
-<div class="doc-section" id="tab-stockout">
-<div class="doc-title"><span>Stockout Signals Table <span class="chart-type">Table</span></span></div>
-<p class="doc-sub">SKUs that may be going out of stock soon based on current velocity.</p>
-<div class="doc-block"><div class="doc-block-label">Columns</div><div class="doc-block-content"><ul><li><code>SKU</code> — Stock Keeping Unit</li><li><code>Units</code> — Quantity sold</li><li><code>Net Revenue</code> — Revenue after refunds</li></ul></div></div>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">Proactive warning to reorder before stock runs out, preventing lost sales.</div></div>
+<hr class="doc-divider">
+
+<!-- ═══════════════════════ METRICS ═══════════════════════ -->
+
+<div style="margin-bottom:14px"><h3 style="font-size:14px;color:var(--gold2)">Dashboard Metrics</h3>
+<p style="font-size:11px;color:var(--text-muted);margin-top:4px">Supporting metrics shown across various dashboard tabs that provide additional context.</p></div>
+
+<div class="sec" data-category="metric" id="tx-total-ords">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M1</span>
+<span class="sec-title">Total Orders</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total count of all orders placed including shipped, refunded, and cancelled.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Total Orders = COUNT(DISTINCT order_id)')">Copy</button></div><div class="sec-card-body"><code>Total Orders = COUNT(DISTINCT order_id)</code></div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#tx-shipped">Shipped</a><a class="related-link" href="#tx-refunded">Refunded</a><a class="related-link" href="#tx-cancelled">Cancelled</a></div>
+</div>
 </div>
 
-<div class="doc-section" id="tab-insights">
-<div class="doc-title"><span>Key Insights <span class="chart-type">Section</span></span></div>
-<p class="doc-sub">Executive summary showing top SKU, top state, top channel, Pareto count, revenue leakage, and net shipment rate.</p>
-<div class="doc-block"><div class="doc-block-label">What It Explains</div><div class="doc-block-content">A bird's-eye view of business health. Combines the most important metrics in one place for quick decision-making.</div></div>
+<div class="sec" data-category="metric" id="tx-shipped">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M2</span>
+<span class="sec-title">Shipped Orders (Metric)</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders successfully fulfilled and shipped.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Shipped = COUNT(DISTINCT order_id) WHERE status = Shipped')">Copy</button></div><div class="sec-card-body"><code>Shipped = COUNT(DISTINCT order_id) WHERE status = 'Shipped'</code></div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tx-refunded">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M3</span>
+<span class="sec-title">Refunded Orders</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders where a refund was issued after shipment.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Refunded = COUNT(DISTINCT order_id) WHERE refund_amount > 0')">Copy</button></div><div class="sec-card-body"><code>Refunded = COUNT(DISTINCT order_id) WHERE refund_amount &gt; 0</code></div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tx-cancelled">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M4</span>
+<span class="sec-title">Cancelled Orders</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders cancelled before shipment.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Cancelled = COUNT(DISTINCT order_id) WHERE status = Cancelled')">Copy</button></div><div class="sec-card-body"><code>Cancelled = COUNT(DISTINCT order_id) WHERE status = 'Cancelled'</code></div></div>
+</div>
+<div class="insight-box warning"><div class="insight-label">&#9888; Watch For</div><div class="insight-text">High cancellation rates may indicate <strong>pricing issues</strong>, <strong>stock unavailability</strong>, or <strong>customer hesitation</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tx-net-rate">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M5</span>
+<span class="sec-title">Net Shipment Rate</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of orders successfully shipped.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Net Shipment Rate = (Shipped / Total Orders) * 100')">Copy</button></div><div class="sec-card-body"><code>Net Shipment Rate = (Shipped / Total Orders) &times; 100</code></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Target <strong>&gt;90%</strong>. Below 80% indicates serious fulfillment issues.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tx-ref-rate">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M6</span>
+<span class="sec-title">Refund Rate (Transactions)</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of shipped orders refunded (transaction perspective).</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Refund Rate (Tx) = (Refunded / Shipped) * 100')">Copy</button></div><div class="sec-card-body"><code>Refund Rate = (Refunded / Shipped) &times; 100</code></div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tx-can-rate">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M7</span>
+<span class="sec-title">Cancel Rate</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of total orders cancelled.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Cancel Rate = (Cancelled / Total Orders) * 100')">Copy</button></div><div class="sec-card-body"><code>Cancel Rate = (Cancelled / Total Orders) &times; 100</code></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128200; Benchmark</div><div class="insight-text">Target <strong>&lt;5%</strong>. Above 10% indicates pricing, stock, or checkout issues.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="prod-pareto">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M8</span>
+<span class="sec-title">Pareto SKUs</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Number of SKUs that contribute to 80% of total net revenue.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">SKUs sorted by net revenue descending. Counts how many top SKUs are needed to reach 80% of total revenue.</div></div>
+<div class="sec-card"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Pareto Count = MIN(n) WHERE SUM(top_n_SKUs) >= 0.8 * Total_Net_Revenue')">Copy</button></div><div class="sec-card-body"><code>Pareto Count = MIN(n) WHERE SUM(top_n_revenue) &ge; 0.8 &times; Total</code></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What It Tells You</div><div class="insight-text"><strong>Low count</strong> (e.g., 5-10) = Few products drive most revenue (high concentration risk). <strong>High count</strong> = Revenue evenly distributed (lower risk but potentially less focus).</div></div>
+<div class="related-links"><a class="related-link" href="#p-sku">Top SKUs Chart</a></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="geo-inter-pct">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M9</span>
+<span class="sec-title">Interstate %</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of shipments going to different states (cross-border).</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Interstate % = (Interstate Shipments / Total Shipments) * 100')">Copy</button></div><div class="sec-card-body"><code>Interstate % = (Interstate Shipments / Total Shipments) &times; 100</code></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What It Tells You</div><div class="insight-text">High interstate % = Most sales cross state lines, subject to IGST and potentially longer shipping times.</div></div>
+<div class="related-links"><a class="related-link" href="#tax-igst">IGST</a></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="geo-intra-pct">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M10</span>
+<span class="sec-title">Intrastate %</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Percentage of shipments within the same state.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Intrastate % = (Intrastate Shipments / Total Shipments) * 100')">Copy</button></div><div class="sec-card-body"><code>Intrastate % = (Intrastate Shipments / Total Shipments) &times; 100</code></div></div>
+</div>
+<div class="related-links"><a class="related-link" href="#tax-cgst">CGST+SGST</a></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tax-eff-rate">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M11</span>
+<span class="sec-title">Effective Tax Rate</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Overall tax rate as a percentage of gross revenue.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Effective Tax Rate = (Total Tax / Gross Revenue) * 100')">Copy</button></div><div class="sec-card-body"><code>Effective Tax Rate = (Total Tax / Gross Revenue) &times; 100</code></div></div>
+</div>
+<div class="insight-box warning"><div class="insight-label">&#9888; Watch For</div><div class="insight-text">Deviations from expected GST rates may indicate <strong>tax filing issues</strong> or <strong>misclassified products</strong>. Investigate if rate changes suddenly.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tax-igst">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M12</span>
+<span class="sec-title">IGST (Interstate Tax)</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Integrated GST collected on cross-state transactions.</p>
+<div class="insight-box info"><div class="insight-label">&#128161; What It Tells You</div><div class="insight-text">Higher IGST relative to CGST+SGST = more cross-state business. Should correlate with Interstate % metric.</div></div>
+<div class="related-links"><a class="related-link" href="#geo-inter-pct">Interstate %</a></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="tax-cgst">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M13</span>
+<span class="sec-title">CGST + SGST (Intrastate Tax)</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Central GST + State GST collected on same-state transactions.</p>
+<div class="insight-box info"><div class="insight-label">&#128161; What It Tells You</div><div class="insight-text">Higher values indicate <strong>strong local market presence</strong>. Should correlate with Intrastate % metric.</div></div>
+<div class="related-links"><a class="related-link" href="#geo-intra-pct">Intrastate %</a></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="exec-leakage">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M14</span>
+<span class="sec-title">Revenue Leakage</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Total amount lost to refunds and returns.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Revenue Leakage = Gross Revenue - Net Revenue')">Copy</button></div><div class="sec-card-body"><code>Revenue Leakage = Gross Revenue - Net Revenue</code></div></div>
+</div>
+<div class="insight-box danger"><div class="insight-label">&#9888; Critical Metric</div><div class="insight-text">Executive-level view of <strong>money lost to refunds</strong>. If leakage exceeds 10-15% of gross revenue, it's a board-level concern.</div></div>
+<div class="related-links"><a class="related-link" href="#kpi-refund">Refund Loss</a><a class="related-link" href="#kpi-net-rev">Net Revenue</a></div>
+</div>
+</div>
+
+<!-- ── Duplicate Invoices Table ── -->
+<div class="sec" data-category="quality" id="tab-dup-inv">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D1</span>
+<span class="sec-title">Duplicate Invoices</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Invoice numbers that appear more than once and their occurrence count.</p>
+<div class="sec-grid">
+<div class="sec-card"><div class="sec-card-label">&#128202; Columns</div><div class="sec-card-body"><ul><li><code>Invoice Number</code> — The duplicated invoice</li><li><code>Count</code> — How many times it appears</li></ul></div></div>
+<div class="sec-card"><div class="sec-card-label">&#9888; Why It Matters</div><div class="sec-card-body">Duplicate invoices cause <strong>incorrect revenue aggregation</strong> and <strong>GST filing errors</strong>. Must be investigated and resolved.</div></div>
+</div>
+</div>
+</div>
+
+<div class="sec" data-category="anomaly" id="tx-same-day">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">A1</span>
+<span class="sec-title">Same-Day Refunds</span>
+<span class="sec-badge badge-anomaly">Anomaly</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders refunded on the same day they were placed.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Compares order date with refund date. Any refund on the same date as the order is flagged as anomalous.</div></div>
+</div>
+<div class="insight-box danger"><div class="insight-label">&#9888; Investigate</div><div class="insight-text">May indicate <strong>fraudulent activity</strong>, <strong>system errors</strong>, or <strong>abuse of return policies</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="anomaly" id="tx-return-loops">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">A2</span>
+<span class="sec-title">Return Loops</span>
+<span class="sec-badge badge-anomaly">Anomaly</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders that went through multiple return/refund cycles.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#9881; How It Works</div><div class="sec-card-body">Identifies orders with more than one refund transaction associated with them.</div></div>
+</div>
+<div class="insight-box warning"><div class="insight-label">&#9888; Investigate</div><div class="insight-text">Could indicate <strong>customer abuse</strong>, <strong>product quality issues</strong>, or <strong>systemic processing errors</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="anomaly" id="tx-multi-refund">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">A3</span>
+<span class="sec-title">Multi-Refund Orders</span>
+<span class="sec-badge badge-anomaly">Anomaly</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders where the refund was processed more than once.</p>
+<div class="insight-box danger"><div class="insight-label">&#9888; Revenue Leakage Risk</div><div class="insight-text">Potential <strong>double-refund scenario</strong> that needs investigation to prevent revenue leakage.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="tax-missing-hsn">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D2</span>
+<span class="sec-title">Missing HSN Rows</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Transaction rows where HSN code is missing.</p>
+<div class="insight-box danger"><div class="insight-label">&#9888; Compliance Risk</div><div class="insight-text">HSN codes are <strong>mandatory for GST filing</strong>. Missing HSN codes block tax returns and can result in penalties.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="dq-missing-inv">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D3</span>
+<span class="sec-title">Missing Invoice Numbers</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders where the invoice number field is blank.</p>
+<div class="insight-box danger"><div class="insight-label">&#9888; Critical Issue</div><div class="insight-text">Missing invoice numbers can <strong>block GST filing</strong> and <strong>prevent reconciliation</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="dq-missing-wh">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D4</span>
+<span class="sec-title">Missing Warehouse ID</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Orders without a warehouse identifier.</p>
+<div class="insight-box warning"><div class="insight-label">&#9888; Operational Issue</div><div class="insight-text">Hinders <strong>warehouse performance tracking</strong> and <strong>logistics analysis</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="dq-zero-amt">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D5</span>
+<span class="sec-title">Zero-Amount Shipments</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Shipments recorded with zero invoice amount.</p>
+<div class="insight-box warning"><div class="insight-label">&#9888; Data Entry Errors</div><div class="insight-text">Likely <strong>data entry errors</strong>. Review and correct to ensure accurate revenue reporting.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="dq-neg-amt">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D6</span>
+<span class="sec-title">Negative Amount (Non-Refund)</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Transactions with negative amounts that are not refunds.</p>
+<div class="insight-box danger"><div class="insight-label">&#9888; Data Anomaly</div><div class="insight-text">May indicate <strong>system errors</strong> or <strong>data corruption</strong>.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="quality" id="dq-orphan">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">D7</span>
+<span class="sec-title">Orphan Refunds</span>
+<span class="sec-badge badge-quality">Data Quality</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Refund records that cannot be matched to any original order.</p>
+<div class="insight-box danger"><div class="insight-label">&#9888; Compliance Risk</div><div class="insight-text">Money refunded without a corresponding sale is a <strong>compliance risk</strong> and potential fraud indicator.</div></div>
+</div>
+</div>
+
+<div class="sec" data-category="metric" id="dq-avg-qty">
+<div class="sec-head" onclick="toggleSec(this)">
+<span class="sec-num">M15</span>
+<span class="sec-title">Avg Qty / Order</span>
+<span class="sec-badge badge-metric">Metric</span>
+<span class="sec-toggle">&#9660;</span>
+</div>
+<div class="sec-body">
+<p class="sec-desc">Average number of units per order.</p>
+<div class="sec-grid">
+<div class="sec-card full"><div class="sec-card-label">&#119808; Formula <button class="copy-btn" onclick="copyFormula(this, 'Avg Qty/Order = Total Units / Total Orders')">Copy</button></div><div class="sec-card-body"><code>Avg Qty/Order = Total Units / Total Orders</code></div></div>
+</div>
+<div class="insight-box info"><div class="insight-label">&#128161; What It Tells You</div><div class="insight-text">Higher values may suggest <strong>wholesale or B2B purchases</strong>. Can inform packaging and shipping strategy.</div></div>
+</div>
 </div>
 
 </div>
@@ -789,13 +1265,114 @@ document.getElementById('userName').textContent = user.username || '—';
 document.getElementById('userRole').textContent = user.role || '—';
 function logout() { localStorage.clear(); window.location.href = '/'; }
 
-// Scroll to section if URL hash
+function toggleSec(el) {
+  var body = el.nextElementSibling;
+  var toggle = el.querySelector('.sec-toggle');
+  if (body.classList.contains('open')) {
+    body.classList.remove('open');
+    toggle.classList.remove('open');
+  } else {
+    body.classList.add('open');
+    toggle.classList.add('open');
+  }
+}
+
+function copyFormula(btn, text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function(){
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  }
+}
+
+var searchBar = document.getElementById('searchBar');
+var countInfo = document.getElementById('countInfo');
+
+function filterSections() {
+  var query = (searchBar.value || '').toLowerCase().trim();
+  var activeFilter = document.querySelector('.pill.active');
+  var filterCat = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
+  var sections = document.querySelectorAll('.sec');
+  var visibleCount = 0;
+  sections.forEach(function(sec){
+    var cat = sec.getAttribute('data-category');
+    var title = (sec.querySelector('.sec-title') || {}).textContent || '';
+    var body = (sec.querySelector('.sec-body') || {}).textContent || '';
+    var desc = (sec.querySelector('.sec-desc') || {}).textContent || '';
+    var text = (title + ' ' + body + ' ' + desc).toLowerCase();
+    var matchFilter = (filterCat === 'all' || cat === filterCat);
+    var matchSearch = !query || text.indexOf(query) !== -1;
+    if (matchFilter && matchSearch) {
+      sec.classList.remove('hidden');
+      visibleCount++;
+    } else {
+      sec.classList.add('hidden');
+    }
+  });
+  countInfo.textContent = 'Showing ' + visibleCount + ' section' + (visibleCount !== 1 ? 's' : '');
+}
+
+searchBar.addEventListener('input', filterSections);
+
+document.querySelectorAll('.pill').forEach(function(pill){
+  pill.addEventListener('click', function(){
+    document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
+    pill.classList.add('active');
+    filterSections();
+  });
+});
+
+var contentEl = document.querySelector('.content');
+var progressFill = document.getElementById('progressFill');
+contentEl.addEventListener('scroll', function(){
+  var scrollTop = contentEl.scrollTop;
+  var scrollHeight = contentEl.scrollHeight - contentEl.clientHeight;
+  var pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  progressFill.style.width = pct + '%';
+});
+
 if (window.location.hash) {
   setTimeout(function(){
-    var el = document.querySelector(window.location.hash);
-    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
-  }, 300);
+    var target = document.querySelector(window.location.hash);
+    if (target) {
+      var body = target.querySelector('.sec-body');
+      var toggle = target.querySelector('.sec-toggle');
+      if (body && !body.classList.contains('open')) {
+        body.classList.add('open');
+        if (toggle) toggle.classList.add('open');
+      }
+      setTimeout(function(){
+        var top = target.getBoundingClientRect().top - 80;
+        contentEl.scrollBy({top: top, behavior: 'smooth'});
+      }, 100);
+    }
+  }, 400);
 }
+
+document.addEventListener('keydown', function(e){
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+    var tag = document.activeElement && document.activeElement.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+      e.preventDefault();
+      searchBar.focus();
+    }
+  }
+  if (e.key === 'Escape') {
+    searchBar.blur();
+  }
+});
 </script>
 </body>
 </html>

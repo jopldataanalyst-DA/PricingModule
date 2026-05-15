@@ -140,6 +140,73 @@ def _same_source_condition(source: str, left_alias: str, right_alias: str) -> st
         return "1=1"
     return f"{left_alias}.sales_source = {right_alias}.sales_source"
 
+def _source_label_expr(source: str, alias: str = "s") -> str:
+    source = (source or "both").lower()
+    if source == "both":
+        return f"{alias}.sales_source"
+    return "'B2B'" if source == "b2b" else "'B2C'"
+
+def _net_sales_order_key(source: str, alias: str = "s") -> str:
+    if (source or "both").lower() == "both":
+        return f"CONCAT({alias}.sales_source, ':', {alias}.Order_Id)"
+    return f"{alias}.Order_Id"
+
+def _net_sales_metrics(source: str, alias: str = "s") -> str:
+    order_key = _net_sales_order_key(source, alias)
+    return f"""
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {alias}.Quantity ELSE 0 END),0) AS sales_qty,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type IN ('Refund','EInvoiceCancel') THEN ABS({alias}.Quantity) ELSE 0 END),0) AS return_qty,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {alias}.Quantity ELSE 0 END),0)
+            - COALESCE(SUM(CASE WHEN {alias}.Transaction_Type IN ('Refund','EInvoiceCancel') THEN ABS({alias}.Quantity) ELSE 0 END),0) AS net_qty,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {alias}.Invoice_Amount ELSE 0 END),0) AS sales_value,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type IN ('Refund','EInvoiceCancel') THEN ABS({alias}.Invoice_Amount) ELSE 0 END),0) AS return_value,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {alias}.Invoice_Amount ELSE 0 END),0)
+            - COALESCE(SUM(CASE WHEN {alias}.Transaction_Type IN ('Refund','EInvoiceCancel') THEN ABS({alias}.Invoice_Amount) ELSE 0 END),0) AS net_sales_value,
+        COALESCE(SUM(CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {alias}.Total_Tax_Amount ELSE 0 END),0) AS sales_tax,
+        COUNT(DISTINCT CASE WHEN {alias}.Transaction_Type = 'Shipment' THEN {order_key} END) AS sales_orders,
+        COUNT(DISTINCT CASE WHEN {alias}.Transaction_Type IN ('Refund','EInvoiceCancel') THEN {order_key} END) AS return_orders
+    """
+
+def _format_net_sales_row(row: dict[str, Any]) -> dict[str, Any]:
+    out = dict(row)
+    money_keys = {"sales_value", "return_value", "net_sales_value", "sales_tax", "asp"}
+    qty_keys = {"sales_qty", "return_qty", "net_qty"}
+    pct_keys = {"return_qty_pct", "return_value_pct"}
+    for key in money_keys | qty_keys | pct_keys:
+        if key in out:
+            out[key] = _fmt(out[key])
+    for key in ("sales_orders", "return_orders"):
+        if key in out:
+            out[key] = int(out[key] or 0)
+    return out
+
+def _with_net_sales_ratios(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    formatted = []
+    for row in rows:
+        sales_qty = _val(row.get("sales_qty"))
+        sales_value = _val(row.get("sales_value"))
+        return_qty = _val(row.get("return_qty"))
+        return_value = _val(row.get("return_value"))
+        net_qty = _val(row.get("net_qty"))
+        net_sales_value = _val(row.get("net_sales_value"))
+        row["return_qty_pct"] = return_qty / sales_qty * 100 if sales_qty > 0 else 0
+        row["return_value_pct"] = return_value / sales_value * 100 if sales_value > 0 else 0
+        row["asp"] = net_sales_value / net_qty if net_qty > 0 else 0
+        formatted.append(_format_net_sales_row(row))
+    return formatted
+
+def _launch_date_expr(alias: str = "im") -> str:
+    raw = f"TRIM({alias}.updated)"
+    return f"""
+        CASE
+            WHEN {raw} REGEXP '^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}' THEN STR_TO_DATE(LEFT({raw}, 10), '%Y-%m-%d')
+            WHEN {raw} REGEXP '^[0-9]{{1,2}}-[A-Za-z]{{3}}-[0-9]{{2}}$' THEN STR_TO_DATE({raw}, '%d-%b-%y')
+            WHEN {raw} REGEXP '^[0-9]{{1,2}}-[A-Za-z]{{3}}-[0-9]{{4}}$' THEN STR_TO_DATE({raw}, '%d-%b-%Y')
+            WHEN {raw} REGEXP '^[0-9]{{1,2}}/[0-9]{{1,2}}/[0-9]{{4}}$' THEN STR_TO_DATE({raw}, '%d/%m/%Y')
+            ELSE NULL
+        END
+    """
+
 def _val(v, default=0):
     return float(v) if v is not None else default
 
@@ -323,6 +390,95 @@ async def get_sales_performance(filters: dict[str, str] = Depends(get_sales_filt
 # ════════════════════════════════════════════════════════════════════════════════
 # 2. TRANSACTION QUALITY & HEALTH
 # ════════════════════════════════════════════════════════════════════════════════
+
+@router.get("/net-sales-dashboard")
+async def get_net_sales_dashboard(filters: dict[str, str] = Depends(get_sales_filters), user=Depends(get_current_user)):
+    """Net sales, returns, and style-level performance dashboard."""
+    source = filters["source"]
+    sales = _sales_table(source, "s", filters)
+    source_expr = _source_label_expr(source, "s")
+    metrics = _net_sales_metrics(source, "s")
+    item_join = "LEFT JOIN stock_items im ON s.Sku = im.sku_code"
+    launch_date = _launch_date_expr("im")
+
+    kpi_row = _fetch_one(f"SELECT {metrics} FROM {sales} {item_join}") or {}
+    kpis = _with_net_sales_ratios([kpi_row])[0] if kpi_row else {}
+    kpis.update({
+        "rto_qty": None,
+        "customer_return_qty": None,
+        "fc_return_qty": None,
+        "rto_qty_pct": None,
+        "customer_return_pct": None,
+        "fc_return_pct": None,
+    })
+
+    monthly = _fetch(f"""
+        SELECT DATE_FORMAT(s.Invoice_Date, '%Y-%m-01') AS month, {metrics}
+        FROM {sales} {item_join}
+        WHERE s.Invoice_Date IS NOT NULL
+        GROUP BY DATE_FORMAT(s.Invoice_Date, '%Y-%m-01')
+        ORDER BY month
+    """)
+    portal = _fetch(f"""
+        SELECT {source_expr} AS portal,
+               COALESCE(NULLIF(s.Fulfillment_Channel,''), 'Unmapped') AS fulfillment_type,
+               {metrics}
+        FROM {sales} {item_join}
+        GROUP BY {source_expr}, COALESCE(NULLIF(s.Fulfillment_Channel,''), 'Unmapped')
+        ORDER BY net_sales_value DESC
+        LIMIT 100
+    """)
+    region = _fetch(f"""
+        SELECT COALESCE(NULLIF(s.Ship_To_State,''), 'Unmapped') AS region,
+               COALESCE(NULLIF(s.Ship_To_State,''), 'Unmapped') AS delivered_state,
+               {source_expr} AS portal,
+               {metrics}
+        FROM {sales} {item_join}
+        GROUP BY COALESCE(NULLIF(s.Ship_To_State,''), 'Unmapped'), {source_expr}
+        ORDER BY net_sales_value DESC
+        LIMIT 100
+    """)
+    style = _fetch(f"""
+        SELECT COALESCE(NULLIF(im.category,''), 'Unmapped') AS category,
+               COALESCE(NULLIF(im.item_name,''), s.Sku, 'Unmapped') AS style_id,
+               COALESCE(NULLIF(im.item_type,''), 'Unmapped') AS style_status,
+               COALESCE(NULLIF(im.size,''), 'Unmapped') AS size,
+               {metrics}
+        FROM {sales} {item_join}
+        GROUP BY COALESCE(NULLIF(im.category,''), 'Unmapped'),
+                 COALESCE(NULLIF(im.item_name,''), s.Sku, 'Unmapped'),
+                 COALESCE(NULLIF(im.item_type,''), 'Unmapped'),
+                 COALESCE(NULLIF(im.size,''), 'Unmapped')
+        ORDER BY net_sales_value DESC
+        LIMIT 100
+    """)
+    launchdate = _fetch(f"""
+        SELECT COALESCE(CAST(YEAR({launch_date}) AS CHAR), 'Unmapped') AS launch_year,
+               COALESCE(DATE_FORMAT({launch_date}, '%b'), 'Unmapped') AS launch_month,
+               COALESCE(MONTH({launch_date}), 0) AS launch_month_no,
+               COALESCE(NULLIF(im.category,''), 'Unmapped') AS category,
+               COALESCE(NULLIF(im.item_name,''), s.Sku, 'Unmapped') AS style_id,
+               {metrics}
+        FROM {sales} {item_join}
+        GROUP BY COALESCE(CAST(YEAR({launch_date}) AS CHAR), 'Unmapped'),
+                 COALESCE(DATE_FORMAT({launch_date}, '%b'), 'Unmapped'),
+                 COALESCE(MONTH({launch_date}), 0),
+                 COALESCE(NULLIF(im.category,''), 'Unmapped'),
+                 COALESCE(NULLIF(im.item_name,''), s.Sku, 'Unmapped')
+        ORDER BY CASE WHEN launch_year = 'Unmapped' THEN 1 ELSE 0 END,
+                 launch_year DESC, launch_month_no DESC, net_sales_value DESC
+        LIMIT 100
+    """)
+
+    return {
+        "kpis": kpis,
+        "monthly": _with_net_sales_ratios(monthly),
+        "portal_table": _with_net_sales_ratios(portal),
+        "region_table": _with_net_sales_ratios(region),
+        "style_table": _with_net_sales_ratios(style),
+        "launchdate_table": _with_net_sales_ratios(launchdate),
+    }
+
 
 @router.get("/transactions")
 async def get_transactions(filters: dict[str, str] = Depends(get_sales_filters), user=Depends(get_current_user)):
