@@ -1,296 +1,157 @@
-"""Amazon pricing API routes.
-
-Use case:
-    Serves the Amazon Pricing dashboard from precomputed pricing rows, supports
-    filtering/export, recalculates profit fields after Cost Into % overrides,
-    and triggers the Amazon pricing pipeline refresh.
-"""
-
-from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from typing import List, Dict, Any
 from auth import get_current_user, check_page_access
-from database import get_database
+from database import get_db
 import json
-import math
 import csv
 import io
 from datetime import datetime
-from data_pipeline import run_amazon_pipeline
 
 router = APIRouter()
 
 ALL_COLUMNS = [
-    "master_sku", "item_name", "original_category", "amazon_cat", "remark",
-    "cost", "mrp", "uniware", "fba", "sjit", "fbf",
-    "launch_date", "loc", "cost_into_percent", "cost_after_percent",
-    "return_charge", "gst_on_return", "final_tp", "required_selling_price",
-    "selected_price_range", "selected_fixed_fee_range", "commission_percent",
-    "commission_amount", "fixed_closing_fee", "fba_pick_pack", "technology_fee",
-    "full_shipping_fee", "whf_percent_on_shipping", "shipping_fee_charged",
-    "total_charges", "final_value_after_charges", "old_daily_sp", "old_deal_sp", "sett_acc_panel",
-    "net_profit_on_sp", "net_profit_percent_on_sp", "net_profit_percent_on_tp"
+    "source", "Invoice_Date", "Order_Id", "Sku", "Transaction_Type", "Quantity", "Invoice_Amount",
+    "Ship_To_State", "Ship_To_City", "Fulfillment_Channel", "Warehouse_Id",
+    "Item_Description", "Asin", "Hsn/sac", "Seller_Gstin",
+    "Principal_Amount", "Shipping_Amount", "Total_Tax_Amount",
+    "Tax_Exclusive_Gross", "Order_Date", "Shipment_Date", "Shipment_Id",
+    "Ship_From_State", "Ship_From_City",
+    "Bill_From_State", "Bill_From_City",
+    "Buyer_Name", "Customer_Bill_To_Gstid",
+    "Cgst_Rate", "Sgst_Rate", "Igst_Rate",
+    "Cgst_Tax", "Sgst_Tax", "Igst_Tax",
+    "Item_Promo_Discount", "Shipping_Promo_Discount",
+    "Tcs_Igst_Amount", "Tcs_Cgst_Amount", "Tcs_Sgst_Amount",
+    "Payment_Method_Code", "Credit_Note_No", "Credit_Note_Date",
+    "Irn_Number", "Irn_Filing_Status", "Irn_Date",
 ]
 
 DEFAULT_VISIBLE_COLUMNS = [
-    "master_sku", "item_name", "original_category", "amazon_cat", "remark",
-    "cost", "mrp", "uniware", "fba", "sjit", "fbf",
-    "launch_date", "loc", "cost_into_percent", "cost_after_percent",
-    "return_charge", "gst_on_return", "final_tp", "required_selling_price",
-    "sett_acc_panel", "net_profit_on_sp", "net_profit_percent_on_sp",
-    "net_profit_percent_on_tp", "old_daily_sp", "old_deal_sp"
+    "source", "Invoice_Date", "Order_Id", "Sku", "Transaction_Type", "Quantity", "Invoice_Amount",
+    "Ship_To_State", "Fulfillment_Channel", "Item_Description",
 ]
 
 COLUMN_LABELS = {
-    "master_sku": "Master SKU",
-    "item_name": "Style ID / Parent SKU",
-    "original_category": "Original Category",
-    "amazon_cat": "Amazon Cat",
-    "remark": "Remark",
-    "cost": "Cost",
-    "mrp": "MRP",
-    "uniware": "Uniware",
-    "fba": "FBA",
-    "sjit": "Sjit",
-    "fbf": "FBF",
-    "launch_date": "Launch Date",
-    "loc": "LOC",
-    "cost_into_percent": "Cost into %",
-    "cost_after_percent": "Cost after %",
-    "return_charge": "Return Charge",
-    "gst_on_return": "GST on Return",
-    "final_tp": "Final TP",
-    "required_selling_price": "Required Selling Price",
-    "selected_price_range": "Selected Price Range",
-    "selected_fixed_fee_range": "Selected Fixed Fee Range",
-    "commission_percent": "Commission %",
-    "commission_amount": "Commission Amount",
-    "fixed_closing_fee": "Fixed Closing Fee",
-    "fba_pick_pack": "FBA Pick Pack",
-    "technology_fee": "Technology Fee",
-    "full_shipping_fee": "Full Shipping Fee",
-    "whf_percent_on_shipping": "WHF % On Shipping",
-    "shipping_fee_charged": "Shipping Fee Charged",
-    "total_charges": "Total Charges",
-    "final_value_after_charges": "Final Value After Charges",
-    "old_daily_sp": "Old Daily SP",
-    "old_deal_sp": "Old Deal SP",
-    "sett_acc_panel": "Sett Acc Panel",
-    "net_profit_on_sp": "Net Profit On SP",
-    "net_profit_percent_on_sp": "Net Profit % On SP",
-    "net_profit_percent_on_tp": "Net Profit % On TP"
+    "source": "Source", "Invoice_Date": "Invoice Date", "Order_Id": "Order ID",
+    "Sku": "SKU", "Transaction_Type": "Type", "Quantity": "Qty",
+    "Invoice_Amount": "Invoice Amount", "Ship_To_State": "Ship To State",
+    "Ship_To_City": "Ship To City", "Fulfillment_Channel": "Fulfillment",
+    "Warehouse_Id": "Warehouse", "Item_Description": "Item Description",
+    "Asin": "ASIN", "Hsn/sac": "HSN/SAC", "Seller_Gstin": "Seller GSTIN",
+    "Principal_Amount": "Principal", "Shipping_Amount": "Shipping",
+    "Total_Tax_Amount": "Total Tax", "Tax_Exclusive_Gross": "Tax Excl Gross",
+    "Order_Date": "Order Date", "Shipment_Date": "Shipment Date",
+    "Shipment_Id": "Shipment ID", "Ship_From_State": "Ship From State",
+    "Ship_From_City": "Ship From City", "Bill_From_State": "Bill From State",
+    "Bill_From_City": "Bill From City",
+    "Buyer_Name": "Buyer Name", "Customer_Bill_To_Gstid": "Buyer GSTIN",
+    "Cgst_Rate": "CGST Rate", "Sgst_Rate": "SGST Rate", "Igst_Rate": "IGST Rate",
+    "Cgst_Tax": "CGST Tax", "Sgst_Tax": "SGST Tax", "Igst_Tax": "IGST Tax",
+    "Item_Promo_Discount": "Item Promo Discount",
+    "Shipping_Promo_Discount": "Shipping Promo Discount",
+    "Tcs_Igst_Amount": "TCS IGST", "Tcs_Cgst_Amount": "TCS CGST",
+    "Tcs_Sgst_Amount": "TCS SGST", "Payment_Method_Code": "Payment Method",
+    "Credit_Note_No": "Credit Note No", "Credit_Note_Date": "Credit Note Date",
+    "Irn_Number": "IRN Number", "Irn_Filing_Status": "IRN Status",
+    "Irn_Date": "IRN Date",
 }
 
-NUMERIC_COLUMNS = [
-    'id', 'cost', 'mrp', 'uniware', 'fba', 'sjit', 'fbf', 'cost_into_percent', 'cost_after_percent',
-    'return_charge', 'gst_on_return', 'final_tp', 'required_selling_price', 'commission_percent',
-    'commission_amount', 'fixed_closing_fee', 'fba_pick_pack', 'technology_fee', 'full_shipping_fee',
-    'whf_percent_on_shipping', 'shipping_fee_charged', 'total_charges', 'final_value_after_charges',
-    'old_daily_sp', 'old_deal_sp', 'sett_acc_panel', 'net_profit_on_sp', 'net_profit_percent_on_sp',
-    'net_profit_percent_on_tp'
+NUMERIC_COLUMNS = set([
+    "Quantity", "Invoice_Amount", "Principal_Amount", "Shipping_Amount",
+    "Total_Tax_Amount", "Tax_Exclusive_Gross",
+    "Cgst_Rate", "Sgst_Rate", "Igst_Rate",
+    "Cgst_Tax", "Sgst_Tax", "Igst_Tax",
+    "Item_Promo_Discount", "Shipping_Promo_Discount",
+    "Tcs_Igst_Amount", "Tcs_Cgst_Amount", "Tcs_Sgst_Amount",
+])
+
+SEARCHABLE_COLUMNS = ["Sku", "Order_Id", "Item_Description", "Ship_To_State", "Asin", "Ship_To_City", "Buyer_Name", "Invoice_Number"]
+
+# Columns shared by both tables (after aliasing)
+UNION_COLUMNS = [
+    "Seller_Gstin", "Invoice_Number", "Invoice_Date",
+    "Transaction_Type", "Order_Id", "Shipment_Id",
+    "Shipment_Date", "Order_Date", "Shipment_Item_Id",
+    "Quantity", "Item_Description", "Asin",
+    "Hsn/sac", "Sku", "Product_Tax_Code",
+    "Bill_From_City", "Bill_From_State", "Bill_From_Country", "Bill_From_Postal_Code",
+    "Ship_From_City", "Ship_From_State", "Ship_From_Country", "Ship_From_Postal_Code",
+    "Ship_To_City", "Ship_To_State", "Ship_To_Country", "Ship_To_Postal_Code",
+    "Invoice_Amount", "Tax_Exclusive_Gross", "Total_Tax_Amount",
+    "Cgst_Rate", "Sgst_Rate", "Utgst_Rate", "Igst_Rate",
+    "Compensatory_Cess_Rate", "Principal_Amount", "Principal_Amount_Basis",
+    "Cgst_Tax", "Sgst_Tax", "Igst_Tax", "Utgst_Tax", "Compensatory_Cess_Tax",
+    "Shipping_Amount", "Shipping_Amount_Basis",
+    "Shipping_Cgst_Tax", "Shipping_Sgst_Tax", "Shipping_Utgst_Tax", "Shipping_Igst_Tax",
+    "Gift_Wrap_Amount", "Gift_Wrap_Amount_Basis",
+    "Gift_Wrap_Cgst_Tax", "Gift_Wrap_Sgst_Tax", "Gift_Wrap_Utgst_Tax", "Gift_Wrap_Igst_Tax",
+    "Gift_Wrap_Compensatory_Cess_Tax",
+    "Item_Promo_Discount", "Item_Promo_Discount_Basis", "Item_Promo_Tax",
+    "Shipping_Promo_Discount", "Shipping_Promo_Discount_Basis", "Shipping_Promo_Tax",
+    "Gift_Wrap_Promo_Discount", "Gift_Wrap_Promo_Discount_Basis", "Gift_Wrap_Promo_Tax",
+    "Tcs_Cgst_Rate", "Tcs_Cgst_Amount",
+    "Tcs_Sgst_Rate", "Tcs_Sgst_Amount",
+    "Tcs_Utgst_Rate", "Tcs_Utgst_Amount",
+    "Tcs_Igst_Rate", "Tcs_Igst_Amount",
+    "Warehouse_Id", "Fulfillment_Channel", "Payment_Method_Code",
+    "Credit_Note_No", "Credit_Note_Date",
+    # B2B-only cols (NULL for B2C)
+    "Bill_To_City", "Bill_To_State", "Bill_To_Country", "Bill_To_Postalcode",
+    "Customer_Bill_To_Gstid", "Customer_Ship_To_Gstid", "Buyer_Name",
+    "Irn_Number", "Irn_Filing_Status", "Irn_Date", "Irn_Error_Code",
 ]
 
-class CostPercentUpdate(BaseModel):
-    """One Cost Into % override for a Master SKU/style row."""
-    master_sku: str
-    cost_into_percent: float
-    style_id: str | None = None
+UNION_SELECT_B2B = "SELECT 'B2B' AS source, " + ", ".join(f"`{c}`" for c in UNION_COLUMNS) + " FROM amazon_sales_b2b"
 
-class CostPercentUpdateRequest(BaseModel):
-    """Batch update payload for Cost Into % overrides."""
-    updates: List[CostPercentUpdate]
+B2C_UNION_COLUMNS = [
+    # Same as UNION_COLUMNS but with Shipping_Cess_Tax_Amount → Shipping_Cess_Tax mapping
+    # and NULL for B2B-only columns (those are the last 11)
+]
+B2C_COMMON = UNION_COLUMNS[:-11]  # All common + Shipping_Cess_Tax
+B2C_MAPPED = []
+for c in B2C_COMMON:
+    if c == "Shipping_Cess_Tax":
+        B2C_MAPPED.append("`Shipping_Cess_Tax_Amount` AS `Shipping_Cess_Tax`")
+    else:
+        B2C_MAPPED.append(f"`{c}`")
+B2C_NULL = ["NULL AS `" + c + "`" for c in UNION_COLUMNS[-11:]]
+UNION_SELECT_B2C = "SELECT 'B2C' AS source, " + ", ".join(B2C_MAPPED + B2C_NULL) + " FROM amazon_sales_b2c"
 
-def safe_float(value):
-    """Convert a value to a finite float for pricing math."""
-    try:
-        result = float(value or 0)
-        if math.isinf(result) or math.isnan(result):
-            return 0.0
-        return result
-    except (TypeError, ValueError):
-        return 0.0
+UNION_BODY = f"({UNION_SELECT_B2B}) UNION ALL ({UNION_SELECT_B2C})"
 
-def safe_int(value):
-    """Convert a value to int after safe float normalization."""
-    return int(safe_float(value))
 
-def display_value(value):
-    """Convert values to comparable strings for filter logic."""
-    if value is None:
+def q(col):
+    return f"`{col}`"
+
+
+def build_search_clause(search: str) -> str:
+    if not search:
         return ""
-    return str(value)
+    s = search.lower().replace("'", "''")
+    clauses = " OR ".join(f"LOWER({q(col)}) LIKE '%{s}%'" for col in SEARCHABLE_COLUMNS)
+    return f"AND ({clauses})"
 
-def parse_json_dict(value):
-    """Parse JSON query parameters used by column filters."""
-    if not value:
-        return {}
-    try:
-        parsed = json.loads(value)
-        return parsed if isinstance(parsed, dict) else {}
-    except json.JSONDecodeError:
-        return {}
 
-def apply_search_and_filters(items, search="", filters=None, skip_column=None):
-    """Apply dashboard search text and selected column filters."""
-    filtered = items
-    if search:
-        q = search.lower()
-        filtered = [
-            x for x in filtered
-            if q in str(x.get('master_sku', '')).lower()
-            or q in str(x.get('item_name', '')).lower()
-            or q in str(x.get('remark', '')).lower()
-            or q in str(x.get('amazon_cat', '')).lower()
-        ]
-
-    filters = filters or {}
+def build_filter_clauses(filters: dict):
+    if not filters:
+        return "", []
+    where_parts = []
+    params = []
     for col, values in filters.items():
-        if col == skip_column or col not in ALL_COLUMNS:
+        if col not in ALL_COLUMNS or not isinstance(values, list) or not values:
             continue
-        if not isinstance(values, list) or not values:
-            continue
-        allowed = {display_value(v) for v in values}
-        filtered = [x for x in filtered if display_value(x.get(col)) in allowed]
+        placeholders = ", ".join("%s" for _ in values)
+        where_parts.append(f"{q(col)} IN ({placeholders})")
+        params.extend(values)
+    return ("AND " + " AND ".join(where_parts)) if where_parts else "", params
 
-    return filtered
-
-def round2(value):
-    """Round currency/percentage values to two decimals consistently."""
-    return round(value + 1e-9, 2)
-
-def round_half_up(value):
-    """Round selling prices using half-up behavior expected by the business."""
-    return int(math.floor(value + 0.5))
-
-def recalculate_pricing_fields(row: Dict[str, Any]) -> Dict[str, Any]:
-    """Recalculate dependent Amazon pricing/profit fields for one row."""
-    cost = safe_float(row.get("cost"))
-    cost_into_percent = safe_float(row.get("cost_into_percent"))
-    return_charge = safe_float(row.get("return_charge")) or 59.0
-    denominator = 100 - cost_into_percent
-
-    cost_after_percent = cost / denominator * 100 if cost > 0 and denominator > 0 else 0.0
-    gst_on_return = return_charge * 0.18 if cost > 0 else 0.0
-    final_tp = cost_after_percent + return_charge + gst_on_return if cost > 0 else 0.0
-
-    commission_percent = safe_float(row.get("commission_percent"))
-    commission_rate = commission_percent / 100
-    if commission_rate >= 1:
-        commission_rate = 0
-
-    fixed_charges = (
-        safe_float(row.get("fixed_closing_fee"))
-        + safe_float(row.get("fba_pick_pack"))
-        + safe_float(row.get("technology_fee"))
-        + safe_float(row.get("shipping_fee_charged"))
-    )
-
-    required_selling_price = round_half_up(
-        (final_tp + fixed_charges) / (1 - commission_rate)
-        if commission_rate < 1
-        else final_tp + fixed_charges
-    )
-    commission_amount = required_selling_price * commission_rate
-    total_charges = commission_amount + fixed_charges
-    final_value_after_charges = required_selling_price - total_charges
-    net_profit_on_sp = final_value_after_charges - return_charge - gst_on_return - cost
-    net_profit_percent_on_sp = (
-        net_profit_on_sp / required_selling_price * 100
-        if required_selling_price > 0
-        else 0.0
-    )
-    net_profit_percent_on_tp = net_profit_on_sp / final_tp * 100 if final_tp > 0 else 0.0
-
-    return {
-        "cost_into_percent": round2(cost_into_percent),
-        "cost_after_percent": round2(cost_after_percent),
-        "gst_on_return": round2(gst_on_return),
-        "final_tp": round2(final_tp),
-        "required_selling_price": required_selling_price,
-        "commission_amount": round2(commission_amount),
-        "total_charges": round2(total_charges),
-        "final_value_after_charges": round2(final_value_after_charges),
-        "sett_acc_panel": round2(final_value_after_charges),
-        "net_profit_on_sp": round2(net_profit_on_sp),
-        "net_profit_percent_on_sp": round2(net_profit_percent_on_sp),
-        "net_profit_percent_on_tp": round2(net_profit_percent_on_tp),
-    }
-
-def load_amazon_pricing_db() -> List[Dict[str, Any]]:
-    """Load Amazon pricing rows and recalculate UI-facing derived fields."""
-    try:
-        rows = get_database().FetchAll("""
-            SELECT
-                apr.*,
-                si.item_name,
-                COALESCE(cip.Cost_Into_Percent, apr.cost_into_percent, 23.0) AS cost_into_percent
-            FROM amazon_pricing_results apr
-            LEFT JOIN (
-                SELECT sku_code, MAX(item_name) AS item_name
-                FROM stock_items
-                GROUP BY sku_code
-            ) si ON apr.master_sku = si.sku_code
-            LEFT JOIN (
-                SELECT master_sku, MAX(Cost_Into_Percent) AS Cost_Into_Percent
-                FROM cost_into_percent
-                WHERE Platform = 'Amazon'
-                GROUP BY master_sku
-            ) cip ON apr.master_sku = cip.master_sku
-        """)
-        items = []
-        for i, row in enumerate(rows):
-            row.update(recalculate_pricing_fields(row))
-            items.append({**row, "id": i + 1})
-        return items
-    except Exception as e:
-        print(f"Error loading amazon pricing from DB: {e}")
-        return []
-
-
-def visible_columns_for_user(user: dict) -> list[str]:
-    """Return Amazon Pricing columns the current user is allowed to view/export."""
-    if user.get("role") == "admin":
-        return list(ALL_COLUMNS)
-    permissions = user.get("column_permissions", {}).get("amazon_pricing", {})
-    visible = permissions.get("visible") or DEFAULT_VISIBLE_COLUMNS
-    allowed = [c for c in visible if c in ALL_COLUMNS]
-    return allowed or DEFAULT_VISIBLE_COLUMNS
-
-
-def editable_columns_for_user(user: dict) -> list[str]:
-    """Return Amazon Pricing columns the current user is allowed to edit."""
-    if user.get("role") == "admin":
-        return []
-    permissions = user.get("column_permissions", {}).get("amazon_pricing", {})
-    visible = visible_columns_for_user(user)
-    editable = permissions.get("editable") or []
-    return [c for c in editable if c in visible and c in ALL_COLUMNS]
-
-
-def build_amazon_csv(rows: List[Dict[str, Any]], columns: List[str]) -> bytes:
-    """Build a CSV export using human-readable Amazon column labels."""
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([COLUMN_LABELS.get(col, col) for col in columns])
-    for row in rows:
-        writer.writerow([row.get(col, "") for col in columns])
-    return output.getvalue().encode("utf-8-sig")
 
 @router.get("/columns")
 async def get_columns(user=Depends(get_current_user)):
-    """Return visible/editable Amazon Pricing columns for the current user."""
     check_page_access(user, "amazon_pricing")
-    visible = visible_columns_for_user(user)
-    all_columns = ALL_COLUMNS if user.get("role") == "admin" else visible
-    editable = editable_columns_for_user(user)
-    return {"visible": visible, "all": all_columns, "editable": editable, "labels": COLUMN_LABELS}
+    return {"visible": DEFAULT_VISIBLE_COLUMNS, "all": ALL_COLUMNS, "editable": [], "labels": COLUMN_LABELS}
 
-@router.get("/filters")
-async def get_filters(user=Depends(get_current_user)):
-    """Return legacy filter metadata for the Amazon Pricing page."""
-    check_page_access(user, "amazon_pricing")
-    return {"categories": []}
 
 @router.get("/filter-options")
 async def get_filter_options(
@@ -299,151 +160,139 @@ async def get_filter_options(
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
-    """Return distinct values for one Amazon Pricing column filter menu."""
     check_page_access(user, "amazon_pricing")
     if column not in ALL_COLUMNS:
         return {"column": column, "values": []}
 
-    items = load_amazon_pricing_db()
-    active_filters = parse_json_dict(filters)
-    items = apply_search_and_filters(items, search=search, filters=active_filters, skip_column=column)
-    values = sorted({display_value(row.get(column)) for row in items}, key=lambda value: value.lower())
+    active_filters = json.loads(filters) if filters else {}
+    filter_clause, filter_params = build_filter_clauses(active_filters)
+    search_clause = ""
+    if search:
+        search_clause = build_search_clause(search)
+
+    col = q(column)
+    sql = f"""
+        SELECT DISTINCT {col} AS val FROM {UNION_BODY} combined
+        WHERE {col} IS NOT NULL AND {col} != ''
+        ORDER BY val
+    """
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        values = [str(r[0]) for r in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Filter options error: {e}")
+        values = []
+
     return {"column": column, "values": values}
+
 
 @router.get("/")
 async def get_amazon_pricing(
     page: int = Query(1, ge=1), page_size: int = Query(50, ge=1, le=500),
-    search: str = Query(""), category: str = Query(""),
-    sort_by: str = Query("id"), sort_dir: str = Query("asc"),
+    search: str = Query(""), sort_by: str = Query("Invoice_Date"), sort_dir: str = Query("desc"),
     filters: str = Query(""),
     user=Depends(get_current_user)
 ):
-    """Return paginated Amazon pricing rows plus stock summary stats."""
     check_page_access(user, "amazon_pricing")
-    
-    items = load_amazon_pricing_db()
-    active_filters = parse_json_dict(filters)
-    items = apply_search_and_filters(items, search=search, filters=active_filters)
 
-    if category:
-        items = [x for x in items if category.lower() in str(x.get('amazon_cat', '')).lower()]
+    active_filters = json.loads(filters) if filters else {}
+    filter_clause, filter_params = build_filter_clauses(active_filters)
+    search_clause = ""
+    if search:
+        search_clause = build_search_clause(search)
 
-    stats = {
-        "total_skus": len(items),
-        "total_available": sum(safe_int(x.get('uniware')) for x in items),
-        "total_stock": sum(safe_int(x.get('uniware')) for x in items),
-        "total_fba": sum(safe_int(x.get('fba')) for x in items),
-        "total_sjit": sum(safe_int(x.get('sjit')) for x in items),
-        "total_fbf": sum(safe_int(x.get('fbf')) for x in items)
-    }
-    
-    if sort_by and sort_dir:
-        reverse = sort_dir == 'desc'
-        if sort_by in NUMERIC_COLUMNS:
-            items.sort(key=lambda x: float(x.get(sort_by, 0) or 0), reverse=reverse)
-        else:
-            items.sort(key=lambda x: (str(x.get(sort_by, '')) or '').lower(), reverse=reverse)
-    
-    total = len(items)
-    start = (page - 1) * page_size
-    end = start + page_size
-    page_items = items[start:end]
-    
-    return {"items": page_items, "total": total, "page": page, "page_size": page_size,
-            "total_pages": (total + page_size - 1) // page_size if total else 1, "stats": stats}
-
-@router.get("/export")
-async def export_amazon_pricing(
-    search: str = Query(""),
-    sort_by: str = Query("id"),
-    sort_dir: str = Query("asc"),
-    filters: str = Query(""),
-    selected_ids: str = Query(""),
-    user=Depends(get_current_user),
-):
-    """Export selected rows, filtered rows, or the full Amazon Pricing table."""
-    check_page_access(user, "amazon_pricing")
-    rows = load_amazon_pricing_db()
-    export_columns = visible_columns_for_user(user)
-    selected = {
-        int(value)
-        for value in selected_ids.split(",")
-        if value.strip().isdigit()
-    }
-    if selected:
-        rows = [row for row in rows if int(row.get("id", 0)) in selected]
-    else:
-        active_filters = {
-            col: values
-            for col, values in parse_json_dict(filters).items()
-            if col in export_columns
-        }
-        rows = apply_search_and_filters(rows, search=search, filters=active_filters)
-
-    if sort_by and sort_dir:
-        reverse = sort_dir == "desc"
-        if sort_by not in export_columns and sort_by != "id":
-            sort_by = "id"
-        if sort_by in NUMERIC_COLUMNS:
-            rows.sort(key=lambda x: float(x.get(sort_by, 0) or 0), reverse=reverse)
-        else:
-            rows.sort(key=lambda x: (str(x.get(sort_by, "")) or "").lower(), reverse=reverse)
-
-    filename = "amazon_pricing_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
-    return StreamingResponse(
-        io.BytesIO(build_amazon_csv(rows, export_columns)),
-        media_type="text/csv",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
-
-@router.post("/cost-percent")
-async def update_cost_percent(payload: CostPercentUpdateRequest, user=Depends(get_current_user)):
-    """Persist Cost Into % overrides and return recalculated pricing rows."""
-    check_page_access(user, "amazon_pricing")
-    if not payload.updates:
-        return {"updated": 0}
-
-    updated = 0
+    base_from = f"FROM ({UNION_SELECT_B2B} UNION ALL {UNION_SELECT_B2C}) combined WHERE 1=1 {search_clause} {filter_clause}"
 
     try:
-        with get_database().Cursor(Commit=True) as cursor:
-            for item in payload.updates:
-                master_sku = (item.master_sku or "").strip()
-                if not master_sku:
-                    continue
-                pct = safe_float(item.cost_into_percent)
-                if pct < 0 or pct >= 100:
-                    raise HTTPException(status_code=400, detail="Cost into % must be between 0 and 99")
+        conn = get_db()
+        cursor = conn.cursor()
 
-                cursor.execute(
-                    "SELECT COUNT(*) FROM cost_into_percent WHERE master_sku=%s AND Platform=%s",
-                    (master_sku, "Amazon")
-                )
-                exists = cursor.fetchone()[0] > 0
+        count_sql = f"SELECT COUNT(*) {base_from}"
+        cursor.execute(count_sql, filter_params)
+        total = cursor.fetchone()[0]
 
-                if exists:
-                    cursor.execute(
-                        "UPDATE cost_into_percent SET Cost_Into_Percent=%s WHERE master_sku=%s AND Platform=%s",
-                        (pct, master_sku, "Amazon")
-                    )
-                else:
-                    cursor.execute(
-                        """
-                        INSERT INTO cost_into_percent (master_sku, style_id, Platform, Cost_Into_Percent)
-                        VALUES (%s, %s, %s, %s)
-                        """,
-                        (master_sku, item.style_id, "Amazon", pct)
-                    )
-                updated += 1
-        return {"updated": updated}
-    except HTTPException:
-        raise
+        stats_sql = f"""
+            SELECT
+                COUNT(*) AS total_rows,
+                COALESCE(SUM(Invoice_Amount), 0) AS total_invoice_amount,
+                COALESCE(SUM(Quantity), 0) AS total_quantity
+            {base_from}
+        """
+        cursor.execute(stats_sql, filter_params)
+        sr = cursor.fetchone()
+        stats = {
+            "total_rows": sr[0],
+            "total_invoice_amount": float(sr[1]) if sr[1] else 0,
+            "total_quantity": float(sr[2]) if sr[2] else 0,
+            "b2b_rows": 0,
+            "b2c_rows": 0,
+        }
+
+        safe_name = q(sort_by) if sort_by in ALL_COLUMNS else "Invoice_Date"
+        order = "DESC" if sort_dir == "desc" else "ASC"
+        offset = (page - 1) * page_size
+
+        data_sql = f"""
+            SELECT * {base_from}
+            ORDER BY {safe_name} {order}
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(data_sql, filter_params + [page_size, offset])
+        col_names = [desc[0] for desc in cursor.description]
+        rows = [dict(zip(col_names, row)) for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+
+        for i, row in enumerate(rows):
+            row["id"] = offset + i + 1
+            src = row.get("source")
+            if src == "B2B":
+                stats["b2b_rows"] = stats.get("b2b_rows", 0) + 1
+            else:
+                stats["b2c_rows"] = stats.get("b2c_rows", 0) + 1
+
+        total_pages = max(1, (total + page_size - 1) // page_size)
+        return {"items": rows, "total": total, "page": page, "page_size": page_size,
+                "total_pages": total_pages, "stats": stats}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update cost into percent: {e}")
+        print(f"Error querying combined sales: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Query error: {e}")
 
-@router.post("/refresh-data")
-async def refresh_amazon_data(background_tasks: BackgroundTasks, user=Depends(get_current_user)):
-    """Trigger the Amazon pricing pipeline in the background."""
+
+@router.get("/export")
+async def export_amazon_pricing(user=Depends(get_current_user)):
     check_page_access(user, "amazon_pricing")
-    background_tasks.add_task(run_amazon_pipeline)
-    return {"message": "Amazon pricing refresh started in the background."}
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        sql = f"{UNION_SELECT_B2B} UNION ALL {UNION_SELECT_B2C}"
+        cursor.execute(sql)
+        col_names = [desc[0] for desc in cursor.description]
+        rows = [dict(zip(col_names, row)) for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Export error: {e}")
+        raise HTTPException(status_code=500, detail=f"Export error: {e}")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([COLUMN_LABELS.get(col, col) for col in ALL_COLUMNS])
+    for row in rows:
+        writer.writerow([row.get(col, "") for col in ALL_COLUMNS])
+
+    filename = "amazon_sales_export_" + datetime.now().strftime("%Y%m%d") + ".csv"
+    return StreamingResponse(
+        io.BytesIO(output.getvalue().encode("utf-8")),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )

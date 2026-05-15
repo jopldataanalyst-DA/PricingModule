@@ -16,7 +16,7 @@ from audit import load_audit_logs, load_import_history, record_audit_log
 router = APIRouter()
 
 VALID_ROLES = {"admin", "viewer", "restricted"}
-VALID_PAGES = {"item_master", "amazon_pricing", "admin", "logs", "import"}
+VALID_PAGES = {"item_master", "amazon_pricing", "admin", "logs", "import", "sales"}
 ITEM_MASTER_COLUMNS = set(DEFAULT_COLUMN_PERMISSIONS["item_master"]["visible"])
 AMAZON_PRICING_COLUMNS_SET = set(AMAZON_PRICING_COLUMNS)
 
@@ -134,7 +134,7 @@ async def create_user(user_data: UserUpdate, request: Request, user=Depends(requ
         "username": payload["username"],
         "password": hash_password(payload["password"]),
         "role": role,
-        "allowed_pages": payload["allowed_pages"] or (["item_master", "amazon_pricing", "admin", "logs", "import"] if role == "admin" else ["item_master"]),
+        "allowed_pages": payload["allowed_pages"] or (["item_master", "amazon_pricing", "admin", "logs", "import", "sales"] if role == "admin" else ["item_master"]),
         "column_permissions": payload["column_permissions"] or _default_permissions(role),
         "is_active": payload["is_active"] if payload["is_active"] is not None else True
     }

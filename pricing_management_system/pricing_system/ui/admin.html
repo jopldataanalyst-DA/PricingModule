@@ -119,6 +119,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="nav-label">Navigation</div>
     <a class="nav-item" href="/dashboard"><span class="icon">📦</span> Item Master</a>
     <a class="nav-item" href="/amazon-pricing"><span class="icon">🛒</span> Amazon Pricing</a>
+    <a class="nav-item" href="/sales"><span class="icon">📊</span> Sales</a>
     <a class="nav-item" href="/errors"><span class="icon">!</span> Errors</a>
     <a class="nav-item active" href="/admin"><span class="icon">⚙️</span> Admin Panel</a>
   </nav>
@@ -296,8 +297,8 @@ const ALL_COLS = ["sku_code","item_name","size","category","location","child_rem
 const COL_LABELS = {sku_code:"Master SKU",item_name:"Style ID / Parent SKU",size:"Size",category:"Category",location:"Location",child_remark:"Child Remark",parent_remark:"Parent Remark",item_type:"Type",cost:"Cost",price:"Wholesale Price",catalog:"Catalog Name",mrp:"MRP",up_price:"Up Price",available_atp:"Uniware Stock",fba_stock:"FBA",fbf_stock:"FBF",sjit_stock:"SJIT",updated:"Launch Date"};
 const AMAZON_COLS = ["master_sku","item_name","original_category","amazon_cat","remark","cost","mrp","uniware","fba","sjit","fbf","launch_date","loc","cost_into_percent","cost_after_percent","return_charge","gst_on_return","final_tp","required_selling_price","selected_price_range","selected_fixed_fee_range","commission_percent","commission_amount","fixed_closing_fee","fba_pick_pack","technology_fee","full_shipping_fee","whf_percent_on_shipping","shipping_fee_charged","total_charges","final_value_after_charges","old_daily_sp","old_deal_sp","sett_acc_panel","net_profit_on_sp","net_profit_percent_on_sp","net_profit_percent_on_tp"];
 const AMAZON_COL_LABELS = {master_sku:"Master SKU",item_name:"Style ID / Parent SKU",original_category:"Original Category",amazon_cat:"Amazon Cat",remark:"Remark",cost:"Cost",mrp:"MRP",uniware:"Uniware",fba:"FBA",sjit:"Sjit",fbf:"FBF",launch_date:"Launch Date",loc:"LOC",cost_into_percent:"Cost into %",cost_after_percent:"Cost after %",return_charge:"Return Charge",gst_on_return:"GST on Return",final_tp:"Final TP",required_selling_price:"Required Selling Price",selected_price_range:"Selected Price Range",selected_fixed_fee_range:"Selected Fixed Fee Range",commission_percent:"Commission %",commission_amount:"Commission Amount",fixed_closing_fee:"Fixed Closing Fee",fba_pick_pack:"FBA Pick Pack",technology_fee:"Technology Fee",full_shipping_fee:"Full Shipping Fee",whf_percent_on_shipping:"WHF % On Shipping",shipping_fee_charged:"Shipping Fee Charged",total_charges:"Total Charges",final_value_after_charges:"Final Value After Charges",old_daily_sp:"Old Daily SP",old_deal_sp:"Old Deal SP",sett_acc_panel:"Sett Acc Panel",net_profit_on_sp:"Net Profit On SP",net_profit_percent_on_sp:"Net Profit % On SP",net_profit_percent_on_tp:"Net Profit % On TP"};
-const PAGES = ["item_master","amazon_pricing","admin","logs","import"];
-const PAGES_LABELS = {item_master:"Item Master",amazon_pricing:"Amazon Pricing",admin:"Admin Panel",logs:"Audit Logs",import:"Import Data"};
+const PAGES = ["item_master","amazon_pricing","admin","logs","import","sales"];
+const PAGES_LABELS = {item_master:"Item Master",amazon_pricing:"Amazon Pricing",admin:"Admin Panel",logs:"Audit Logs",import:"Import Data",sales:"Sales Analytics"};
 const COL_PERM_TABLES = ["item_master","amazon_pricing"];
 const COL_PERM_TABLE_LABELS = {item_master:"Item Master",amazon_pricing:"Amazon Pricing"};
 

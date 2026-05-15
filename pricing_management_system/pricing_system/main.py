@@ -19,6 +19,7 @@ from items import router as items_router
 from admin import router as admin_router
 from logs import router as logs_router
 from amazon import router as amazon_router
+from sales import router as sales_router
 from database import init_users, init_db
 from data_pipeline import run_pipeline
 import asyncio
@@ -39,6 +40,7 @@ app.include_router(items_router, prefix="/api/items", tags=["items"])
 app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
 app.include_router(logs_router, prefix="/api/logs", tags=["logs"])
 app.include_router(amazon_router, prefix="/api/amazon", tags=["amazon"])
+app.include_router(sales_router, prefix="/api/sales", tags=["sales"])
 
 # Static files
 app.mount("/ui", StaticFiles(directory=r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui"), name="ui")
@@ -84,6 +86,11 @@ async def errors_page():
 async def admin_page():
     """Serve the admin panel for users, permissions, audit logs, and imports."""
     return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\admin.html")
+
+@app.get("/sales")
+async def sales_page():
+    """Serve the Amazon Sales Analytics dashboard page."""
+    return FileResponse(r"D:\VatsalFiles\PricingModule\pricing_management_system\pricing_system\ui\sales.html")
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

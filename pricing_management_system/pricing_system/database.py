@@ -11,6 +11,7 @@ from pathlib import Path
 import hashlib
 import csv
 import sys
+import os
 from typing import Any
 
 DATA_DIR = Path(__file__).parent.parent.parent / "Data"
@@ -27,24 +28,25 @@ def hash_password(password: str) -> str:
 USERS_FILE = DATA_DIR / "users.json"
 
 AMAZON_PRICING_COLUMNS = [
-    "master_sku", "item_name", "original_category", "amazon_cat", "remark",
-    "cost", "mrp", "uniware", "fba", "sjit", "fbf",
-    "launch_date", "loc", "cost_into_percent", "cost_after_percent",
-    "return_charge", "gst_on_return", "final_tp", "required_selling_price",
-    "selected_price_range", "selected_fixed_fee_range", "commission_percent",
-    "commission_amount", "fixed_closing_fee", "fba_pick_pack", "technology_fee",
-    "full_shipping_fee", "whf_percent_on_shipping", "shipping_fee_charged",
-    "total_charges", "final_value_after_charges", "old_daily_sp", "old_deal_sp", "sett_acc_panel",
-    "net_profit_on_sp", "net_profit_percent_on_sp", "net_profit_percent_on_tp"
+    "source", "Invoice_Date", "Order_Id", "Sku", "Transaction_Type", "Quantity", "Invoice_Amount",
+    "Ship_To_State", "Ship_To_City", "Fulfillment_Channel", "Warehouse_Id",
+    "Item_Description", "Asin", "Hsn/sac", "Seller_Gstin",
+    "Principal_Amount", "Shipping_Amount", "Total_Tax_Amount",
+    "Tax_Exclusive_Gross", "Order_Date", "Shipment_Date", "Shipment_Id",
+    "Ship_From_State", "Ship_From_City",
+    "Bill_From_State", "Bill_From_City",
+    "Buyer_Name", "Customer_Bill_To_Gstid",
+    "Cgst_Rate", "Sgst_Rate", "Igst_Rate",
+    "Cgst_Tax", "Sgst_Tax", "Igst_Tax",
+    "Item_Promo_Discount", "Shipping_Promo_Discount",
+    "Tcs_Igst_Amount", "Tcs_Cgst_Amount", "Tcs_Sgst_Amount",
+    "Payment_Method_Code", "Credit_Note_No", "Credit_Note_Date",
+    "Irn_Number", "Irn_Filing_Status", "Irn_Date",
 ]
 
 AMAZON_PRICING_DEFAULT_VISIBLE = [
-    "master_sku", "item_name", "original_category", "amazon_cat", "remark",
-    "cost", "mrp", "uniware", "fba", "sjit", "fbf",
-    "launch_date", "loc", "cost_into_percent", "cost_after_percent",
-    "return_charge", "gst_on_return", "final_tp", "required_selling_price",
-    "sett_acc_panel", "net_profit_on_sp", "net_profit_percent_on_sp",
-    "net_profit_percent_on_tp", "old_daily_sp", "old_deal_sp"
+    "source", "Invoice_Date", "Order_Id", "Sku", "Transaction_Type", "Quantity", "Invoice_Amount",
+    "Ship_To_State", "Fulfillment_Channel", "Item_Description",
 ]
 
 DEFAULT_COLUMN_PERMISSIONS = {
@@ -80,13 +82,13 @@ RESTRICTED_COLUMN_PERMISSIONS = {
         "editable": []
     },
     "amazon_pricing": {
-        "visible": ["master_sku", "item_name", "original_category", "amazon_cat", "remark", "cost", "mrp", "uniware", "fba", "sjit", "fbf"],
+        "visible": ["source", "Invoice_Date", "Order_Id", "Sku", "Transaction_Type", "Quantity", "Invoice_Amount", "Ship_To_State", "Fulfillment_Channel"],
         "editable": []
     }
 }
 
 DEFAULT_USERS = [
-    {"id": 1, "username": "admin", "password": hash_password("admin123"), "special_password": "", "role": "admin", "allowed_pages": ["item_master", "amazon_pricing", "admin", "logs", "import"], "column_permissions": ADMIN_COLUMN_PERMISSIONS, "is_active": True},
+    {"id": 1, "username": "admin", "password": hash_password("admin123"), "special_password": "", "role": "admin", "allowed_pages": ["item_master", "amazon_pricing", "admin", "logs", "import", "sales"], "column_permissions": ADMIN_COLUMN_PERMISSIONS, "is_active": True},
     {"id": 2, "username": "vikesh", "password": hash_password("vikesh123"), "special_password": hash_password("vikesh123"), "role": "viewer", "allowed_pages": ["item_master"], "column_permissions": DEFAULT_COLUMN_PERMISSIONS, "is_active": True},
     {"id": 3, "username": "hitesh", "password": hash_password("hitesh123"), "special_password": hash_password("hitesh123"), "role": "restricted", "allowed_pages": ["item_master"], "column_permissions": RESTRICTED_COLUMN_PERMISSIONS, "is_active": True},
 ]
@@ -115,7 +117,7 @@ def normalize_user(user: dict[str, Any], next_id: int | None = None) -> dict[str
         default_perms = RESTRICTED_COLUMN_PERMISSIONS
     else:
         default_perms = DEFAULT_COLUMN_PERMISSIONS
-    allowed_default = ["item_master", "amazon_pricing", "admin", "logs", "import"] if role == "admin" else ["item_master"]
+    allowed_default = ["item_master", "amazon_pricing", "admin", "logs", "import", "sales"] if role == "admin" else ["item_master"]
     normalized = dict(user)
     if not normalized.get("id") and next_id is not None:
         normalized["id"] = next_id
@@ -338,6 +340,27 @@ def create_amazon_sales_table(cursor, kind: str):
             except Exception:
                 pass
 
+    if os.getenv("ENABLE_SALES_DASHBOARD_INDEXES", "").lower() in {"1", "true", "yes"}:
+        dashboard_indexes = [
+            (f"idx_{table}_tx_date", ["Transaction_Type", "Invoice_Date"]),
+            (f"idx_{table}_tx_order", ["Transaction_Type", "Order_Id"]),
+            (f"idx_{table}_tx_sku", ["Transaction_Type", "Sku"]),
+            (f"idx_{table}_tx_state", ["Transaction_Type", "Ship_To_State"]),
+            (f"idx_{table}_tx_city", ["Transaction_Type", "Ship_To_City"]),
+            (f"idx_{table}_tx_pincode", ["Transaction_Type", "Ship_To_Postal_Code"]),
+            (f"idx_{table}_tx_channel", ["Transaction_Type", "Fulfillment_Channel"]),
+            (f"idx_{table}_tx_warehouse", ["Transaction_Type", "Warehouse_Id"]),
+            (f"idx_{table}_tx_from_to", ["Transaction_Type", "Ship_From_State", "Ship_To_State"]),
+            (f"idx_{table}_invoice_number", ["Invoice_Number"]),
+        ]
+        for index_name, col_names in dashboard_indexes:
+            if all(col_name in existing_cols for col_name in col_names):
+                try:
+                    cols_sql = ", ".join(quote_identifier(col_name) for col_name in col_names)
+                    cursor.execute(f"CREATE INDEX `{index_name}` ON `{table}` ({cols_sql})")
+                except Exception:
+                    pass
+
 
 def init_db():
     """Create the application database and all required tables/indexes."""
@@ -387,6 +410,16 @@ def init_db():
             cursor.execute("ALTER TABLE stock_items DROP COLUMN cost_into_percent")
         except Exception:
             pass
+
+        for index_sql in [
+            "CREATE INDEX idx_stock_items_style_id ON stock_items (item_name(100))",
+            "CREATE INDEX idx_stock_items_size ON stock_items (size(50))",
+            "CREATE INDEX idx_stock_items_type ON stock_items (item_type(50))",
+        ]:
+            try:
+                cursor.execute(index_sql)
+            except Exception:
+                pass
         
         # Create stock_update table
         cursor.execute("""

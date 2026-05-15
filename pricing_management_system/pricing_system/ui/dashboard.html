@@ -882,6 +882,7 @@
       <div class="nav-label">Menu</div>
       <a class="nav-item active" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
       <a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
+      <a class="nav-item" href="/sales" id="nav-sales"><span class="icon">📊</span> Sales</a>
       <a class="nav-item" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
       <a class="nav-item" href="#" id="nav-import" onclick="openImport()"><span class="icon">⬆️</span> Import Data</a>
       <a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
@@ -1049,6 +1050,9 @@
       }
       if (pages.indexOf('amazon_pricing') < 0 && user.role !== 'admin') {
         document.getElementById('nav-amazon').style.display = 'none';
+      }
+      if (pages.indexOf('sales') < 0 && user.role !== 'admin') {
+        document.getElementById('nav-sales').style.display = 'none';
       }
       if (pages.indexOf('item_master') < 0 && user.role !== 'admin') {
         document.getElementById('nav-errors').style.display = 'none';

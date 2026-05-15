@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Analytics — Rajnandini ERP</title>
+<link rel="icon" type="image/png" href="/ui/Images/Icon%20WHITE%20COLOR.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d0f0e;--surface:#111614;--surface2:#181e1b;--surface3:#1e2724;--gold:#c9a96e;--gold2:#e8c98a;--gold-dim:rgba(201,169,110,0.15);--green:#2d6a4f;--green-dim:rgba(64,145,108,0.15);--text:#e8e4dc;--text-muted:#7a8580;--text-dim:#4a5550;--border:#222c28;--border2:#2a3530;--danger:#e05252;--danger-dim:rgba(224,82,82,0.12);--warning:#f4a261;--warning-dim:rgba(244,162,97,0.12);--info:#4db8d4;--info-dim:rgba(77,184,212,0.12);--success:#52b788;--success-dim:rgba(82,183,136,0.12);--purple:#b48ef5;--purple-dim:rgba(180,142,245,0.12);--sidebar-w:220px;--header-h:60px;--radius:10px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;position:fixed;left:0;top:0;z-index:100}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}.sidebar-logo-img{height:28px;width:auto;display:none}.sidebar-logo-copy{display:inline}.logo-text{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold2);line-height:1.2}.logo-sub{font-size:9px;color:var(--text-muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-user{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}.user-role{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.nav-section{padding:12px 0;flex:1;overflow-y:auto}
+.nav-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;padding:8px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;margin:1px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text-muted);transition:all .15s;text-decoration:none}
+.nav-item:hover{background:var(--surface2);color:var(--text)}.nav-item.active{background:var(--gold-dim);color:var(--gold2)}.nav-item .icon{font-size:15px;width:20px;text-align:center}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:0 24px;flex-shrink:0}
+.header-title{font-size:15px;font-weight:600}.header-badge{background:var(--gold-dim);color:var(--gold);font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.source-select{height:30px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:11px;font-family:'DM Sans',sans-serif;padding:0 10px;outline:none}
+.source-select:focus{border-color:var(--gold)}
+.content{flex:1;overflow-y:auto;padding:24px}
+.filter-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:14px}
+.filter-control{display:flex;flex-direction:column;gap:5px}
+.filter-control label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.filter-control input,.filter-control select{height:32px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;padding:0 9px;outline:none;min-width:0}
+.filter-control input:focus,.filter-control select:focus{border-color:var(--gold)}
+.filter-actions{display:flex;align-items:end;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--gold-dim)}.stat-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat-value{font-size:20px;font-weight:700;font-family:'DM Mono',monospace;line-height:1.2}
+.stat-value.gold{color:var(--gold2)}.stat-value.green{color:var(--success)}.stat-value.blue{color:var(--info)}.stat-value.orange{color:var(--warning)}.stat-value.purple{color:var(--purple)}.stat-value.red{color:var(--danger)}
+.stat-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
+.tabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tab{padding:7px 14px;font-size:11px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;white-space:nowrap;border-radius:5px 5px 0 0}
+.tab:hover{color:var(--text);background:var(--surface2)}.tab.active{color:var(--gold2);border-bottom-color:var(--gold);background:var(--gold-dim)}
+.tab-content{display:none}.tab-content.active{display:block}
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.section-title{font-size:12px;font-weight:600;color:var(--gold2);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-box{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;position:relative;height:280px}
+.chart-box.full{grid-column:1/-1;height:300px}
+.chart-box h4{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+.chart-canvas{position:relative;width:100%;height:calc(100% - 24px)}
+table.data{width:100%;border-collapse:collapse;font-size:11px}
+table.data th{background:var(--surface2);color:var(--text-muted);font-weight:600;padding:5px 8px;text-align:left;white-space:nowrap;font-size:9px;letter-spacing:.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+table.data td{padding:4px 8px;border-bottom:1px solid rgba(34,44,40,0.6);font-family:'DM Mono',monospace;font-size:11px}
+table.data tr:hover td{background:rgba(255,255,255,0.02)}
+.mini-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.mini-stat{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
+.mini-stat .ms-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.mini-stat .ms-value{font-size:14px;font-weight:700;font-family:'DM Mono',monospace;margin-top:3px}
+.mini-stat .ms-value.gold{color:var(--gold2)}.mini-stat .ms-value.green{color:var(--success)}.mini-stat .ms-value.blue{color:var(--info)}.mini-stat .ms-value.orange{color:var(--warning)}.mini-stat .ms-value.red{color:var(--danger)}.mini-stat .ms-value.purple{color:var(--purple)}
+.flex-row{display:flex;gap:14px;flex-wrap:wrap}.flex-col{flex:1;min-width:260px}
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#b8914e);color:#1a1208}.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(201,169,110,.3)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text-muted)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}.btn-sm{padding:4px 9px;font-size:10px}
+.empty-state{padding:30px;text-align:center;color:var(--text-muted);font-size:12px}
+.loading{display:flex;align-items:center;justify-content:center;height:100px;color:var(--text-muted);gap:8px;font-size:12px}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:12px;min-width:200px;display:flex;align-items:center;gap:8px;animation:toastIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+</style>
+<link rel="stylesheet" href="/ui/app-theme.css">
+<script src="/ui/app-theme.js"></script>
+</head>
+<body>
+<aside class="sidebar">
+<div class="sidebar-logo"><div class="sidebar-logo-copy"><div class="logo-text">Rajnandini</div></div></div>
+<div class="sidebar-user"><div class="user-avatar" id="userAvatar">A</div><div class="user-info"><div class="user-name" id="userName">—</div><div class="user-role" id="userRole">—</div></div></div>
+<nav class="nav-section">
+<div class="nav-label">Menu</div>
+<a class="nav-item" href="/dashboard" id="nav-item-master"><span class="icon">📦</span> Item Master</a>
+<a class="nav-item" href="/amazon-pricing" id="nav-amazon"><span class="icon">🛒</span> Amazon Pricing</a>
+<a class="nav-item active" href="/sales" id="nav-sales"><span class="icon">📊</span> Sales</a>
+<a class="nav-item" href="/errors" id="nav-errors"><span class="icon">!</span> Errors</a>
+<a class="nav-item" href="/admin" id="nav-admin"><span class="icon">⚙️</span> Admin Panel</a>
+</nav>
+<div class="sidebar-footer">
+<a class="nav-item" href="#" onclick="logout()" style="color:var(--danger)"><span class="icon">🚪</span> Sign Out</a>
+</div>
+</aside>
+<main class="main">
+<header class="header">
+<span class="header-title">Sales Analytics</span>
+<span class="header-badge" id="salesSourceBadge">Amazon B2B</span>
+<div class="header-right">
+<select class="theme-select" data-theme-select title="Theme"></select>
+<button class="btn btn-gold btn-sm" onclick="loadAll()">↻ Refresh</button>
+</div>
+</header>
+<div class="content" id="mainContent">
+  <div class="filter-panel" id="salesFilters">
+    <div class="filter-control"><label>Date From</label><input type="date" id="filter-start-date"></div>
+    <div class="filter-control"><label>Date To</label><input type="date" id="filter-end-date"></div>
+    <div class="filter-control"><label>Portal</label><select id="filter-portal"><option value="b2b">B2B</option><option value="b2c">B2C</option><option value="both">All</option></select></div>
+    <div class="filter-control"><label>Account</label><select id="filter-account"><option value="">All</option></select></div>
+    <div class="filter-control"><label>Fulfillment Mode</label><select id="filter-fulfillment"><option value="">All</option></select></div>
+    <div class="filter-control"><label>Category</label><select id="filter-category"><option value="">All</option></select></div>
+    <div class="filter-control"><label>Style ID</label><select id="filter-style-id"><option value="">All</option></select></div>
+    <div class="filter-control"><label>Style Status</label><select id="filter-style-status"><option value="">All</option></select></div>
+    <div class="filter-control"><label>Size</label><select id="filter-size"><option value="">All</option></select></div>
+    <div class="filter-actions">
+      <button class="btn btn-gold btn-sm" onclick="applySalesFilters()">Apply</button>
+      <button class="btn btn-outline btn-sm" onclick="resetSalesFilters()">Reset</button>
+    </div>
+  </div>
+  <div class="stats-grid" id="kpiGrid">
+    <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value gold" id="kpi-gross-rev">—</div></div>
+    <div class="stat-card"><div class="stat-label">Net Revenue</div><div class="stat-value green" id="kpi-net-rev">—</div></div>
+    <div class="stat-card"><div class="stat-label">Refund Loss</div><div class="stat-value red" id="kpi-refund">—</div></div>
+    <div class="stat-card"><div class="stat-label">Shipped Orders</div><div class="stat-value blue" id="kpi-orders">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total Units</div><div class="stat-value purple" id="kpi-units">—</div></div>
+    <div class="stat-card"><div class="stat-label">AOV</div><div class="stat-value orange" id="kpi-aov">—</div></div>
+    <div class="stat-card"><div class="stat-label">Refund Rate</div><div class="stat-value red" id="kpi-refund-rate">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total Tax</div><div class="stat-value" id="kpi-tax" style="color:var(--info)">—</div></div>
+  </div>
+
+  <div class="tabs" id="subTabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="sales">Sales</div>
+    <div class="tab" data-tab="transactions">Transactions</div>
+    <div class="tab" data-tab="products">Products</div>
+    <div class="tab" data-tab="geography">Geography</div>
+    <div class="tab" data-tab="shipping">Shipping</div>
+    <div class="tab" data-tab="warehouse">Warehouse</div>
+    <div class="tab" data-tab="tax">Tax</div>
+    <div class="tab" data-tab="quality">Data Quality</div>
+    <div class="tab" data-tab="operations">Operations</div>
+    <div class="tab" data-tab="executive">Executive</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="tab-content active" id="tab-overview">
+    <div class="section-card">
+      <div class="section-title">Revenue Overview</div>
+      <div class="chart-row">
+        <div class="chart-box full"><h4>Monthly Revenue</h4><div class="chart-canvas"><canvas id="ovMonthlyChart"></canvas></div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Fulfillment Channel Revenue</h4><div class="chart-canvas"><canvas id="ovChannelChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top States by Orders</h4><div class="chart-canvas"><canvas id="ovStateChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SALES -->
+  <div class="tab-content" id="tab-sales">
+    <div class="section-card">
+      <div class="section-title">Sales Performance</div>
+      <div class="chart-row">
+        <div class="chart-box full"><h4>Monthly Revenue Trend</h4><div class="chart-canvas"><canvas id="salesMonthlyChart"></canvas></div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>MoM Growth</h4><div class="chart-canvas"><canvas id="salesGrowthChart"></canvas></div></div>
+        <div class="chart-box"><h4>Channel Revenue</h4><div class="chart-canvas"><canvas id="salesChannelChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">GSTIN Revenue</div>
+      <div style="overflow-x:auto"><table class="data" id="salesGstinTable"><thead><tr><th>GSTIN</th><th>Revenue</th><th>Orders</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div class="tab-content" id="tab-transactions">
+    <div class="section-card">
+      <div class="section-title">Transaction Quality & Health</div>
+      <div class="mini-stats" id="txMiniStats">
+        <div class="mini-stat"><div class="ms-label">Total Orders</div><div class="ms-value blue" id="tx-total-ords">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Shipped</div><div class="ms-value green" id="tx-shipped">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Refunded</div><div class="ms-value red" id="tx-refunded">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Cancelled</div><div class="ms-value orange" id="tx-cancelled">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="tx-net-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="tx-ref-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Cancel Rate</div><div class="ms-value orange" id="tx-can-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Same-Day Refunds</div><div class="ms-value orange" id="tx-same-day">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Return Loops</div><div class="ms-value gold" id="tx-return-loops">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Multi-Refund Orders</div><div class="ms-value orange" id="tx-multi-refund">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Dup Invoices</div><div class="ms-value red" id="tx-dup-inv">—</div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Duplicate Invoices</div>
+      <div style="overflow-x:auto"><table class="data" id="txDupTable"><thead><tr><th>Invoice Number</th><th>Count</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Cancel-to-Ship Ratio by GSTIN</div>
+      <div style="overflow-x:auto"><table class="data" id="txGstinTable"><thead><tr><th>GSTIN</th><th>Cancels</th><th>Ships</th><th>Cancel Rate</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="tab-content" id="tab-products">
+    <div class="section-card">
+      <div class="section-title">Product & SKU Intelligence</div>
+      <div class="mini-stats" id="prodMiniStats">
+        <div class="mini-stat"><div class="ms-label">Pareto SKUs (80% Net Rev)</div><div class="ms-value gold" id="prod-pareto">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Total Net Revenue</div><div class="ms-value green" id="prod-total-net">—</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Top SKUs by Net Revenue</h4><div class="chart-canvas"><canvas id="prodSkuChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top ASINs by Revenue</h4><div class="chart-canvas"><canvas id="prodAsinChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">SKU Performance</div>
+      <div style="overflow-x:auto"><table class="data" id="prodSkuTable"><thead><tr><th>SKU</th><th>Gross Rev</th><th>Refund</th><th>Net Rev</th><th>Units</th><th>Refund Rate</th><th>Tax Rate</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Zero-Refund SKUs & High-Refund Risk</div>
+      <div class="flex-row">
+        <div class="flex-col">
+          <div style="overflow-x:auto"><table class="data" id="prodZeroRefundTable"><thead><tr><th>SKU</th><th>Net Rev</th><th>Units</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="flex-col">
+          <div style="overflow-x:auto"><table class="data" id="prodHighRefundTable"><thead><tr><th>SKU</th><th>Refund Rate</th><th>Units</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Top HSN Codes by Taxable Revenue</div>
+      <div style="overflow-x:auto"><table class="data" id="prodHsnTable"><thead><tr><th>HSN</th><th>Taxable Revenue</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- GEOGRAPHY -->
+  <div class="tab-content" id="tab-geography">
+    <div class="section-card">
+      <div class="section-title">Customer Geography</div>
+      <div class="mini-stats" id="geoMiniStats">
+        <div class="mini-stat"><div class="ms-label">Interstate %</div><div class="ms-value blue" id="geo-inter-pct">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Intrastate %</div><div class="ms-value green" id="geo-intra-pct">—</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box full"><h4>Top 10 States by Net Revenue</h4><div class="chart-canvas"><canvas id="geoStateNetChart"></canvas></div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Top Cities by Orders</h4><div class="chart-canvas"><canvas id="geoCityChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top Postal Codes by Revenue</h4><div class="chart-canvas"><canvas id="geoPostalChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">State-wise Performance (Net Revenue)</div>
+      <div style="overflow-x:auto"><table class="data" id="geoStateTable"><thead><tr><th>State</th><th>Orders</th><th>Revenue</th><th>Refund</th><th>Net Revenue</th><th>Refund Rate</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- SHIPPING -->
+  <div class="tab-content" id="tab-shipping">
+    <div class="section-card">
+      <div class="section-title">Shipping & Route Analysis</div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Origin States by Shipments</h4><div class="chart-canvas"><canvas id="shipOriginChart"></canvas></div></div>
+        <div class="chart-box"><h4>Top Routes by Volume</h4><div class="chart-canvas"><canvas id="shipRouteChart"></canvas></div></div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">Routes & High-Refund Routes</div>
+      <div class="flex-row">
+        <div class="flex-col">
+          <div style="overflow-x:auto"><table class="data" id="shipRoutesTable"><thead><tr><th>From</th><th>To</th><th>Volume</th><th>Revenue</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="flex-col">
+          <div style="overflow-x:auto"><table class="data" id="shipRefundRoutesTable"><thead><tr><th>From</th><th>To</th><th>Refunds</th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAREHOUSE -->
+  <div class="tab-content" id="tab-warehouse">
+    <div class="section-card">
+      <div class="section-title">Warehouse & Fulfillment</div>
+      <div class="chart-row">
+        <div class="chart-box full"><h4>Warehouse Performance</h4><div class="chart-canvas"><canvas id="whChart"></canvas></div></div>
+      </div>
+      <div style="overflow-x:auto;margin-bottom:14px"><table class="data" id="whTable"><thead><tr><th>Warehouse</th><th>Orders</th><th>Revenue</th><th>Refund Orders</th><th>Refund Rate</th><th>Rev/Order</th></tr></thead><tbody></tbody></table></div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Fulfillment Channel Net Revenue</h4><div class="chart-canvas"><canvas id="fulfillNetChart"></canvas></div></div>
+        <div class="chart-box"><h4>Fulfillment Orders</h4><div class="chart-canvas"><canvas id="fulfillOrdersChart"></canvas></div></div>
+      </div>
+      <div style="overflow-x:auto"><table class="data" id="fulfillTable"><thead><tr><th>Channel</th><th>Orders</th><th>Gross Rev</th><th>Net Rev</th><th>Units</th><th>Refund Rate</th><th>AOV</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TAX -->
+  <div class="tab-content" id="tab-tax">
+    <div class="section-card">
+      <div class="section-title">Tax & Compliance</div>
+      <div class="mini-stats" id="taxMiniStats">
+        <div class="mini-stat"><div class="ms-label">Total Tax</div><div class="ms-value gold" id="tax-total">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Effective Tax Rate</div><div class="ms-value blue" id="tax-eff-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">IGST (Interstate)</div><div class="ms-value orange" id="tax-igst">—</div></div>
+        <div class="mini-stat"><div class="ms-label">CGST+SGST (Intra)</div><div class="ms-value green" id="tax-cgst">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Missing HSN Rows</div><div class="ms-value red" id="tax-missing-hsn">—</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box"><h4>Tax by State</h4><div class="chart-canvas"><canvas id="taxStateChart"></canvas></div></div>
+        <div class="chart-box"><h4>Tax by HSN</h4><div class="chart-canvas"><canvas id="taxHsnChart"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA QUALITY -->
+  <div class="tab-content" id="tab-quality">
+    <div class="section-card">
+      <div class="section-title">Order Quality & Data Integrity</div>
+      <div class="mini-stats" id="qualityMiniStats">
+        <div class="mini-stat"><div class="ms-label">Avg Qty/Order</div><div class="ms-value gold" id="dq-avg-qty">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Missing Invoice#</div><div class="ms-value red" id="dq-missing-inv">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Missing Warehouse ID</div><div class="ms-value red" id="dq-missing-wh">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Zero-Amt Shipments</div><div class="ms-value orange" id="dq-zero-amt">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Neg Amt (Non-Refund)</div><div class="ms-value red" id="dq-neg-amt">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Orphan Refunds</div><div class="ms-value orange" id="dq-orphan">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Dup Invoice Groups</div><div class="ms-value orange" id="dq-dup-inv">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPERATIONS -->
+  <div class="tab-content" id="tab-operations">
+    <div class="section-card">
+      <div class="section-title">Operational Intelligence</div>
+      <div class="section-card" style="margin-bottom:10px">
+        <div class="section-title" style="color:var(--success)">Restock Candidates (High Velocity + Low Refund)</div>
+        <div style="overflow-x:auto"><table class="data" id="opsRestockTable"><thead><tr><th>SKU</th><th>Units</th><th>Net Revenue</th><th>Refund Rate</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title" style="color:var(--warning)">Possible Stockout Signals</div>
+        <div style="overflow-x:auto"><table class="data" id="opsStockoutTable"><thead><tr><th>SKU</th><th>Units</th><th>Net Revenue</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXECUTIVE -->
+  <div class="tab-content" id="tab-executive">
+    <div class="section-card">
+      <div class="section-title">Business Health Snapshot</div>
+      <div class="mini-stats" id="execMiniStats">
+        <div class="mini-stat"><div class="ms-label">Gross Revenue</div><div class="ms-value gold" id="exec-gross">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Net Revenue</div><div class="ms-value green" id="exec-net">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Revenue Leakage</div><div class="ms-value red" id="exec-leakage">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Refund Rate</div><div class="ms-value red" id="exec-ref-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Net Shipment Rate</div><div class="ms-value green" id="exec-net-ship-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Eff. Tax Rate</div><div class="ms-value blue" id="exec-tax-rate">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Top SKU</div><div class="ms-value gold" id="exec-top-sku" style="font-size:11px">—</div></div>
+        <div class="mini-stat"><div class="ms-label">Top State</div><div class="ms-value gold" id="exec-top-state" style="font-size:11px">—</div></div>
+      </div>
+      <div class="section-card" style="margin-top:8px">
+        <div class="section-title">Key Insights</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.8" id="execInsights"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+<div class="toast-container" id="toastContainer"></div>
+<script>
+var token = localStorage.getItem('token');
+var user = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token) window.location.href = '/';
+document.getElementById('userAvatar').textContent = (user.username || 'U')[0].toUpperCase();
+document.getElementById('userName').textContent = user.username || '—';
+document.getElementById('userRole').textContent = user.role || '—';
+var pages = user.allowed_pages || [];
+if (pages.indexOf('sales') < 0 && user.role !== 'admin') window.location.href = '/dashboard';
+if (pages.indexOf('admin') < 0 && user.role !== 'admin') document.getElementById('nav-admin').style.display = 'none';
+if (pages.indexOf('amazon_pricing') < 0 && user.role !== 'admin') document.getElementById('nav-amazon').style.display = 'none';
+if (pages.indexOf('item_master') < 0 && user.role !== 'admin') { document.getElementById('nav-item-master').style.display = 'none'; document.getElementById('nav-errors').style.display = 'none'; }
+
+var chartInstances = {};
+function destroyChart(key) { if (chartInstances[key]) { chartInstances[key].destroy(); delete chartInstances[key]; } }
+function makeChart(key, canvasId, config) {
+  try { destroyChart(key); var ctx = document.getElementById(canvasId); if (!ctx) return null; chartInstances[key] = new Chart(ctx.getContext('2d'), config); return chartInstances[key]; }
+  catch(e) { console.warn('Chart ' + key + ':', e); return null; }
+}
+
+var COLORS = ['#c9a96e','#52b788','#4db8d4','#f4a261','#b48ef5','#e05252','#40916c','#e8c98a','#7a8580','#2d6a4f'];
+Chart.defaults.color = '#7a8580'; Chart.defaults.font.family = "'DM Sans',sans-serif";
+
+var sourceLabels = { both: 'B2B + B2C', b2b: 'B2B', b2c: 'B2C' };
+var savedSalesSource = localStorage.getItem('salesSource');
+var salesSource = sourceLabels[savedSalesSource] ? savedSalesSource : 'b2b';
+if (!sourceLabels[salesSource]) salesSource = 'b2b';
+function updateSourceUi() {
+  var headerSource = document.getElementById('salesSourceSelect');
+  if (headerSource) headerSource.value = salesSource;
+  document.getElementById('filter-portal').value = salesSource;
+  document.getElementById('salesSourceBadge').textContent = 'Amazon ' + sourceLabels[salesSource];
+}
+updateSourceUi();
+
+function getFilterValue(id) {
+  var el = document.getElementById(id);
+  return el ? el.value : '';
+}
+function salesFilterParams() {
+  var params = new URLSearchParams();
+  params.set('source', salesSource);
+  var map = {
+    start_date: 'filter-start-date',
+    end_date: 'filter-end-date',
+    account: 'filter-account',
+    fulfillment: 'filter-fulfillment',
+    category: 'filter-category',
+    style_id: 'filter-style-id',
+    style_status: 'filter-style-status',
+    size: 'filter-size'
+  };
+  Object.keys(map).forEach(function(key){
+    var value = getFilterValue(map[key]);
+    if (value) params.set(key, value);
+  });
+  return params.toString();
+}
+function fillSelect(id, values, selected) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var html = '<option value="">All</option>';
+  (values || []).forEach(function(value){
+    html += '<option value="'+esc(value)+'">'+esc(value)+'</option>';
+  });
+  el.innerHTML = html;
+  if (selected) el.value = selected;
+}
+async function loadFilterOptions() {
+  try {
+    var qs = salesFilterParams();
+    var res = await fetch('/api/sales/filter-options?'+qs,{headers:{'Authorization':'Bearer '+token}});
+    if (!res.ok) return;
+    var opts = await res.json();
+    fillSelect('filter-account', opts.accounts, getFilterValue('filter-account'));
+    fillSelect('filter-fulfillment', opts.fulfillment, getFilterValue('filter-fulfillment'));
+    fillSelect('filter-category', opts.categories, getFilterValue('filter-category'));
+    fillSelect('filter-style-id', opts.style_ids, getFilterValue('filter-style-id'));
+    fillSelect('filter-style-status', opts.style_statuses, getFilterValue('filter-style-status'));
+    fillSelect('filter-size', opts.sizes, getFilterValue('filter-size'));
+  } catch(e) {}
+}
+function applySalesFilters() {
+  salesSource = getFilterValue('filter-portal') || 'b2b';
+  localStorage.setItem('salesSource', salesSource);
+  updateSourceUi();
+  clearCache();
+  Object.keys(chartInstances).forEach(destroyChart);
+  loadAll();
+  loadFilterOptions();
+}
+function resetSalesFilters() {
+  ['filter-start-date','filter-end-date','filter-account','filter-fulfillment','filter-category','filter-style-id','filter-style-status','filter-size'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  salesSource = 'b2b';
+  localStorage.setItem('salesSource', salesSource);
+  updateSourceUi();
+  clearCache();
+  Object.keys(chartInstances).forEach(destroyChart);
+  loadAll();
+  loadFilterOptions();
+}
+
+function esc(v) { return String(v ?? '').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+function fmt(n) { if (n==null||isNaN(n)) return '—'; return '₹'+Number(n).toLocaleString('en-IN',{maximumFractionDigits:2}); }
+function fmtNum(n) { if (n==null||isNaN(n)) return '—'; return Number(n).toLocaleString('en-IN'); }
+function fmtPct(n) { if (n==null||isNaN(n)) return '—'; return Number(n).toFixed(2)+'%'; }
+function showToast(msg,t) { var el=document.createElement('div'); el.className='toast'; el.innerHTML='<span>'+(t==='error'?'❌':'ℹ️')+'</span><span>'+msg+'</span>'; document.getElementById('toastContainer').appendChild(el); setTimeout(function(){el.remove()},4000); }
+function logout() { localStorage.clear(); window.location.href = '/'; }
+
+var cachedData = {};
+async function apiGet(endpoint) {
+  var filters = salesFilterParams();
+  var cacheKey = filters + ':' + endpoint;
+  if (cachedData[cacheKey]) return cachedData[cacheKey];
+  try {
+    var joiner = endpoint.indexOf('?') >= 0 ? '&' : '?';
+    var res = await fetch('/api/sales'+endpoint+joiner+filters,{headers:{'Authorization':'Bearer '+token}});
+    if (res.status===401){localStorage.clear();window.location.href='/';return null;}
+    if (!res.ok) return null;
+    var data = await res.json(); cachedData[cacheKey]=data; return data;
+  } catch(e){return null;}
+}
+function clearCache(){cachedData={};}
+
+function activeTabName() {
+  var active = document.querySelector('#subTabs .tab.active');
+  return active ? active.getAttribute('data-tab') : 'overview';
+}
+function renderTab(tn) {
+  if (tn==='overview') renderOverview();
+  else if (tn==='sales') renderSales();
+  else if (tn==='transactions') renderTransactions();
+  else if (tn==='products') renderProducts();
+  else if (tn==='geography') renderGeography();
+  else if (tn==='shipping') renderShipping();
+  else if (tn==='warehouse') renderWarehouse();
+  else if (tn==='tax') renderTax();
+  else if (tn==='quality') loadDataQuality();
+  else if (tn==='operations') loadOperations();
+  else if (tn==='executive') loadExecutive();
+}
+var headerSourceSelect = document.getElementById('salesSourceSelect');
+if (headerSourceSelect) {
+  headerSourceSelect.addEventListener('change', function(){
+    salesSource = this.value;
+    if (!sourceLabels[salesSource]) salesSource = 'b2b';
+    localStorage.setItem('salesSource', salesSource);
+    updateSourceUi();
+    clearCache();
+    Object.keys(chartInstances).forEach(destroyChart);
+    loadAll();
+    loadFilterOptions();
+  });
+}
+
+// ── Tab Switching ──
+document.querySelectorAll('#subTabs .tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('#subTabs .tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.tab-content').forEach(function(tc){tc.classList.remove('active');});
+    tab.classList.add('active'); var tn=tab.getAttribute('data-tab');
+    document.getElementById('tab-'+tn).classList.add('active');
+    renderTab(tn);
+  });
+});
+
+// ── Load All ──
+async function loadAll() {
+  clearCache();
+  var s = await apiGet('/summary');
+  if (!s) { showToast('Failed to load sales data','error'); return; }
+  document.getElementById('kpi-gross-rev').textContent = fmt(s.gross_revenue);
+  document.getElementById('kpi-net-rev').textContent = fmt(s.net_revenue);
+  document.getElementById('kpi-refund').textContent = fmt(s.refund_amount);
+  document.getElementById('kpi-orders').textContent = fmtNum(s.shipped_orders);
+  document.getElementById('kpi-units').textContent = fmtNum(s.total_units);
+  document.getElementById('kpi-aov').textContent = fmt(s.aov);
+  document.getElementById('kpi-refund-rate').textContent = fmtPct(s.refund_rate);
+  document.getElementById('kpi-tax').textContent = fmt(s.total_tax);
+  renderTab(activeTabName());
+}
+
+// ── OVERVIEW ──
+async function renderOverview() {
+  var [sp, geo] = await Promise.all([apiGet('/sales-performance'), apiGet('/geography')]);
+  if (sp && sp.monthly && sp.monthly.length>0) {
+    var m=sp.monthly.map(function(r){return r.month?r.month.slice(0,7):'';});
+    var v=sp.monthly.map(function(r){return r.revenue;});
+    makeChart('ov-mon','ovMonthlyChart',{type:'bar',data:{labels:m,datasets:[{label:'Revenue',data:v,backgroundColor:COLORS[0]+'cc',borderColor:COLORS[0],borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+  }
+  if (sp && sp.channel_rev && sp.channel_rev.length>0) {
+    var cl=sp.channel_rev.map(function(c){return c.channel;});
+    var cv=sp.channel_rev.map(function(c){return c.revenue;});
+    makeChart('ov-ch','ovChannelChart',{type:'doughnut',data:{labels:cl,datasets:[{data:cv,backgroundColor:COLORS,borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:6,font:{size:10}}}}}});
+  }
+  if (geo && geo.states && geo.states.length>0) {
+    var st=geo.states.slice(0,10).map(function(s){return s.state;});
+    var so=geo.states.slice(0,10).map(function(s){return s.orders;});
+    makeChart('ov-st','ovStateChart',{type:'bar',data:{labels:st,datasets:[{label:'Orders',data:so,backgroundColor:COLORS[1]+'cc',borderColor:COLORS[1],borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+  }
+}
+
+// ── SALES ──
+async function renderSales() {
+  var sp = await apiGet('/sales-performance');
+  if (!sp) return;
+  if (sp.monthly && sp.monthly.length>0) {
+    var m=sp.monthly.map(function(r){return r.month?r.month.slice(0,7):'';});
+    var v=sp.monthly.map(function(r){return r.revenue;});
+    makeChart('sal-m','salesMonthlyChart',{type:'line',data:{labels:m,datasets:[{label:'Revenue',data:v,borderColor:COLORS[0],backgroundColor:'rgba(201,169,110,0.1)',fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[0]}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+    var g=sp.monthly.map(function(r){return r.growth;});
+    var gc=g.slice(1).map(function(gv){return gv>=0?'rgba(82,183,136,0.6)':'rgba(224,82,82,0.6)';});
+    makeChart('sal-g','salesGrowthChart',{type:'bar',data:{labels:m.slice(1),datasets:[{label:'MoM Growth %',data:g.slice(1),backgroundColor:gc,borderColor:gc.map(function(gv){return gv>=0?'#52b788':'#e05252';}),borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:function(v){return v+'%';}}}}}});
+  }
+  if (sp.channel_rev && sp.channel_rev.length>0) {
+    makeChart('sal-ch','salesChannelChart',{type:'bar',data:{labels:sp.channel_rev.map(function(c){return c.channel;}),datasets:[{label:'Revenue',data:sp.channel_rev.map(function(c){return c.revenue;}),backgroundColor:COLORS[2]+'cc',borderColor:COLORS[2],borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+  }
+  var gHtml='';
+  (sp.gstin_rev||[]).forEach(function(g){gHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif;font-size:10px">'+esc(g.gstin)+'</td><td>'+fmt(g.revenue)+'</td><td>'+fmtNum(g.orders)+'</td></tr>';});
+  document.querySelector('#salesGstinTable tbody').innerHTML=gHtml||'<tr><td colspan="3" class="empty-state">No data</td></tr>';
+}
+
+// ── TRANSACTIONS ──
+async function renderTransactions() {
+  var t = await apiGet('/transactions');
+  if (!t) return;
+  document.getElementById('tx-total-ords').textContent=fmtNum(t.total_orders);
+  document.getElementById('tx-shipped').textContent=fmtNum(t.shipped_orders);
+  document.getElementById('tx-refunded').textContent=fmtNum(t.refund_orders);
+  document.getElementById('tx-cancelled').textContent=fmtNum(t.cancel_orders);
+  document.getElementById('tx-net-rate').textContent=fmtPct(t.net_shipment_rate);
+  document.getElementById('tx-ref-rate').textContent=fmtPct(t.refund_rate);
+  document.getElementById('tx-can-rate').textContent=fmtPct(t.cancel_rate);
+  document.getElementById('tx-same-day').textContent=fmtNum(t.same_day_refunds);
+  document.getElementById('tx-return-loops').textContent=fmtNum(t.return_loop_orders);
+  document.getElementById('tx-multi-refund').textContent=fmtNum(t.multi_refund_orders);
+  document.getElementById('tx-dup-inv').textContent=fmtNum(t.dup_invoice_count);
+
+  var dHtml='';
+  (t.dup_invoices||[]).forEach(function(d){dHtml+='<tr><td>'+esc(d.invoice)+'</td><td>'+fmtNum(d.count)+'</td></tr>';});
+  document.querySelector('#txDupTable tbody').innerHTML=dHtml||'<tr><td colspan="2" class="empty-state">No duplicates</td></tr>';
+
+  var gHtml='';
+  (t.gstin_stats||[]).forEach(function(g){gHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif;font-size:10px">'+esc(g.Seller_Gstin)+'</td><td>'+fmtNum(g.cancels)+'</td><td>'+fmtNum(g.ships)+'</td><td>'+fmtPct(g.cancel_rate)+'</td></tr>';});
+  document.querySelector('#txGstinTable tbody').innerHTML=gHtml||'<tr><td colspan="4" class="empty-state">No data</td></tr>';
+}
+
+// ── PRODUCTS ──
+async function renderProducts() {
+  var p = await apiGet('/products');
+  if (!p) return;
+  document.getElementById('prod-pareto').textContent=fmtNum(p.pareto_count);
+  document.getElementById('prod-total-net').textContent=fmt(p.total_net_revenue);
+
+  var top10=(p.top_skus||[]).slice(0,10);
+  makeChart('p-sku','prodSkuChart',{type:'bar',data:{labels:top10.map(function(s){return s.master_sku||s.sku;}),datasets:[{label:'Net Revenue',data:top10.map(function(s){return s.net_revenue;}),backgroundColor:COLORS[0]+'cc',borderColor:COLORS[0],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+
+  var asins=(p.top_asins||[]).slice(0,10);
+  makeChart('p-asin','prodAsinChart',{type:'bar',data:{labels:asins.map(function(a){return a.Asin;}),datasets:[{label:'Revenue',data:asins.map(function(a){return a.revenue;}),backgroundColor:COLORS[1]+'cc',borderColor:COLORS[1],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+
+  var sHtml='';
+  (p.top_skus||[]).forEach(function(s){
+    sHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif">'+esc(s.master_sku||s.sku)+'</td><td>'+fmt(s.gross_revenue)+'</td><td>'+fmt(s.refund_amount)+'</td><td>'+fmt(s.net_revenue)+'</td><td>'+fmtNum(s.units)+'</td><td>'+fmtPct(s.refund_rate)+'</td><td>'+fmtPct(s.tax_rate)+'</td></tr>';
+  });
+  document.querySelector('#prodSkuTable tbody').innerHTML=sHtml||'<tr><td colspan="7" class="empty-state">No data</td></tr>';
+
+  var zHtml='';
+  (p.zero_refund_skus||[]).forEach(function(s){zHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif">'+esc(s.master_sku||s.sku)+'</td><td>'+fmt(s.net_revenue)+'</td><td>'+fmtNum(s.units)+'</td></tr>';});
+  document.querySelector('#prodZeroRefundTable tbody').innerHTML=zHtml||'<tr><td colspan="3" class="empty-state">None</td></tr>';
+
+  var hHtml='';
+  (p.high_refund_risk_skus||[]).forEach(function(s){hHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif">'+esc(s.master_sku||s.sku)+'</td><td style="color:var(--danger)">'+fmtPct(s.refund_rate)+'</td><td>'+fmtNum(s.units)+'</td></tr>';});
+  document.querySelector('#prodHighRefundTable tbody').innerHTML=hHtml||'<tr><td colspan="3" class="empty-state">None</td></tr>';
+
+  var hsnHtml='';
+  (p.top_hsn||[]).forEach(function(h){hsnHtml+='<tr><td>'+esc(h.hsn)+'</td><td>'+fmt(h.taxable_revenue)+'</td></tr>';});
+  document.querySelector('#prodHsnTable tbody').innerHTML=hsnHtml||'<tr><td colspan="2" class="empty-state">No data</td></tr>';
+}
+
+// ── GEOGRAPHY ──
+async function renderGeography() {
+  var g = await apiGet('/geography');
+  if (!g) return;
+  document.getElementById('geo-inter-pct').textContent=fmtPct(g.interstate_pct)+' ('+fmtNum(g.interstate_shipments)+')';
+  document.getElementById('geo-intra-pct').textContent=fmtPct(g.intrastate_pct)+' ('+fmtNum(g.intrastate_shipments)+')';
+
+  var top10=(g.states||[]).slice(0,10);
+  makeChart('geo-net','geoStateNetChart',{type:'bar',data:{labels:top10.map(function(s){return s.state;}),datasets:[{label:'Net Revenue',data:top10.map(function(s){return s.net_revenue;}),backgroundColor:COLORS[0]+'cc',borderColor:COLORS[0],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+
+  var cities=(g.cities||[]).slice(0,10);
+  if (cities.length>0) {
+    makeChart('geo-city','geoCityChart',{type:'bar',data:{labels:cities.map(function(c){return c.city+(c.state?', '+c.state:'');}),datasets:[{label:'Orders',data:cities.map(function(c){return c.orders;}),backgroundColor:COLORS[1]+'cc',borderColor:COLORS[1],borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+  } else {
+    var el=document.getElementById('geoCityChart');
+    if(el){el.style.display='none'; var p=el.parentNode; if(p&&!p.querySelector('.chart-empty-msg')){var m=document.createElement('div');m.className='chart-empty-msg empty-state';m.style.cssText='height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px';m.textContent='No city-level data available';p.appendChild(m);}}
+  }
+
+  var postal=(g.postal_codes||[]).slice(0,10);
+  makeChart('geo-post','geoPostalChart',{type:'bar',data:{labels:postal.map(function(p){return p.pincode;}),datasets:[{label:'Revenue',data:postal.map(function(p){return p.revenue;}),backgroundColor:COLORS[3]+'cc',borderColor:COLORS[3],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+
+  var stHtml='';
+  (g.states||[]).forEach(function(s){stHtml+='<tr><td>'+esc(s.state)+'</td><td>'+fmtNum(s.orders)+'</td><td>'+fmt(s.revenue)+'</td><td>'+fmt(s.refund_amount)+'</td><td>'+fmt(s.net_revenue)+'</td><td>'+fmtPct(s.refund_rate)+'</td></tr>';});
+  document.querySelector('#geoStateTable tbody').innerHTML=stHtml||'<tr><td colspan="6" class="empty-state">No data</td></tr>';
+}
+
+// ── SHIPPING ──
+async function renderShipping() {
+  var s = await apiGet('/shipping');
+  if (!s) return;
+  var origins=(s.origins||[]).slice(0,10);
+  makeChart('shp-orig','shipOriginChart',{type:'bar',data:{labels:origins.map(function(o){return o.state;}),datasets:[{label:'Shipments',data:origins.map(function(o){return o.shipments;}),backgroundColor:COLORS[2]+'cc',borderColor:COLORS[2],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+  var routes=(s.routes||[]).slice(0,10);
+  makeChart('shp-rt','shipRouteChart',{type:'bar',data:{labels:routes.map(function(r){return(r.from_state||'?')+' → '+(r.to_state||'?');}),datasets:[{label:'Volume',data:routes.map(function(r){return r.route_volume;}),backgroundColor:COLORS[3]+'cc',borderColor:COLORS[3],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+  var rtHtml='';
+  (s.routes||[]).forEach(function(r){rtHtml+='<tr><td>'+esc(r.from_state||'?')+'</td><td>'+esc(r.to_state||'?')+'</td><td>'+fmtNum(r.route_volume)+'</td><td>'+fmt(r.revenue)+'</td></tr>';});
+  document.querySelector('#shipRoutesTable tbody').innerHTML=rtHtml||'<tr><td colspan="4" class="empty-state">No data</td></tr>';
+  var rrHtml='';
+  (s.refund_routes||[]).forEach(function(r){rrHtml+='<tr><td>'+esc(r.from_state||'?')+'</td><td>'+esc(r.to_state||'?')+'</td><td style="color:var(--danger)">'+fmtNum(r.refund_count)+'</td></tr>';});
+  document.querySelector('#shipRefundRoutesTable tbody').innerHTML=rrHtml||'<tr><td colspan="3" class="empty-state">No data</td></tr>';
+}
+
+// ── WAREHOUSE ──
+async function renderWarehouse() {
+  var w = await apiGet('/warehouse');
+  if (!w) return;
+  var wh=(w.warehouses||[]);
+  if (wh.length>0) {
+    makeChart('wh-bar','whChart',{type:'bar',data:{labels:wh.map(function(w){return w.warehouse;}),
+      datasets:[{label:'Orders',data:wh.map(function(w){return w.orders;}),backgroundColor:COLORS[1]+'cc',borderColor:COLORS[1],borderWidth:1,borderRadius:4,order:2},
+                {label:'Revenue (₹K)',data:wh.map(function(w){return w.revenue/1000;}),backgroundColor:COLORS[0]+'cc',borderColor:COLORS[0],borderWidth:1,borderRadius:4,order:1,yAxisID:'y1'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},
+        scales:{y:{beginAtZero:true,position:'left'},y1:{beginAtZero:true,position:'right',grid:{display:false},ticks:{callback:function(v){return'₹'+v.toFixed(0)+'K';}}}}}});
+  }
+  var whHtml='';
+  wh.forEach(function(w){whHtml+='<tr><td>'+esc(w.warehouse)+'</td><td>'+fmtNum(w.orders)+'</td><td>'+fmt(w.revenue)+'</td><td>'+fmtNum(w.refund_orders)+'</td><td>'+fmtPct(w.refund_rate)+'</td><td>'+fmt(w.rev_per_order)+'</td></tr>';});
+  document.querySelector('#whTable tbody').innerHTML=whHtml||'<tr><td colspan="6" class="empty-state">No data</td></tr>';
+
+  var fc=(w.fulfillment||[]);
+  makeChart('fc-net','fulfillNetChart',{type:'bar',data:{labels:fc.map(function(f){return f.channel;}),datasets:[{label:'Net Revenue',data:fc.map(function(f){return f.net_revenue;}),backgroundColor:COLORS[0]+'cc',borderColor:COLORS[0],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+  makeChart('fc-ord','fulfillOrdersChart',{type:'bar',data:{labels:fc.map(function(f){return f.channel;}),datasets:[{label:'Orders',data:fc.map(function(f){return f.orders;}),backgroundColor:COLORS[2]+'cc',borderColor:COLORS[2],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+
+  var fcHtml='';
+  fc.forEach(function(f){fcHtml+='<tr><td>'+esc(f.channel)+'</td><td>'+fmtNum(f.orders)+'</td><td>'+fmt(f.gross_revenue)+'</td><td>'+fmt(f.net_revenue)+'</td><td>'+fmtNum(f.units)+'</td><td>'+fmtPct(f.refund_rate)+'</td><td>'+fmt(f.aov)+'</td></tr>';});
+  document.querySelector('#fulfillTable tbody').innerHTML=fcHtml||'<tr><td colspan="7" class="empty-state">No data</td></tr>';
+}
+
+// ── TAX ──
+async function renderTax() {
+  var t = await apiGet('/tax');
+  if (!t) return;
+  document.getElementById('tax-total').textContent=fmt(t.total_tax);
+  document.getElementById('tax-eff-rate').textContent=fmtPct(t.effective_tax_rate);
+  document.getElementById('tax-igst').textContent=fmt(t.igst_tax);
+  document.getElementById('tax-cgst').textContent=fmt(t.cgst_sgst_tax);
+  document.getElementById('tax-missing-hsn').textContent=fmtNum(t.missing_hsn_rows);
+
+  var states=(t.tax_by_state||[]).slice(0,10);
+  makeChart('tax-st','taxStateChart',{type:'bar',data:{labels:states.map(function(s){return s.state;}),datasets:[{label:'Tax',data:states.map(function(s){return s.tax;}),backgroundColor:COLORS[2]+'cc',borderColor:COLORS[2],borderWidth:1,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+
+  var hsns=(t.tax_by_hsn||[]).slice(0,10);
+  if (hsns.length>0) {
+    makeChart('tax-hsn','taxHsnChart',{type:'bar',data:{labels:hsns.map(function(h){return h.hsn;}),datasets:[{label:'Tax',data:hsns.map(function(h){return h.tax;}),backgroundColor:COLORS[5]+'cc',borderColor:COLORS[5],borderWidth:1,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return'₹'+(v/1000).toFixed(0)+'K';}}}}}});
+  } else {
+    var el=document.getElementById('taxHsnChart');
+    if(el){el.style.display='none'; var p=el.parentNode; if(p&&!p.querySelector('.chart-empty-msg')){var m=document.createElement('div');m.className='chart-empty-msg empty-state';m.style.cssText='height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:12px';m.textContent='No HSN-level tax data available';p.appendChild(m);}}
+  }
+}
+
+// ── DATA QUALITY ──
+async function loadDataQuality() {
+  var q = await apiGet('/data-quality');
+  if (!q) return;
+  document.getElementById('dq-avg-qty').textContent=Number(q.avg_qty_per_order).toFixed(2);
+  document.getElementById('dq-missing-inv').textContent=fmtNum(q.missing_invoice_rows);
+  document.getElementById('dq-missing-wh').textContent=fmtNum(q.missing_warehouse_rows);
+  document.getElementById('dq-zero-amt').textContent=fmtNum(q.zero_amount_shipments);
+  document.getElementById('dq-neg-amt').textContent=fmtNum(q.negative_non_refund_rows);
+  document.getElementById('dq-orphan').textContent=fmtNum(q.orphan_refund_orders);
+  document.getElementById('dq-dup-inv').textContent=fmtNum(q.dup_invoice_count);
+}
+
+// ── OPERATIONS ──
+async function loadOperations() {
+  var o = await apiGet('/operations');
+  if (!o) return;
+  var rHtml='';
+  (o.restock_candidates||[]).forEach(function(r){rHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif">'+esc(r.master_sku||r.sku)+'</td><td>'+fmtNum(r.units)+'</td><td>'+fmt(r.net_revenue)+'</td><td style="color:var(--success)">'+fmtPct(r.refund_rate)+'</td></tr>';});
+  document.querySelector('#opsRestockTable tbody').innerHTML=rHtml||'<tr><td colspan="4" class="empty-state">No candidates</td></tr>';
+  var sHtml='';
+  (o.stockout_signals||[]).forEach(function(s){sHtml+='<tr><td style="font-family:\'DM Sans\',sans-serif">'+esc(s.master_sku||s.sku)+'</td><td>'+fmtNum(s.units)+'</td><td>'+fmt(s.net_revenue)+'</td></tr>';});
+  document.querySelector('#opsStockoutTable tbody').innerHTML=sHtml||'<tr><td colspan="3" class="empty-state">No signals</td></tr>';
+}
+
+// ── EXECUTIVE ──
+async function loadExecutive() {
+  var e = await apiGet('/executive');
+  if (!e) return;
+  document.getElementById('exec-gross').textContent=fmt(e.gross_revenue);
+  document.getElementById('exec-net').textContent=fmt(e.net_revenue);
+  document.getElementById('exec-leakage').textContent=fmt(e.refund_amount);
+  document.getElementById('exec-ref-rate').textContent=fmtPct(e.refund_rate);
+  document.getElementById('exec-net-ship-rate').textContent=fmtPct(e.net_shipment_rate);
+  document.getElementById('exec-tax-rate').textContent=fmtPct(e.effective_tax_rate);
+  document.getElementById('exec-top-sku').textContent=esc(e.top_sku||'—');
+  document.getElementById('exec-top-state').textContent=esc(e.top_state||'—');
+
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--gold2)">Top SKU</strong><br><span style="color:var(--text-muted)">'+esc(e.top_sku||'N/A')+'</span><br><span style="color:var(--gold2)">'+fmt(e.top_sku_revenue)+'</span></div>';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--gold2)">Top State</strong><br><span style="color:var(--text-muted)">'+esc(e.top_state||'N/A')+'</span></div>';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--gold2)">Top Channel</strong><br><span style="color:var(--text-muted)">'+esc(e.top_channel||'N/A')+'</span></div>';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--gold2)">Pareto Count</strong><br><span style="font-size:18px;font-weight:700;color:var(--gold2)">'+fmtNum(e.pareto_count)+'</span><br><span style="color:var(--text-muted)">SKUs → 80% net revenue</span></div>';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--danger)">Revenue Leakage</strong><br><span style="color:var(--danger)">'+fmt(e.refund_amount)+'</span><br><span style="color:var(--text-muted)">Refund Rate: '+fmtPct(e.refund_rate)+'</span></div>';
+  html+='<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px"><strong style="color:var(--success)">Net Shipment Rate</strong><br><span style="font-size:18px;font-weight:700;color:var(--success)">'+fmtPct(e.net_shipment_rate)+'</span></div>';
+  html+='</div>';
+  document.getElementById('execInsights').innerHTML=html;
+}
+
+// ── Init ──
+loadAll();
+loadFilterOptions();
+</script>
+</body>
+</html>
